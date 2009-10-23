@@ -4,7 +4,7 @@ TIMEOUT = 0                                    # default length of time (s) befo
 SLEEP_DUR = 0.00                        # sleep delay
 TERMINATOR = "\r"                        # command terminator byte
 QUIT_CODE = "^"
-CLEAR_CODE = "`"
+CLEAR_CODE = "`"											# manually clear your request buffer
 
 print NAME + ' v' + VERSION
 print 'Unzipping and loading modules...'
@@ -45,7 +45,7 @@ COMMANDS:\r
 \r
  help:  displays this file\r
  ^:     quits program, does not require delimiting\r
- `:     clears request buffer\r
+ `:     clears your request buffer\r
 \r
  http://<host/path> receives a URL\r
  https://<host/path> receives a secure URL\r
@@ -95,6 +95,7 @@ response = ""                # parsed buffer
 src_addr = ()
 request = ""
 tIndex = -1
+bufferDict = {};				# declare address/buffer dictionary
 
 while (time.clock()-startTime < stopTime or stopTime==0):
     
@@ -117,9 +118,13 @@ while (time.clock()-startTime < stopTime or stopTime==0):
             # data, src_addr = sd.recvfrom(1)
             data, src_addr = sd.recvfrom(72)
             #print "data: " + data + " / ascii: " + str(ord(data)) + " / buffer: " + buf
-            buf += data
+            #buf += data
+            bufferDict[src_addr[0]] += data
+            buf = bufferDict[src_addr[0]]
             tIndex = str.find(buf, TERMINATOR)
-            
+            #request = ""
+
+            # If there's a request in this buffer, parse it
             if tIndex > -1:
                 request = buf[:tIndex]
                 
@@ -127,26 +132,29 @@ while (time.clock()-startTime < stopTime or stopTime==0):
                 
                 if request == 'help': # send the help file
                     response = helpFile
-                    buf = ""
+                    bufferDict[src_addr[0]] = ""
                     request = ""
                 else:
                     f = urllib.urlopen(request) # get the URL
                     response = f.read() # parse the incoming data
-                    print '\tgot '+ str(len(response)) + ' bytes'
-                    buf = ""
+                    print '\tGot '+ str(len(response)) + ' bytes'
+                    bufferDict[src_addr[0]] = ""
                     request = ""
             elif data == QUIT_CODE:
                 print "QUITTING"
                 break;
             elif data == CLEAR_CODE:
-                buf = ""
+                bufferDict[src_addr[0]] = ""
                 request = ""
+            elif data == "|":
+                print bufferDict
             #else:
-            #    request += data
+                # no terminator detected, so append 
+                #bufferDict[src_addr[0]] += data
 	
         except Exception, e:
             response = '*** request failed: ' + request + ' | ' + str(e) + '\n\r'
-            buf = ""
+            bufferDict[src_addr[0]] = ""
             request = ""
             print '* request failed *'
             print e
