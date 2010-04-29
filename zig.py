@@ -1,5 +1,5 @@
 NAME = 'ZigBee Internet Gateway (zig)'
-VERSION = '1.00a28'
+VERSION = '1.00a29'
 TIMEOUT = 0                                    # default length of time (s) before main loop automatically times out, 0 runs forever
 SLEEP_DUR = 0.00                        # sleep delay
 TERMINATOR = "\r"                        # command terminator byte
@@ -9,12 +9,13 @@ CLEAR_CODE = "`"											# manually clear your request buffer
 print NAME + ' v' + VERSION
 print 'Unzipping and loading modules...'
 
-import sys, time
+import sys, time, os
 from socket import *
 from select import *
 
-sys.path.append('WEB/python/url_libs.zip')
-sys.path.append('WEB/python/email.zip')
+APP_ARCHIVE = "WEB/python/zig_library.zip"
+sys.path.insert(0, APP_ARCHIVE)
+sys.path.insert(0, os.path.join(APP_ARCHIVE, "lib"))
 
 import urllib
 print '  ...done.'
