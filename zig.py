@@ -1,5 +1,5 @@
 NAME = 'ZigBee Internet Gateway (zig)'
-VERSION = '1.00a30'
+VERSION = '1.00a31'
 TIMEOUT = 0                                    # default length of time (s) before main loop automatically times out, 0 runs forever
 SLEEP_DUR = 0.00                        # sleep delay
 TERMINATOR = "\r"                        # command terminator byte
@@ -17,7 +17,7 @@ APP_ARCHIVE = "WEB/python/zig_library.zip"
 sys.path.insert(0, APP_ARCHIVE)
 sys.path.insert(0, os.path.join(APP_ARCHIVE, "lib"))
 
-import urllib
+import urllib, digicli
 print '  ...done.'
 
 stopTime = 0
