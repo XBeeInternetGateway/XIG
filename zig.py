@@ -1,5 +1,5 @@
 NAME = 'ZigBee Internet Gateway (zig)'
-VERSION = '1.00a31'
+VERSION = '1.00a32'
 TIMEOUT = 0                                    # default length of time (s) before main loop automatically times out, 0 runs forever
 SLEEP_DUR = 0.00                        # sleep delay
 TERMINATOR = "\r"                        # command terminator byte
@@ -77,6 +77,14 @@ def idigiOn():
         print "iDigi settings succeeded. " + str(response)
     return success
 
+def getXBeeVersion():
+    success, response = digicli.digicli('display xbee address')
+    if success:
+        for line in response:
+            if line.find('  firmware_version (VR): 0x')>=0:
+                return line[27:31]
+    return '0000'
+
 
 print 'Initializing URL calls...'
 urllib.urlopen('http://www.google.com')
@@ -84,6 +92,11 @@ print '  ...done.'
 
 # Turn on iDigi connections
 idigiOn()
+
+# Get radio hardware version
+response = getXBeeVersion()
+series = response[0]
+
 
 if len(sys.argv) > 1: # if there's an argument we use it for the stop time
     stopTime = int(sys.argv[1])
@@ -94,11 +107,18 @@ else:
 
 startTime = time.clock()
 
-## create a socket using the ZigBee address family, datagram mode and a proprietary transport
+# Create a socket using the ZigBee address family, datagram mode and a proprietary transport
 sd = socket(AF_ZIGBEE, SOCK_DGRAM, ZBS_PROT_TRANSPORT)
-# bind to end point zero
-# end point, profile ID and cluster ID are zero when using the 802.15.4 radios
-sd.bind(("",0xe8,0,0))
+# Different radios have different bindings
+## end point, profile ID and cluster ID are zero when using the 802.15.4 radios
+if series == '1':
+    sd.bind(("",0,0,0)) #bindings for series 1 radios
+# end point is 0xE8 when using ZigBee radios
+elif series == '2':
+    sd.bind(("",0xe8,0,0)) #bindings for series 2 radios
+else:
+    print "Unknown radio version, bindings may not be correct"
+    sd.bind(("",0,0,0)) #bindings for unknown radios
 
 # Configure the socket for non-blocking operation:
 sd.setblocking(0)
