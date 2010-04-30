@@ -1,5 +1,5 @@
 NAME = 'ZigBee Internet Gateway (zig)'
-VERSION = '1.00a29'
+VERSION = '1.00a30'
 TIMEOUT = 0                                    # default length of time (s) before main loop automatically times out, 0 runs forever
 SLEEP_DUR = 0.00                        # sleep delay
 TERMINATOR = "\r"                        # command terminator byte
@@ -36,6 +36,7 @@ for key in dict.keys()
 """
 ####################################
 
+
 helpFile = '\n\r---------------------------\n\r'+ NAME + ' v' + VERSION + """
 \r  by Rob Faludi <faludi.com> and Ted Hayes <log.liminastudio.com>\r
 \r
@@ -67,9 +68,22 @@ USE:\r
 ---------------------------\r
 """
 
+## TURN ON CONNECTION TO IDIGI ##
+def idigiOn():
+    success,response = digicli.digicli("set mgmtconnection conntype=client connenabled=on clntreconntimeout=60 svraddr1=en://developer.idigi.com")
+    if success==False:
+        print  "iDigi settings failed: " + str(response)
+    else:
+        print "iDigi settings succeeded. " + str(response)
+    return success
+
+
 print 'Initializing URL calls...'
 urllib.urlopen('http://www.google.com')
 print '  ...done.'
+
+# Turn on iDigi connections
+idigiOn()
 
 if len(sys.argv) > 1: # if there's an argument we use it for the stop time
     stopTime = int(sys.argv[1])
