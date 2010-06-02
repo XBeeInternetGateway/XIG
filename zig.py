@@ -1,10 +1,10 @@
 NAME = 'ZigBee Internet Gateway (zig)'
-VERSION = '1.00a32'
-TIMEOUT = 0                                    # default length of time (s) before main loop automatically times out, 0 runs forever
+VERSION = '1.00a34'
+TIMEOUT = 0                             # default length of time (s) before main loop automatically times out, 0 runs forever
 SLEEP_DUR = 0.00                        # sleep delay
-TERMINATOR = "\r"                        # command terminator byte
+TERMINATOR = "\r"                       # command terminator byte
 QUIT_CODE = "^"
-CLEAR_CODE = "`"											# manually clear your request buffer
+CLEAR_CODE = "`"			# manually clear your request buffer
 
 print NAME + ' v' + VERSION
 print 'Unzipping and loading modules...'
@@ -96,6 +96,7 @@ idigiOn()
 # Get radio hardware version
 response = getXBeeVersion()
 series = response[0]
+print "XBee version 0x" + str(response) + " series " + str(series)
 
 
 if len(sys.argv) > 1: # if there's an argument we use it for the stop time
@@ -113,12 +114,15 @@ sd = socket(AF_ZIGBEE, SOCK_DGRAM, ZBS_PROT_TRANSPORT)
 ## end point, profile ID and cluster ID are zero when using the 802.15.4 radios
 if series == '1':
     sd.bind(("",0,0,0)) #bindings for series 1 radios
+    packetSize = 100
 # end point is 0xE8 when using ZigBee radios
 elif series == '2':
     sd.bind(("",0xe8,0,0)) #bindings for series 2 radios
+    packetSize = 72
 else:
-    print "Unknown radio version, bindings may not be correct"
+    print "Unknown radio version, bindings and packet size may not be correct"
     sd.bind(("",0,0,0)) #bindings for unknown radios
+    packetSize = 72
 
 # Configure the socket for non-blocking operation:
 sd.setblocking(0)
@@ -151,7 +155,7 @@ while (time.clock()-startTime < stopTime or stopTime==0):
         try:
         # Receive from the socket:
             # data, src_addr = sd.recvfrom(1)
-            data, src_addr = sd.recvfrom(72)
+            data, src_addr = sd.recvfrom(packetSize)
             #print "data: " + data + " / ascii: " + str(ord(data)) + " / buffer: " + buf
             #buf += data
             bufferDict[src_addr[0]] += data
@@ -197,7 +201,7 @@ while (time.clock()-startTime < stopTime or stopTime==0):
     if sd in wlist:
         try:
             # Send to the socket:
-            part = response[:72] #packets can't be larger than 72 bytes
+            part = response[:packetSize] #packets can't be larger than 72 bytes
             count = sd.sendto(part, 0, src_addr)
             # Slice off count bytes from the buffer
             response = response[count:]
