@@ -1,5 +1,5 @@
 NAME = 'ZigBee Internet Gateway (zig)'
-VERSION = '1.00a34'
+VERSION = '1.00a35'
 TIMEOUT = 0                             # default length of time (s) before main loop automatically times out, 0 runs forever
 SLEEP_DUR = 0.00                        # sleep delay
 TERMINATOR = "\r"                       # command terminator byte
@@ -24,8 +24,6 @@ stopTime = 0
 
 ############ NEXT STEPS ############
 """"
-show current ip in help file
-
 log transaction to file system
 get UTC time for logs
 write log header to file
@@ -37,7 +35,34 @@ for key in dict.keys()
 ####################################
 
 
-helpFile = '\n\r---------------------------\n\r'+ NAME + ' v' + VERSION + """
+## TURN ON CONNECTION TO IDIGI ##
+def idigiOn():
+    success,response = digicli.digicli("set mgmtconnection conntype=client connenabled=on clntreconntimeout=60 svraddr1=en://developer.idigi.com")
+    if success==False:
+        print  "iDigi settings failed: " + str(response)
+    else:
+        print "iDigi settings succeeded. " + str(response)
+    return success
+
+## OBTAIN XBEE VERSION ##
+def getXBeeVersion():
+    success, response = digicli.digicli('display xbee address')
+    if success:
+        for line in response:
+            if line.find('  firmware_version (VR): 0x')>=0:
+                return line[27:31]
+    return '0000'
+
+## OBTAIN LOCAL IP ADDRESS ##
+def getIPAddr():
+    success, response = digicli.digicli('show network')
+    if success:
+        for line in response:
+            if line.find('  ipaddress          : ')>=0:
+                return line[23:37].strip()
+    return '000.000.000.000'
+
+helpFile = '\n\r---------------------------\n\r'+ NAME + ' v' + VERSION + '  IP: ' + getIPAddr() + """
 \r  by Rob Faludi <faludi.com> and Ted Hayes <log.liminastudio.com>\r
 \r
 ARGUMENTS:\r
@@ -67,23 +92,6 @@ USE:\r
   XBee I/O into a database\r
 ---------------------------\r
 """
-
-## TURN ON CONNECTION TO IDIGI ##
-def idigiOn():
-    success,response = digicli.digicli("set mgmtconnection conntype=client connenabled=on clntreconntimeout=60 svraddr1=en://developer.idigi.com")
-    if success==False:
-        print  "iDigi settings failed: " + str(response)
-    else:
-        print "iDigi settings succeeded. " + str(response)
-    return success
-
-def getXBeeVersion():
-    success, response = digicli.digicli('display xbee address')
-    if success:
-        for line in response:
-            if line.find('  firmware_version (VR): 0x')>=0:
-                return line[27:31]
-    return '0000'
 
 
 print 'Initializing URL calls...'
