@@ -1,5 +1,5 @@
 NAME = 'ZigBee Internet Gateway (zig)'
-VERSION = '1.00a35'
+VERSION = '1.00a36'
 TIMEOUT = 0                             # default length of time (s) before main loop automatically times out, 0 runs forever
 SLEEP_DUR = 0.00                        # sleep delay
 TERMINATOR = "\r"                       # command terminator byte
@@ -41,7 +41,7 @@ def idigiOn():
     if success==False:
         print  "iDigi settings failed: " + str(response)
     else:
-        print "iDigi settings succeeded. " + str(response)
+        print "iDigi settings succeeded. "
     return success
 
 ## OBTAIN XBEE VERSION ##
@@ -61,6 +61,15 @@ def getIPAddr():
             if line.find('  ipaddress          : ')>=0:
                 return line[23:37].strip()
     return '000.000.000.000'
+
+## SET XBEE PAN ID ##
+def setPANID(panID):
+    success,response = digicli.digicli('set xbee ID=' + str(hex(panID)))
+    if success==False:
+        print  "xbee pan setting failed: " + str(response)
+    else:
+        print "xbee pan set."
+    return success
 
 helpFile = '\n\r---------------------------\n\r'+ NAME + ' v' + VERSION + '  IP: ' + getIPAddr() + """
 \r  by Rob Faludi <faludi.com> and Ted Hayes <log.liminastudio.com>\r
@@ -100,6 +109,9 @@ print '  ...done.'
 
 # Turn on iDigi connections
 idigiOn()
+
+# set PAN ID
+setPANID(0xAAAA)
 
 # Get radio hardware version
 response = getXBeeVersion()
