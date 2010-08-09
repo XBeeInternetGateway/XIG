@@ -62,14 +62,24 @@ def getIPAddr():
                 return line[23:37].strip()
     return '000.000.000.000'
 
-## SET XBEE PAN ID ##
+## SET PAN ID ##
 def setPANID(panID):
     success,response = digicli.digicli('set xbee ID=' + str(hex(panID)))
     if success==False:
-        print  "xbee pan setting failed: " + str(response)
+        print  "pan setting failed: " + str(response)
     else:
-        print "xbee pan set."
+        print "pan set."
     return success
+
+## SET GATEWAY NODE IDENTIFIER ##
+def setNodeID(nodeID):
+    success,response = digicli.digicli('set xbee NI=' + str(nodeID))
+    if success==False:
+        print  "nodeID setting failed: " + str(response)
+    else:
+        print "nodeID set."
+    return success
+
 
 helpFile = '\n\r---------------------------\n\r'+ NAME + ' v' + VERSION + '  IP: ' + getIPAddr() + """
 \r  by Rob Faludi <faludi.com> and Ted Hayes <log.liminastudio.com>\r
@@ -112,6 +122,7 @@ idigiOn()
 
 # set PAN ID
 setPANID(0xAAAA)
+setNodeID("ZIG GATEWAY")
 
 # Get radio hardware version
 response = getXBeeVersion()
