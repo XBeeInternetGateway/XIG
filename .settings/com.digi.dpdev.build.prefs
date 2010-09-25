@@ -1,9 +1,9 @@
-#Mon Aug 09 18:16:50 EDT 2010
+#Sun Sep 19 08:48:13 CEST 2010
 IP=10.0.1.227
 compile_sources=true
 device=ConnectPort X4
 eclipse.preferences.version=1
 entry_point=src\\xig.py
-remote_config_name=ConnectPort X5
+remote_config_name=Rob's X4
 remove_docstrings=true
 use_current_remote_config=true

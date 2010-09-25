@@ -496,7 +496,10 @@ class HTTPResponse:
                 i = line.find(';')
                 if i >= 0:
                     line = line[:i] # strip chunk-extensions
-                chunk_left = int(line, 16)
+                try:
+                    chunk_left = int(line, 16)
+                except ValueError:
+                    continue
                 if chunk_left == 0:
                     break
             if amt is None:
@@ -521,8 +524,8 @@ class HTTPResponse:
         # read and discard trailer up to the CRLF terminator
         ### note: we shouldn't have any trailers!
         while True:
-            line = self.fp.readline()
-            if line == '\r\n':
+            line = self.fp.readline() 
+            if line.strip() == '':
                 break
 
         # we read everything; close the "file"
