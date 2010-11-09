@@ -171,7 +171,6 @@ class HTTPSession(AbstractSession):
         
     def read(self, sd):
         read_amt = self.__max_buf_size - len(self.__write_buf)
-        print "CAN READ: %d read_amt" % read_amt
         if read_amt <= 0:
             return 0
         

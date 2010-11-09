@@ -5,9 +5,9 @@ Created on Sep 17, 2010
 '''
 
 ## Global String Constants
-NAME = "XBee Internet Gateway (xig)"
+NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 ## Global Configuration Constants
 # Global blocking operation timeout, including connect times
@@ -29,7 +29,7 @@ APP_ARCHIVE = "WEB/python/_xig.zip"
 sys.path.insert(0, APP_ARCHIVE)
 
 # additional standard library module imports
-import struct, errno, string, random, shlex
+import struct, errno, string, random, shlex, time
 from copy import copy
 from socket import *
 from select import *
@@ -79,7 +79,7 @@ class Xig(object):
         self.helpfile = (string.Template(HELPFILE_TEMPLATE)
                            .substitute(appName=NAME, appVersion=VERSION,
                                         ipAddr=self.getLocalIP()))
-        self.helpfile.replace('\n', '\r\n')
+        self.helpfile = self.helpfile.replace('\n', '\r\n')
         self.__quit_flag = False
         self.__io_kernel = XigIOKernel(xig_core=self)
 
@@ -114,8 +114,10 @@ class Xig(object):
         return GLOBAL_MAX_BUF_SIZE
                     
     def go(self):
+        print "XIG startup complete, ready to serve requests."
         while not self.__quit_flag:
             self.__io_kernel.ioLoop(timeout=None)
+            #time.sleep(1)
         # run one last time, with feeling:
         self.__io_kernel.ioLoop(timeout=5.0)
         self.__io_kernel.shutdown()
@@ -162,12 +164,179 @@ class XigInactiveSessionCommandParser(object):
         return cmds
 
         
+class XBeeXmitStack(object):
+    
+    DEFAULT_RETRIES = 3             # total retries before failing a transmit
+    MAX_OUTSTANDING = 1             # total outstanding xmits for single stn
+    MAX_TOTAL_OUTSTANDING = 3       # maximum total outstanding xmits
 
+    class XmitRequest(object):
+        STATE_QUEUED = 0
+        STATE_OUTSTANDING = 1
+        
+        def __init__(self, buf, flags, addr, xmit_id):
+            self.retries_remaining = XBeeXmitStack.DEFAULT_RETRIES
+            self.buf = buf
+            self.flags = flags
+            self.addr = addr[0:5] + (xmit_id,)
+            self.xmit_id = xmit_id
+            self.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
+            
+    
+    class XmitTable(object):
+        def __init__(self):
+            self.__table = {}
+
+        def queue(self, xmit_req):
+            if type(xmit_req) is not XBeeXmitStack.XmitRequest:
+                raise TypeError, "xmit_req must be XBeeXmitStack.XmitRequest object"
+            
+            if xmit_req.addr[0] not in self.__table:
+                self.__table[xmit_req.addr[0]] = []
+            self.__table[xmit_req.addr[0]].append(xmit_req)
+            
+        def generate_tx_queue(self):
+            dest_list = self.__table.keys()
+            random.shuffle(dest_list)
+            # Copy table, carefully controlling references:
+            # (we are only copying references to the list objects here)
+            table_copy = {}
+            for dest in dest_list:
+                table_copy[dest] = copy(self.__table[dest])
+                
+            while len(dest_list) != 0:
+                for dest in copy(dest_list):
+                    xmit_req = table_copy[dest].pop(0)
+                    if (xmit_req.state ==
+                        XBeeXmitStack.XmitRequest.STATE_OUTSTANDING):
+                        # this destination has no more packets to send
+                        dest_list.remove(dest)
+                        continue
+                    if len(table_copy[dest]) == 0:
+                        dest_list.remove(dest)
+                    yield xmit_req
+
+        def num_entries_for_addr(self, addr):
+            try:
+                return len(self.__table[addr[0]])
+            except KeyError:
+                return 0
+
+        def num_entries(self):
+            return sum(map(lambda k: len(self.__table[k]),
+                           self.__table.keys()))
+            
+        def find_xmit_req(self, xmit_id):
+            for k in self.__table.keys():
+                q = filter(lambda xr: xr.xmit_id == xmit_id,
+                           self.__table[k])
+                if len(q):
+                    return q[0]
+            return None
+        
+        def expunge(self, xmit_id):
+            xmit_req = self.find_xmit_req(xmit_id)
+            hw_addr = xmit_req.addr[0]
+            self.__table[hw_addr].remove(xmit_req)
+            if len(self.__table[hw_addr]) == 0:
+                del(self.__table[hw_addr])
+
+    class TooManyOutstandingRequests(Exception):
+        pass
+            
+    def __init__(self, xig_core, xbee_sd):
+        self.__xbee_sd = xbee_sd
+        self.__xmit_id_set = set(range(1,256))        
+        self.__xmit_table = XBeeXmitStack.XmitTable()
+        
+    def sendto(self, buf, flags, addr):
+        # See if we can take a new request:
+        if (self.__xmit_table.num_entries_for_addr(addr) >= 
+                XBeeXmitStack.MAX_OUTSTANDING or
+                    self.__xmit_table.num_entries() >= 
+                        XBeeXmitStack.MAX_TOTAL_OUTSTANDING):
+            # No, raise exception
+            # print "XMIT too many entries (%d)" % self.__xmit_table.num_entries()
+            raise XBeeXmitStack.TooManyOutstandingRequests
+        
+        # Create new request
+        self.__xmit_table.queue(
+            XBeeXmitStack.XmitRequest(buf, flags, addr, self.__xmit_id_set.pop()))
+        return len(buf) 
+        
+    def xmit(self):
+        for xmit_req in self.__xmit_table.generate_tx_queue():
+            # print "XMIT write len %d to XBee" % len(xmit_req.buf)
+            # Take care to strip off any transmit option bits:
+            # print "XMIT dest addr %s" % repr(xmit_req.addr)
+            print "XMIT SEND: to %s (id = %d)" % (repr(xmit_req.addr[0:4]), xmit_req.addr[5])
+            count = self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr)
+            # print "XMIT wrote len %d to XBee" % count
+            xmit_req.state = XBeeXmitStack.XmitRequest.STATE_OUTSTANDING
+            
+    def tx_status_recv(self, buf, addr):
+        """\
+        Process a TX status frame.
+
+        Performs internal accounting.
+        """
+
+        tx_status = 0
+        cluster_id = addr[3]
+        xmit_id = addr[5]
+        xmit_req = self.__xmit_table.find_xmit_req(xmit_id)
+        
+        if xmit_req is None:
+            return
+     
+    
+        if xmit_id < 1:
+            print "XMIT FAIL: frame is not TX Status frame!"
+    
+        if cluster_id == 0x89:
+            # X-API transmit status frame:
+            print "XMIT INFO: X-API TX Status (id = %d)" % xmit_id
+            tx_status = ord(buf[2])
+        elif cluster_id == 0x8b:
+            # X-API ZigBee transmit status frame:
+            print "XMIT INFO: X-API ZigBee TX Status (id = %d)" % xmit_id
+            tx_status = ord(buf[5])
+        elif cluster_id == 0:
+            # XBee driver status indication:
+            print "XMIT INFO: XBee driver status indication (id = %d)" % xmit_id
+            tx_status = struct.unpack("i", buf)[0]
+        else:
+            raise ValueError, (
+                "XMIT FAIL: unknown status indication frame format (id = %d)" % (
+                    xmit_id)) 
+    
+        if tx_status == 0:
+            # Transmission successful!
+            # Return xmit id to set:
+            print "XMIT GOOD: tx_status (id = %d)" % xmit_id
+            self.__xmit_id_set.add(xmit_id)
+            self.__xmit_table.expunge(xmit_id)
+            return
+        
+        # Bad TX status!
+        xmit_req.retries_remaining -= 1
+        if xmit_req.retries_remaining <= 0:
+            print "XMIT FAIL: xmit to %s FAILED permanently with tx_status = 0x%08x (%d)" % (
+                addr[0], tx_status, tx_status) 
+            self.__xmit_id_set.add(xmit_id)
+            self.__xmit_table.expunge(xmit_id)
+            return
+        
+        # Mark TX for retry:
+        print "XMIT FAIL: to %s FAILED with tx status = 0x%02x, will retry." % (
+            addr[0], tx_status)            
+        xmit_req.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
+                    
 
 class XigIOKernel(object):
     XBEE_S1_MAX_PAYLOAD = 100
     XBEE_S23_MAX_PAYLOAD = 72
-    XBEE_MIN_PAYLOAD = XBEE_S23_MAX_PAYLOAD
+    XBEE_MIN_PAYLOAD = 48
     
     def __init__(self, xig_core):
         self.__core = xig_core
@@ -191,7 +360,15 @@ class XigIOKernel(object):
                 self.__xig_sd_max_io_sz = self.XBEE_S1_MAX_PAYLOAD
             elif xbee_series == '2' or xbee_series == '3':
                 bind_addr = ('', 0xe8, 0, 0)
-                self.__xig_sd_max_io_sz = self.XBEE_S23_MAX_PAYLOAD
+                try:
+                    self.__xig_sd_max_io_sz = struct.unpack(
+                        "B", xbee.ddo_get_param(None, 'NP'))[0]
+                except:
+                    self.__xig_sd_max_io_sz = self.XBEE_S23_MAX_PAYLOAD
+                source_routing_enabled = struct.unpack("B",
+                    xbee.ddo_get_param(None, 'AR'))[0] != 0xff
+                if source_routing_enabled:
+                    self.__xig_sd_max_io_sz -= 20
             else:
                 bind_addr = ('', 0xe8, 0, 0)
                 self.__xig_sd_max_io_sz = self.XBEE_MIN_PAYLOAD
@@ -203,8 +380,14 @@ class XigIOKernel(object):
             self.__xig_sd_max_io_sz = self.XBEE_MIN_PAYLOAD
             self.__xbee_sd.bind(('', XBEE_SIM_UDP_PORT))
 
+        print "XBee MTU = %d bytes" % (self.__xig_sd_max_io_sz)
         # Put XBee socket into non-blocking mode:
         self.__xbee_sd.setblocking(0)
+        # Enable XBee TX_STATUS reporting:
+        self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
+        
+        # Initialize XBeeXmitStack instance:
+        self.__xbee_xmit_stack = XBeeXmitStack(self, self.__xbee_sd)
 
 
     def __getXBeeVersion(self):
@@ -252,6 +435,8 @@ class XigIOKernel(object):
         if self.__xbee_sd in rl:
             rl.remove(self.__xbee_sd)
             buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_io_sz)
+            self.__xbee_xmit_stack.tx_status_recv(buf, addr)
+            print "RECV: %d bytes from %s" % (len(buf), repr(addr[0:4]))
             if addr in self.__active_sessions:
                 # data is destined to session
                 self.__active_sessions[addr].appendXBeeToSessionBuffer(buf)
@@ -272,12 +457,15 @@ class XigIOKernel(object):
             random.shuffle(pending_data_to_xbee_sessions)
             # Try a single write from all active sessions until we'd block:
             for sess in pending_data_to_xbee_sessions:
+                buf = sess.getSessionToXBeeBuffer()[0:self.__xig_sd_max_io_sz]
                 try:
-                    buf = sess.getSessionToXBeeBuffer()[0:self.__xig_sd_max_io_sz]
-                    #print "IO write len %d to XBee" % len(buf)
-                    count = self.__xbee_sd.sendto(buf, 0, sess.getXBeeAddr())
-                    print "IO wrote len %d to XBee" % count
+                    count = self.__xbee_xmit_stack.sendto(buf, 0, sess.getXBeeAddr())
                     sess.accountSessionToXBeeBuffer(count)
+                except XBeeXmitStack.TooManyOutstandingRequests:
+                    pass
+                
+                try:
+                    self.__xbee_xmit_stack.xmit()
                 except error, why:
                     # TODO: handle gracefully
                     if why[0] != errno.EWOULDBLOCK:
@@ -296,6 +484,8 @@ class XigIOKernel(object):
             for xcommand in new_xcommands:
                 for session_class in self.__session_classes:
 #                    print "Trying: '%s' on '%s'" % (xcommand.command, session_class.__name__)
+                    # Take care to strip off XBee option bits:
+                    addr = addr[0:4] + (0,0)
                     sess = session_class.handleSessionCommand(
                                 self.__core, xcommand.command, addr)
                     if sess is not None:
@@ -317,3 +507,4 @@ def main():
 if __name__ == "__main__":
     ret = main()
     sys.exit(ret)
+

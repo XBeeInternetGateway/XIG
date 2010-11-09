@@ -13,9 +13,8 @@ class XigSession(AbstractSession):
     COMMAND_QUIT  = 0x3
     
     def __init__(self, xig_core, url, xbee_addr):
-        self.__core = xig_core
+        self.__core = xig_core 
         self.__xbee_addr = xbee_addr
-        
         self.__write_buf = ""
         self.__read_buf = ""
         self.__command = XigSession.COMMAND_NONE

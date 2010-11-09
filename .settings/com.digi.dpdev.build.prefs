@@ -1,5 +1,5 @@
-#Sun Sep 19 08:48:13 CEST 2010
-IP=10.0.1.227
+#Sun Oct 10 17:30:52 CDT 2010
+IP=192.168.42.162
 compile_sources=true
 device=ConnectPort X4
 eclipse.preferences.version=1
