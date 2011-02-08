@@ -7,7 +7,7 @@ Created on Sep 17, 2010
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.2.0"
+VERSION = "1.1.1"
 
 ## Global Configuration Constants
 # Global blocking operation timeout, including connect times

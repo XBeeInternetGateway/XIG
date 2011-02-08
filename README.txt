@@ -118,6 +118,15 @@ o  The following URL schemes are not yet supported (help contribute!):
 
 V. Release History
 
+2011/02/08 - XIG v1.1.1
+
+Two significant bug fixes. 
+
+Fixes issue #4  "XIG stops responding after invalid URL entered"
+Fixes bug reported by e-mail where URL elements including and after
+'?' character in query string are ignored.
+ 
+
 2010/11/17 - XIG v1.1.0
 
 All transmissions from the ConnectPort gateway to destination XBees are

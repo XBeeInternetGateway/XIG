@@ -38,7 +38,11 @@ class HTTPSession(AbstractSession):
         
         self.__urlScheme = parsedUrl[0]
         self.__urlNetLoc = parsedUrl[1]
-        self.__urlPath = parsedUrl[2] 
+        self.__urlPath = parsedUrl[2]
+        if len(parsedUrl[3]):
+            self.__urlPath += '?' + parsedUrl[3]
+        if len(parsedUrl[4]):
+            self.__urlPath += '#' + parsedUrl[4] 
         self.__urlUsername = None
         self.__urlPassword = ""
         
@@ -49,8 +53,12 @@ class HTTPSession(AbstractSession):
             self.__urlUsername, self.__urlPassword = self.__urlUsername.split(':')
 
         # Perform HTTP connection:
-        self.__connect()
-        
+        try:
+            self.__connect()
+        except httplib.InvalidURL:
+            self.__do_error("unable to perform HTTP request; invalid URL")
+
+                    
     def __connect(self):
         if self.__urlScheme == "https":
             # TODO: connect timeout
