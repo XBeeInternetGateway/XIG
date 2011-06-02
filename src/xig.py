@@ -7,7 +7,7 @@ Created on Sep 17, 2010
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.1.1"
+VERSION = "1.2.0"
 
 ## Global Configuration Constants
 # Global blocking operation timeout, including connect times
@@ -35,7 +35,9 @@ from socket import *
 from select import *
 
 # Digi specific library module imports
+DIGI_PLATFORM_FLAG = False
 if sys.platform.startswith('digi'):
+    DIGI_PLATFORM_FLAG = True
     import rci, xbee
     
 # XIG Library imports
@@ -53,25 +55,23 @@ COMMANDS:
  All commands are CR "\\r" or NL "\\n" delimited, except where noted.
  help or xig://help:   displays this file
  quit or xig://quit:   quits program
- abort:                aborts the current session
+ abort or xig://abort: aborts the current session
+ time or xig://time:   prints the time in ISO format
 
  http://<host/path> retrieves a URL
  https://<host/path> retrieves a secure URL 
  http://<user:pass@host/path> retrieves a URL using username and password
  https://<user:pass@host/path> retrieves a URL using username and password 
 
-USE:
- The recommended speed is 115200 baud which can be set with ATBD7
- Lower baud rates may work if you are receiving short responses
-
+NOTES:
+ 
  The following formats are NOT yet supported:
 
   ftp://<host/path>
   ftp://<username:password@host/path>  
-  telnet://<host:port>
+  telnet://<host:port> / tcp://host:port
   mailto:<addr@host>
   
-
 """
 
 class Xig(object):
@@ -180,8 +180,7 @@ class XBeeXmitStack(object):
             self.flags = flags
             self.addr = addr[0:5] + (xmit_id,)
             self.xmit_id = xmit_id
-            self.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
-            
+            self.state = XBeeXmitStack.XmitRequest.STATE_QUEUED          
     
     class XmitTable(object):
         def __init__(self):
@@ -248,6 +247,11 @@ class XBeeXmitStack(object):
         self.__xbee_sd = xbee_sd
         self.__xmit_id_set = set(range(1,256))        
         self.__xmit_table = XBeeXmitStack.XmitTable()
+        
+        if not DIGI_PLATFORM_FLAG:
+            self.tx_status_recv = self._sim_tx_status_recv
+            self.sendto = self._sim_sendto
+            self.xmit = self._sim_xmit
         
     def sendto(self, buf, flags, addr):
         # See if we can take a new request:
@@ -331,7 +335,17 @@ class XBeeXmitStack(object):
         print "XMIT FAIL: to %s FAILED with tx status = 0x%02x, will retry." % (
             addr[0], tx_status)            
         xmit_req.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
-                    
+        
+    # The below methods are used when the XIG is simulated on a PC,
+    # these methods get re-bound in __init__ if a non-ConnectPort environment
+    # is detected:
+    def _sim_tx_status_recv(self, buf, addr):
+        print "XBeeXmitStack._sim_tx_status_recv()"
+    def _sim_sendto(self, buf, flags, addr):
+        print "XBeeXmitStack._sim_sendto()"
+        return self.__xbee_sd.sendto(buf, flags, addr)
+    def _sim_xmit(self):
+        print "XBeeXmitStack._sim_xmit()"
 
 class XigIOKernel(object):
     XBEE_S1_MAX_PAYLOAD = 100
@@ -349,7 +363,7 @@ class XigIOKernel(object):
         self.__xig_sd = None
         self.__xig_sd_max_io_sz = self.XBEE_MIN_PAYLOAD
         
-        if sys.platform.startswith('digi'):
+        if DIGI_PLATFORM_FLAG:
             self.__xbee_sd = socket(AF_XBEE, SOCK_DGRAM, XBS_PROT_TRANSPORT)
             xbee_version = self.__getXBeeVersion()
             xbee_series = xbee_version[0]
@@ -372,7 +386,10 @@ class XigIOKernel(object):
             else:
                 bind_addr = ('', 0xe8, 0, 0)
                 self.__xig_sd_max_io_sz = self.XBEE_MIN_PAYLOAD
-            self.__xbee_sd.bind(bind_addr)            
+            self.__xbee_sd.bind(bind_addr)
+            
+            # Enable XBee TX_STATUS reporting:
+            self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
         else:
             print "Using PC-based UDP simulation mode on port %d..." % (
               XBEE_SIM_UDP_PORT)
@@ -383,8 +400,6 @@ class XigIOKernel(object):
         print "XBee MTU = %d bytes" % (self.__xig_sd_max_io_sz)
         # Put XBee socket into non-blocking mode:
         self.__xbee_sd.setblocking(0)
-        # Enable XBee TX_STATUS reporting:
-        self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
         
         # Initialize XBeeXmitStack instance:
         self.__xbee_xmit_stack = XBeeXmitStack(self, self.__xbee_sd)
@@ -484,8 +499,9 @@ class XigIOKernel(object):
             for xcommand in new_xcommands:
                 for session_class in self.__session_classes:
 #                    print "Trying: '%s' on '%s'" % (xcommand.command, session_class.__name__)
-                    # Take care to strip off XBee option bits:
-                    addr = addr[0:4] + (0,0)
+                    if DIGI_PLATFORM_FLAG:
+                        # Take care to strip off XBee option bits:
+                        addr = addr[0:4] + (0,0)
                     sess = session_class.handleSessionCommand(
                                 self.__core, xcommand.command, addr)
                     if sess is not None:

@@ -99,6 +99,7 @@ There are other commands available when using XIG:
      help or xig://help:   displays this file
      quit or xig://quit:   quits program
      abort or xig://abort: aborts the current session
+     time or xig://time:   returns the current time in ISO format
     
      http://<host/path> retrieves a URL
      https://<host/path> retrieves a secure URL 
@@ -117,6 +118,19 @@ o  The following URL schemes are not yet supported (help contribute!):
 
 
 V. Release History
+
+2011/05/30 - XIG v1.2.0
+
+Completes feature request input as issue #5: "Query for NTP time
+directly to Gateway" XIG can now return the current time understood
+by the ConnectPort X2 gateway by sending XIG the xig://time command.
+
+Minor code refactoring updates including common modules moved into
+their own library directory
+
+Re-introduction of the ability for the XIG to be run on a PC for
+UDP simulation mode.  Useful for testing with the netcat utility.
+
 
 2011/02/08 - XIG v1.1.1
 

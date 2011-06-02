@@ -1,9 +1,14 @@
+"""
+HTTP Session implementation.  Commmunicates with the World-Wide Web.
+Handles all http:// and https:// prefixed commands.
+"""
+
 import errno
 import urlparse
 import base64
 import socket
 
-import digi_httplib as httplib
+import library.digi_httplib as httplib
 
 from abstract import AbstractSession
 
