@@ -97,14 +97,22 @@ class HTTPSession(AbstractSession):
                 self.__httpResponse.status, self.__httpResponse.reason)
         
         if self.__httpConn.sock is None:
+            print "MOE"
             # Since socket is closed, read on file object will not block:
             self.__write_buf += self.__httpResponse.read()
-            self.__state = HTTPSession.STATE_DRAIN
+            if len(self.__write_buf) == 0:
+                self.__state = HTTPSession.STATE_FINISHED
+            else:
+                self.__state = HTTPSession.STATE_DRAIN
             return
-            
+
         # configure socket for non-blocking I/O operation:
         self.__httpConn.sock.setblocking(0)
         self.__state = HTTPSession.STATE_CONNECTED
+                
+        if self.__httpResponse.length == 0:
+            self.__do_error("0 length response from server")
+            return
 
 
     def __do_error(self, error_msg):
@@ -201,8 +209,9 @@ class HTTPSession(AbstractSession):
             self.__state = HTTPSession.STATE_DRAIN
             self.close()
             
-        if (len(buf) == 0 or self.__httpResponse.length == 0 or
-            self.__httpResponse.isclosed()):
+        if (len(buf) == 0 or 
+            self.__httpResponse.isclosed() or
+            self.__httpResponse.length == 0):
             self.__state = HTTPSession.STATE_DRAIN
         self.__write_buf += buf
         
