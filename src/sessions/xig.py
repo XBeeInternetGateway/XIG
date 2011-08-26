@@ -7,8 +7,9 @@ from library import time_helpers
 
 class XigSession(AbstractSession):
     """\
-    An abstract Internet session, used to facilitate the gatewaying of
-    data between the Internet domain and an XBee node.
+    XigSession is the default session.  UART data sent to the gateway 
+    forming complete URLs will be attempted to be hangled by instances of
+    this session object.
     """
     
     def __init__(self, xig_core, url, xbee_addr):

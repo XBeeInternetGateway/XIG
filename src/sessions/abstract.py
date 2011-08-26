@@ -17,6 +17,19 @@ class AbstractSession(object):
         """
         raise Exception, "not implemented" 
 
+    @staticmethod
+    def commandHelpText():
+        """\
+            Return a string containing lines showing example what URL
+            syntax the session supports.
+            
+            For example:
+            
+            http://<host/path> retrieves a URL
+            https://<host/path> retrieves a secure URL
+        """  
+        raise Exception, "not implemented"
+
     def close(self):
         raise Exception, "not implemented"
 

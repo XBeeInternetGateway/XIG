@@ -24,7 +24,7 @@ class HTTPSession(AbstractSession):
     STATE_DRAIN     = 0x2
     STATE_FINISHED  = 0x3
     
-    def __init__(self, xig_core, url, xbee_addr):
+    def __init__(self, xig_core, url, xbee_addr, ignore_response=False):
         
         self.__core = xig_core
         self.__write_buf = ""
@@ -59,12 +59,12 @@ class HTTPSession(AbstractSession):
 
         # Perform HTTP connection:
         try:
-            self.__connect()
+            self.__connect(ignore_response)
         except httplib.InvalidURL:
             self.__do_error("unable to perform HTTP request; invalid URL")
 
                     
-    def __connect(self):
+    def __connect(self, ignore_response=False):
         if self.__urlScheme == "https":
             # TODO: connect timeout
             self.__httpConn = httplib.HTTPSConnection(self.__urlNetLoc)            
@@ -84,11 +84,24 @@ class HTTPSession(AbstractSession):
         try:
             self.__httpConn.request(self.__httpMethod, self.__urlPath,
                                   self.__httpRequest, headers)
+            print "HTTP: Successful %s of %s" % (self.__httpMethod,
+                                                 self.__urlPath)
         except socket.gaierror, e:
-            self.__do_error("unable to perform HTTP request '%s'" % str(e))
+            if not ignore_response:
+                self.__do_error("unable to perform HTTP request '%s'" % str(e))
+            else:
+                self.__state = HTTPSession.STATE_FINISHED
             return
         except socket.error, e:
-            self.__do_error("unable to perform HTTP request '%s'" % str(e))
+            if not ignore_response:
+                self.__do_error("unable to perform HTTP request '%s'" % str(e))
+            else:
+                self.__state = HTTPSession.STATE_FINISHED
+            return
+        
+        if ignore_response:
+            self.close()
+            self.__state = HTTPSession.STATE_FINISHED
             return
             
         self.__httpResponse = self.__httpConn.getresponse()
@@ -97,7 +110,6 @@ class HTTPSession(AbstractSession):
                 self.__httpResponse.status, self.__httpResponse.reason)
         
         if self.__httpConn.sock is None:
-            print "MOE"
             # Since socket is closed, read on file object will not block:
             self.__write_buf += self.__httpResponse.read()
             if len(self.__write_buf) == 0:
@@ -125,15 +137,21 @@ class HTTPSession(AbstractSession):
         """
         Attempt to handle an in-session command given by cmd_str from
         xbee_addr
-        
-        If cmd_str is valid, return True.  If the command is not valid
-        (or incomplete), return False.
         """
         
         if cmd_str.startswith("http://") or cmd_str.startswith("https://"):
             return HTTPSession(xig_core, cmd_str, xbee_addr)
         
         return None
+  
+    @staticmethod
+    def commandHelpText():
+        return """\
+ http://<host/path>: retrieves a URL
+ https://<host/path>: retrieves a secure URL 
+ http://<user:pass@host/path>: retrieves a URL using username and password
+ https://<user:pass@host/path>: retrieves a URL using username and password
+"""
     
     def close(self):
         try:
