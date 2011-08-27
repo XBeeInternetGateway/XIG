@@ -561,7 +561,10 @@ class XigIOKernel(object):
             If the given packet was an I/O packet, returns True.
             Else, returns False.
         """
-        if addr[2:4] != (0xc105, 0x92):
+        
+        # Matches Series 2 and Series 1 I/O packets, respectively:
+        if (addr[2:4] != (0xc105, 0x92) and
+            addr[2:4] != (0x0, 0x92)):
             return False
         
         if DIGI_PLATFORM_FLAG:
