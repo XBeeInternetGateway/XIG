@@ -21,10 +21,14 @@ if sys.platform is None:
     import http
     import idigi_rci
     import io_sample
+    import udp
+    import osc
 
 # Add to this map if you create more sessions: 
 SESSION_MODEL_CLASS_MAP = {
     "http": ["HTTPSession"],
     "idigi_rci": ["iDigiRCIAutostartSession", "iDigiRCISession"],
     "io_sample": ["ioSampleSessionAutostartSession"],
+    "udp": ["UDPSession"],
+    "osc": ["OSCSession"],
 }

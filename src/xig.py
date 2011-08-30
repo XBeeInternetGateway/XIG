@@ -2,12 +2,14 @@
 Created on Sep 17, 2010
 
 @author: jordanh
+
+See XIG README.txt for more information.
 '''
 
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.3.0a1"
+VERSION = "1.3.0a2"
 
 ## Global Configuration Constants
 # Global blocking operation timeout, including connect times
@@ -42,6 +44,10 @@ DIGI_PLATFORM_FLAG = False
 if sys.platform.startswith('digi'):
     DIGI_PLATFORM_FLAG = True
     import rci, xbee
+
+# Windows specific library module imports:
+if sys.platform.startswith('win'):
+    from library.win_socketpair import SocketPair as socketpair
     
 # XIG Library imports
 import sessions
@@ -183,7 +189,16 @@ class Xig(object):
         # run one last time, with feeling:
         self.__io_kernel.ioLoop(timeout=5.0)
         self.__io_kernel.shutdown()
+
+        # From Digi support, to prevent the dreaded:
+        # "zipimport.ZipImportError: bad local file header in WEB/python/_xig.zip" error
+        import zipimport
+        syspath_backup = list(sys.path)
+        zipimport._zip_directory_cache.clear()
+        sys.path = syspath_backup
+        
         return 0
+
 
     def enqueueSession(self, session):
         """\
@@ -526,6 +541,9 @@ class XigIOKernel(object):
     def __getXBeeVersion(self):
         return "%04X" % struct.unpack(">H", xbee.ddo_get_param(None, 'VR'))[0]
     
+    def __homogenizeXBeeSocketAddr(self, xbee_socket_addr):
+        return xbee_socket_addr[0:4] + (0,0)
+    
     def xbeeAddrFromHwAddr(self, hw_addr,
                                ep=None, profile=None, cluster=None):
         xbee_series = self.__xbee_version[0]
@@ -634,6 +652,7 @@ class XigIOKernel(object):
             rl.remove(self.__xbee_sd)
             buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_io_sz)
             self.__xbee_xmit_stack.tx_status_recv(buf, addr)
+            addr = self.__homogenizeXBeeSocketAddr(addr)
             print "RECV: %d bytes from %s" % (len(buf), repr(addr[0:4]))
             if self.__ioSampleHook(buf, addr):
                 pass
@@ -685,7 +704,7 @@ class XigIOKernel(object):
                 for session_class in self.__core.getSessionClasses():
                     if DIGI_PLATFORM_FLAG:
                         # Take care to strip off XBee option bits:
-                        addr = addr[0:4] + (0,0)
+                        addr = self.__homogenizeXBeeSocketAddr(addr)
                     sess = session_class.handleSessionCommand(
                                 self.__core, xcommand.command, addr)
                     if sess is not None:

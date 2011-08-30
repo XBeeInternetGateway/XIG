@@ -21,8 +21,6 @@ class ioSampleSessionAutostartSession(AbstractAutostartSession):
         self.__core = xig_core
         self.__io_sample_destination_url = getattr(
             self.__core.getConfig(), "io_sample_destination_url", None)
-        if not self.__io_sample_destination_url.endswith("/"):
-            self.__io_sample_destination_url += "/"
         self.__core.ioSampleSubcriberAdd(self.__ioSampleCallback)
 
     def helpText(self):
@@ -46,16 +44,15 @@ class ioSampleSessionAutostartSession(AbstractAutostartSession):
         dio_set = set(map(lambda d: "DIO%d" % d, range(13)))
         io_set = ad_set.union(dio_set)
         sample_set = set(sample.keys())
-        
-        # convert all analog io pin values to voltages:
-        for io_pin in ad_set.intersection(sample_set):
-            sample[io_pin] = sample_to_mv(sample[io_pin])
-        
+               
         # built URL predicate:
         url_pred = { "addr": addr[0] }
         for io_pin in io_set.intersection(sample_set):
             url_pred[io_pin] = str(int(sample[io_pin]))
-        url_pred = "?" + urlencode(url_pred)
+        if "?" in self.__io_sample_destination_url:
+            url_pred = urlencode(url_pred)
+        else:
+            url_pred = "?" + urlencode(url_pred)
         url = self.__io_sample_destination_url + url_pred
             
         # schedule HTTP session operation:

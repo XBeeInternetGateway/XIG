@@ -5,24 +5,18 @@ Created on May 31, 2011
 based on HTTPSession by jordanh
 '''
 import errno
-# use our own urlparser which knows about the osc scheme, as the standard one doesn't, even though it's compliant
-import library.urlparse2
+# use our own urlparser which knows about the osc scheme
+import library.xig_urlparse as urlparse
 import base64
 import socket
 import library.OSCClient
 
 from sessions.abstract import AbstractSession
 
-# TODO: in a more perfect world, we would have a thread q to which we could
-#       dispatch blocking operations to, such as the blocking connect which
-#       occurs in this session.  The size of the thread q could be made
-#       to be configurable and taylored to the target Digi ConnectPort target
-#       environment.
-# 
 # version 0.1, only 1 OSC server, not multiple servers
 # version 0.2, multiple OSC servers, using targets.txt file
 # 
-# May 2011, Adapted from HTTPSession by Axel Roest
+# May 2011, Adapted from UDPSession by Axel Roest
 #
 # addr = (host,port)        // tuple
 # UDPSock = socket(AF_INET,SOCK_DGRAM)
@@ -31,11 +25,7 @@ from sessions.abstract import AbstractSession
 # msg = "Whatever message goes here..."
 # OSCSock.sendto(msg,addr)
 # 
-# Problem: urlparse doesn't understand the udp:// url (funny that)
-# solution: new included revision of urlparse: urlparse2
-#
 # Current bug: OSCClient checks for reuse of the same host and switches the port to a new port on the address tuple:
-# Possible bugs (untested): what happens if a UDP packet is bigger than an XBee packet, of say 80 bytes
 
 class OSCSession(AbstractSession):
     
@@ -47,15 +37,14 @@ class OSCSession(AbstractSession):
         self.__xbee_addr = xbee_addr
         self.__max_buf_size = self.__core.getGlobalMaxBufSize() 
 
-        # this should be read from a file or website later of course
-        # OSCClient now, OSCMultiClient later
-        self.__targets = self.getTargetsfromFile("WEB/python/targets.txt")
+        # Read configuration from configuration file:
+        self.__targets = self.getTargetsFromConfig()
 
-      #  self.__oscclient = OSCClient.OSCClient()
+        # self.__oscclient = OSCClient.OSCClient()
         self.__multiclient = OSCClient.OSCMultiClient()
         
         # Parse URL:
-        parsedUrl = urlparse2.urlsplit(url)
+        parsedUrl = urlparse.urlsplit(url)
         
         # could be rewritten as self.__urlScheme = parsedUrl.scheme  etc.
         self.__urlScheme = parsedUrl[0]
@@ -116,24 +105,15 @@ class OSCSession(AbstractSession):
         self.__write_buf = "Xig-Error: " + error_msg + "\r\n"
         self.__multiclient.close()          # necessary?
     
-    def getTargetsfromFile(self, filename):
+    def getTargetsfromFile(self, filename):        
+        input_targets = getattr(self.__core.getConfig(), "osc_targets", None)
         targets = []
-        lines=[]
-        try:
-            _fin = open(filename, 'r')
-            lines = _fin.readlines()
-            _fin.close()
-        except:
-            _fin.close()
-    
-        for line in lines:
-            if '#' in line:
-                continue
-            addr,portStr = line.split(':')
+        for input_target in input_targets:
+            addr, portStr = input_target.split(':')
             addr = addr.replace(' ', '')
             port = int(portStr.replace(' ', ''))
-            targets.append( (addr,port) )
-            # print "target: '%s' port: '%d'" % (addr,port)
+            targets.append( (addr, port) )
+
         return targets
         
     @staticmethod
@@ -150,6 +130,13 @@ class OSCSession(AbstractSession):
             return OSCSession(xig_core, cmd_str, xbee_addr)
         
         return None
+
+    @staticmethod
+    def commandHelpText():
+        return """\
+ osc://host:port: initiate UDP session to remote server and port number
+"""
+
     
     def close(self):
         try:

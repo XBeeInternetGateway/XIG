@@ -3,62 +3,39 @@ Created on May 18, 2011
 
 @author: Axel Roest
 based on HTTPSession by jordanh
+
+Modified by jordanh on August 30, 2011 to fit into XIG v1.3.0
+architecture.  Sessions are now continuous until they terminate
+with xig://abort command.
 '''
-import errno
-# use our own urlparser which knows about the udp scheme, as the standard one doesn't, even though it's compliant
-import library.urlparse2
-import base64
+# use our own urlparser which knows about the udp scheme
+import library.xig_urlparse as urlparse
 import socket
 
 from sessions.abstract import AbstractSession
 
-# TODO: in a more perfect world, we would have a thread q to which we could
-#       dispatch blocking operations to, such as the blocking connect which
-#       occurs in this session.  The size of the thread q could be made
-#       to be configurable and taylored to the target Digi ConnectPort target
-#       environment.
-# 
-# May 2011, Adapted from HTTPSession by Axel Roest
-#
-# msg = "Whatever message goes here..."
-# UDPSock.sendto(msg,addr)
-# 
-# Problem: urlparse doesn't understand the udp:// url (funny that)
-# Solution: urlparse2
-#
-# Possible bugs (untested): what happens if a UDP packet is bigger than an XBee packet, of say 80 bytes
 
 class UDPSession(AbstractSession):
+    STATE_INIT           = 0x0
+    STATE_WRITING        = 0x1
+    STATE_DRAINTOXBEE    = 0x2
+    STATE_FINISHED       = 0x3
     
     def __init__(self, xig_core, url, xbee_addr):
-        
         self.__core = xig_core
-        self.__write_buf = ""
-        self.__read_buf = ""
+        self.__toxbee_buf = ""
+        self.__fromxbee_buf = ""
         self.__xbee_addr = xbee_addr
+        self.__state = UDPSession.STATE_INIT
         self.__max_buf_size = self.__core.getGlobalMaxBufSize() 
               
         # Parse URL:
-        parsedUrl = urlparse2.urlsplit(url)
-        
-        # could be rewritten as self.__urlScheme = parsedUrl.scheme  etc.
+        parsedUrl = urlparse.urlsplit(url)
         self.__urlScheme = parsedUrl[0]
         self.__urlNetLoc = parsedUrl[1]
-        self.__urlPath = parsedUrl[2]
-        if len(parsedUrl[3]):
-            self.__urlPath += '?' + parsedUrl[3]
-        if len(parsedUrl[4]):
-            self.__urlPath += '#' + parsedUrl[4] 
-        self.__urlUsername = None
-        self.__urlPassword = ""
         
-        if '@' in self.__urlNetLoc:
-            self.__urlUsername, self.__urlNetLoc = self.__urlNetLoc.split('@')
-            
-        if self.__urlUsername is not None and ':' in self.__urlUsername:
-            self.__urlUsername, self.__urlPassword = self.__urlUsername.split(':')
+        print "UDP: session to %s" % (self.__urlNetLoc)
         
-        print "starting UDP connection to [%s] %s" % ( self.__urlScheme, self.__urlNetLoc )
         # check for portnumber in url
         self.__urlPort = 0
         if ':' in self.__urlNetLoc:
@@ -66,37 +43,20 @@ class UDPSession(AbstractSession):
             self.__urlPort = int(portStr)
         
         # Perform UDP connection:
-        self.__connect()
+        self.__create_socket()
                     
-    def __connect(self):
-        if self.__urlScheme == "udp":
-            # TODO: connect timeout
-            # addr = (host,port)        // tuple
-            addr = self.__urlNetLoc, self.__urlPort
-            self.__UDPSocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-          
-        bytesSent = 0
-
+    def __create_socket(self):
+        addr = self.__urlNetLoc, self.__urlPort
         try:
-            # maybe we need to connect first (NO!), and close later?
-            bytesSent = self.__UDPSocket.sendto(self.__urlPath, addr)
-
-        except socket.gaierror, e:
-            self.__do_error("unable to perform UDP request '%s'" % str(e))
-            return
-        except socket.error, e:
-            self.__do_error("unable to perform UDP request '%s'" % str(e))
-            return
-            
-        if bytesSent != len(self.__urlPath):
-            print "UDP WARNING not all bytes sent: %d from %d" % (bytesSent, len(self.__urlPath))
-
- #       self.__UDPSocket.close()
-
+            self.__UDPSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        except:
+            self.__do_error("unable to create UDP socket")
+        self.__state = UDPSession.STATE_WRITING
             
     def __do_error(self, error_msg):
-        self.__write_buf = "Xig-Error: " + error_msg + "\r\n"
-        self.__UDPSocket.close()
+        self.__toxbee_buf = "Xig-Error: " + error_msg + "\r\n"
+        self.close()
+        self.__state = UDPSession.STATE_DRAINTOXBEE
     
     @staticmethod
     def handleSessionCommand(xig_core, cmd_str, xbee_addr):
@@ -112,17 +72,33 @@ class UDPSession(AbstractSession):
             return UDPSession(xig_core, cmd_str, xbee_addr)
         
         return None
+
+    @staticmethod
+    def commandHelpText():
+        return """\
+ udp://host:port: initiate UDP session to remote server and port number
+                  (note: session will end only by using xig://abort)
+"""
     
     def close(self):
         try:
             self.__UDPSocket.close()
         except:
             pass
-        self.__write_buf = "Xig: connection aborted\r\n"
+        self.__toxbee_buf = "Xig: connection aborted\r\n"
+        self.__state = UDPSession.STATE_DRAINTOXBEE
         
-    
     def isFinished(self):
-        return True
+        # Take this opportunity to see if we should transistion to the
+        # finished state:
+        if self.__state == UDPSession.STATE_DRAINTOXBEE:
+            if not len(self.__toxbee_buf):
+                self.__state = UDPSession.STATE_FINISHED
+                
+        if self.__state == UDPSession.STATE_FINISHED:
+            return True
+        
+        return False
     
     def getXBeeAddr(self):
         return self.__xbee_addr
@@ -131,33 +107,53 @@ class UDPSession(AbstractSession):
         return []
     
     def getWriteSockets(self):
+        if (len(self.__fromxbee_buf) and
+            self.__state == UDPSession.STATE_WRITING):
+            return ([self.__UDPSocket])
         return []
     
     def getSessionToXBeeBuffer(self):
-        return self.__write_buf
+        return self.__toxbee_buf
     
     def getXBeeToSessionBuffer(self):
-        return "" # stub to complete interface
+        return self.__fromxbee_buf
 
     def appendSessionToXBeeBuffer(self, buf):
-        self.__write_buf += buf # stub, not used
+        self.__toxbee_buf += buf
     
     def appendXBeeToSessionBuffer(self, buf):
-        self.__read_buf += buf
-        self.__read_buf = self.__read_buf.replace("\r", "\n")
-        self.__read_buf = self.__read_buf.replace("\n\n", "\n")
-        if self.__read_buf.find("abort\n") > -1:
+        self.__fromxbee_buf += buf
+        
+        if (self.__fromxbee_buf.find("xig://abort\n") > -1 or
+            self.__fromxbee_buf.find("xig://abort\r") > -1):
+            self.__fromxbee_buf = ""
             self.close()
-            self.__read_buf = ""
-        elif len(self.__read_buf) > self.__core.getGlobalMaxBufSize():
-            sidx = len(self.__read_buf) - self.__core.getGlobalMaxBufSize()
-            self.__read_buf = self.__read_buf[sidx:]
+            return
+        
+        if len(self.__fromxbee_buf) > self.__core.getGlobalMaxBufSize():
+            sidx = len(self.__fromxbee_buf) - self.__core.getGlobalMaxBufSize()
+            self.__fromxbee_buf = self.__fromxbee_buf[sidx:]
         
     def accountSessionToXBeeBuffer(self, count):
-        self.__write_buf = self.__write_buf[count:]
+        self.__toxbee_buf = self.__toxbee_buf[count:]
 
     def read(self, sd):
-        return 0
-        
-    def write(self, sd):
         return 0 # stub, this should never be called
+        
+    def write(self, sd):     
+        if self.__state != UDPSession.STATE_WRITING:
+            return 0
+        
+        write_amt = self.__max_buf_size - len(self.__fromxbee_buf)
+        if write_amt <= 0:
+            return 0
+        
+        try:
+            wrote = self.__UDPSocket.sendto(
+                        self.__fromxbee_buf[:write_amt], 0,
+                        (self.__urlNetLoc, self.__urlPort))
+            self.__fromxbee_buf = self.__fromxbee_buf[wrote:]
+        except Exception, e:
+            self.__do_error('unexpected UDP socket error "%s"') % (str(e))
+                
+        return wrote

@@ -28,7 +28,7 @@ to create your free developer account.
 The payload of the <do_command> element is JSON formatted.  The
 structure for XIG commands is the following:
 
-  <COMMAND_NAME param1="val1" param2="val2" .. />
+  <COMMAND_NAME param1="val1" param2="val2" ..>data</COMMAND_NAME>
 
 Response structure is:
 
@@ -42,7 +42,7 @@ The following commands are supported:
 
 Send data to a remote XBee:
 
-  <send_data hw_address="00:11:22:33:44:55:66:77!" data="string data" />
+  <send_data hw_address="00:11:22:33:44:55:66:77!"/>Hello!</send_data>
 
 Response:
 
@@ -50,7 +50,7 @@ Response:
    
 Send hex-encoded binary data to a remote XBee:
 
-  <send_hex_data hw_address="00:11:22:33:44:55:66:77!" hexdata="4A4B4C" />
+  <send_hexdata hw_address="00:11:22:33:44:55:66:77!">4A4B4C</send_hexdata>
                  
 Response:
 
@@ -61,10 +61,11 @@ Response:
 import sys
 import exceptions
 import threading
+from encodings import string_escape
+
 import library.digi_ElementTree as ET
 import library.xbee_addressing as xbee_addressing
 
-import time
 
 if sys.platform.startswith('digi'):
     import rci
@@ -108,9 +109,11 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         # switch on command names, unhandled command names will generate
         # an error:
         if xig_tree.tag == "send_data":
-            data = str(xig_tree.get("data")) or ""
+            data = str(xig_tree.text) or ""
+            data = data.decode("string_escape")
         elif xig_tree.tag == "send_hexdata":
-            data = str(xig_tree.get("hexdata")) or ""
+            data = str(xig_tree.text) or ""
+            data = filter(lambda c: c in "0123456789abcdef", data.lower())
             # Pythonic decode of hex data to binary string:
             try:
                 data = ''.join([chr(int(''.join(t),16)) for t in 

@@ -147,10 +147,10 @@ class HTTPSession(AbstractSession):
     @staticmethod
     def commandHelpText():
         return """\
- http://<host/path>: retrieves a URL
- https://<host/path>: retrieves a secure URL 
- http://<user:pass@host/path>: retrieves a URL using username and password
- https://<user:pass@host/path>: retrieves a URL using username and password
+ http://host/path: retrieves a URL
+ https://host/path: retrieves a secure URL 
+ http://user:pass@host/path: retrieves a URL using username and password
+ https://user:pass@host/path: retrieves a URL using username and password
 """
     
     def close(self):

@@ -82,15 +82,7 @@ def parse_is(data):
             retdir["AD%d" % currentAI] = aval
         analogmask >>= 1
         currentAI += 1
-    
-    
-    for key in _IO_MAP.keys():  # for every key in _IO_MAP  
-        if retdir.has_key(key): # if the key is in the retdir
-            for match_key in _IO_MAP.keys():  #for every OTHER key in _IO_MAP
-                #If it points to the same value (pin)
-                #Create a new key with the old key's value
-                if _IO_MAP[match_key] == _IO_MAP[key]: 
-                    retdir[match_key] = retdir[key]  
+
                                                      
     return retdir
 
