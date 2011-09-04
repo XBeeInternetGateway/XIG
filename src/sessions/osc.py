@@ -35,7 +35,7 @@ class OSCSession(AbstractSession):
         self.__write_buf = ""
         self.__read_buf = ""
         self.__xbee_addr = xbee_addr
-        self.__max_buf_size = self.__core.getGlobalMaxBufSize() 
+        self.__max_buf_size = self.__core.getConfig().global_max_buf_size 
 
         # Read configuration from configuration file:
         self.__targets = self.getTargetsFromConfig()
@@ -174,8 +174,8 @@ class OSCSession(AbstractSession):
         if self.__read_buf.find("abort\n") > -1:
             self.close()
             self.__read_buf = ""
-        elif len(self.__read_buf) > self.__core.getGlobalMaxBufSize():
-            sidx = len(self.__read_buf) - self.__core.getGlobalMaxBufSize()
+        elif len(self.__read_buf) > self.__max_buf_size:
+            sidx = len(self.__read_buf) - self.__max_buf_size
             self.__read_buf = self.__read_buf[sidx:]
         
     def accountSessionToXBeeBuffer(self, count):

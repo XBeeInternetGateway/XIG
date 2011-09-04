@@ -56,3 +56,26 @@ class XigConfig(object):
     osc_targets = [
         # "10.1.1.1:21234
     ]
+
+    ## Global Configuration Variables
+    
+    # You shouldn't need to change anything in this section unless
+    # you know what you've been doing or you've been instructed to
+    # do so.
+    
+    # Controls how long must buffers in the system may reach before
+    # they are trimmed.  This setting also happens to control the
+    # maximum length of a URL or XIG command.
+    global_max_buf_size = 256
+    
+    # Controls how many sessions are allowed to queue up for a
+    # single XBee destination.  Normally XBees only request a single
+    # session at a time but automatic services may queue up several
+    # session requests, such as the I/O service.
+    global_max_dest_session_q_len = 8
+    
+    # If the XIG is run on a PC for development or debugging purposes
+    # this setting controls which UDP port number acts as the XBee
+    # simulation.
+    xbee_sim_udp_port = 5649
+    

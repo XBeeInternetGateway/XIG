@@ -3,16 +3,18 @@ HTTP Session implementation.  Commmunicates with the World-Wide Web.
 Handles all http:// and https:// prefixed commands.
 """
 
+import sys
 import errno
 import urlparse
 import base64
 import socket
 
 import library.digi_httplib as httplib
+from library.command_parser import Command, StreamingCommandParser
 
 from abstract import AbstractSession
 
-# TODO: in a more perfect world, we would have a thread q to which we could
+# TODO: in a more perffect world, we would have a thread q to which we could
 #       dispatch blocking operations to, such as the blocking connect which
 #       occurs in this session.  The size of the thread q could be made
 #       to be configurable and taylored to the target Digi ConnectPort target
@@ -31,16 +33,23 @@ class HTTPSession(AbstractSession):
         self.__read_buf = ""
         self.__state = HTTPSession.STATE_INIT 
         self.__xbee_addr = xbee_addr
-        self.__max_buf_size = self.__core.getGlobalMaxBufSize() 
+        self.__max_buf_size = self.__core.getConfig().global_max_buf_size
+        self.__command_parser = StreamingCommandParser() 
 
         self.__httpConn = None
         self.__httpMethod = "GET"
         self.__httpRequest = ""
         self.__httpResponse = None
+        if sys.platform == "darwin":
+            self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.EAGAIN)
+        else:
+            self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.WSAEWOULDBLOCK,
+                                      errno.EAGAIN)
               
         # Parse URL:
         parsedUrl = urlparse.urlsplit(url)
         
+        self.__url = url
         self.__urlScheme = parsedUrl[0]
         self.__urlNetLoc = parsedUrl[1]
         self.__urlPath = parsedUrl[2]
@@ -62,6 +71,16 @@ class HTTPSession(AbstractSession):
             self.__connect(ignore_response)
         except httplib.InvalidURL:
             self.__do_error("unable to perform HTTP request; invalid URL")
+            
+        # Setup command parser:
+        self.__command_parser.register_command(Command("abort\r\n",
+                                                self.__commandAbortHandler))
+        self.__command_parser.register_command(Command("abort\n",
+                                                self.__commandAbortHandler))
+        self.__command_parser.register_command(Command("xig//abort\r\n",
+                                                self.__commandAbortHandler))
+        self.__command_parser.register_command(Command("xig://abort\n",
+                                                self.__commandAbortHandler))
 
                     
     def __connect(self, ignore_response=False):
@@ -84,8 +103,8 @@ class HTTPSession(AbstractSession):
         try:
             self.__httpConn.request(self.__httpMethod, self.__urlPath,
                                   self.__httpRequest, headers)
-            print "HTTP: Successful %s of %s" % (self.__httpMethod,
-                                                 self.__urlPath)
+            print "HTTP: successful %s of %s" % (self.__httpMethod,
+                                                 self.__url)
         except socket.gaierror, e:
             if not ignore_response:
                 self.__do_error("unable to perform HTTP request '%s'" % str(e))
@@ -106,7 +125,7 @@ class HTTPSession(AbstractSession):
             
         self.__httpResponse = self.__httpConn.getresponse()
         if self.__httpResponse.status != 200:
-            print "HTTP WARNING status = %d, reason = %s" % (
+            print "HTTP: WARNING status = %d, reason = %s" % (
                 self.__httpResponse.status, self.__httpResponse.reason)
         
         if self.__httpConn.sock is None:
@@ -191,49 +210,48 @@ class HTTPSession(AbstractSession):
         self.__write_buf += buf # stub, not used
     
     def appendXBeeToSessionBuffer(self, buf):
-        self.__read_buf += buf
-        self.__read_buf = self.__read_buf.replace("\r", "\n")
-        self.__read_buf = self.__read_buf.replace("\n\n", "\n")
-        if self.__read_buf.find("abort\n") > -1:
-            self.close()
-            self.__read_buf = ""
-        elif len(self.__read_buf) > self.__core.getGlobalMaxBufSize():
-            sidx = len(self.__read_buf) - self.__core.getGlobalMaxBufSize()
+        self.__read_buf += self.__command_parser.parse(buf)
+        if len(self.__read_buf) > self.__max_buf_size:
+            sidx = len(self.__read_buf) - self.__max_buf_size
             self.__read_buf = self.__read_buf[sidx:]
 
     def accountSessionToXBeeBuffer(self, count):
         self.__write_buf = self.__write_buf[count:]
         if (self.__state == HTTPSession.STATE_DRAIN and
             len(self.__write_buf) == 0):
-            #print "HTTP STATE DRAIN -> FINISHED"
             self.__state = HTTPSession.STATE_FINISHED
         
     def read(self, sd):
         read_amt = self.__max_buf_size - len(self.__write_buf)
         if read_amt <= 0:
             return 0
-        
         buf = ""
         try:
             buf = self.__httpResponse.read(read_amt)
         except socket.error, why:
-            print "HTTP read error %s" % errno.errorcode[why[0]]
-            if why[0] not in (errno.EWOULDBLOCK, errno.WSAEWOULDBLOCK):
+            if why[0] not in self.__eWouldBlockExcs:
+                print "HTTP: read error %s" % errno.errorcode[why[0]]
                 self.__state = HTTPSession.STATE_DRAIN
+                self.close()
             else:
                 return 0
         except httplib.IncompleteRead:
-            print "HTTP Incomplete Read of HTTP 1.1 chunk"
+            print "HTTP: incomplete read of HTTP 1.1 chunk"
             self.__state = HTTPSession.STATE_DRAIN
             self.close()
             
         if (len(buf) == 0 or 
             self.__httpResponse.isclosed() or
             self.__httpResponse.length == 0):
+            print "HTTP: connection closed by remote server"
             self.__state = HTTPSession.STATE_DRAIN
-        self.__write_buf += buf
         
+        self.__write_buf += buf
         return len(buf)
 
     def write(self, sd):
         return 0 # stub, this should never be called
+    
+    def __commandAbortHandler(self):
+        self.close()
+        self.__read_buf = ""

@@ -8,11 +8,13 @@ Modified by jordanh on August 30, 2011 to fit into XIG v1.3.0
 architecture.  Sessions are now continuous until they terminate
 with xig://abort command.
 '''
-# use our own urlparser which knows about the udp scheme
-import library.xig_urlparse as urlparse
 import socket
 
 from sessions.abstract import AbstractSession
+
+# use our own urlparser which knows about the udp scheme
+import library.xig_urlparse as urlparse
+from library.command_parser import Command, StreamingCommandParser
 
 
 class UDPSession(AbstractSession):
@@ -27,7 +29,8 @@ class UDPSession(AbstractSession):
         self.__fromxbee_buf = ""
         self.__xbee_addr = xbee_addr
         self.__state = UDPSession.STATE_INIT
-        self.__max_buf_size = self.__core.getGlobalMaxBufSize() 
+        self.__max_buf_size = self.__core.getConfig().global_max_buf_size 
+        self.__command_parser = StreamingCommandParser()
               
         # Parse URL:
         parsedUrl = urlparse.urlsplit(url)
@@ -41,6 +44,12 @@ class UDPSession(AbstractSession):
         if ':' in self.__urlNetLoc:
             self.__urlNetLoc, portStr = self.__urlNetLoc.split(':')
             self.__urlPort = int(portStr)
+
+        # Create command handlers:
+        self.__command_parser.register_command(Command("xig//abort\r\n",
+                                                self.__commandAbortHandler))
+        self.__command_parser.register_command(Command("xig://abort\n",
+                                                self.__commandAbortHandler))
         
         # Perform UDP connection:
         self.__create_socket()
@@ -122,16 +131,9 @@ class UDPSession(AbstractSession):
         self.__toxbee_buf += buf
     
     def appendXBeeToSessionBuffer(self, buf):
-        self.__fromxbee_buf += buf
-        
-        if (self.__fromxbee_buf.find("xig://abort\n") > -1 or
-            self.__fromxbee_buf.find("xig://abort\r") > -1):
-            self.__fromxbee_buf = ""
-            self.close()
-            return
-        
-        if len(self.__fromxbee_buf) > self.__core.getGlobalMaxBufSize():
-            sidx = len(self.__fromxbee_buf) - self.__core.getGlobalMaxBufSize()
+        self.__fromxbee_buf += self.__command_parser.parse(buf)
+        if len(self.__fromxbee_buf) > self.__max_buf_size:
+            sidx = len(self.__fromxbee_buf) - self.__max_buf_size
             self.__fromxbee_buf = self.__fromxbee_buf[sidx:]
         
     def accountSessionToXBeeBuffer(self, count):
@@ -157,3 +159,7 @@ class UDPSession(AbstractSession):
             self.__do_error('unexpected UDP socket error "%s"') % (str(e))
                 
         return wrote
+    
+    def __commandAbortHandler(self):
+        self.close()
+        self.__read_buf = ""

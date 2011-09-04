@@ -278,6 +278,13 @@ Architecture changes to allow for services (such as the I/O sample
 service) in addition to sessions with commands driven from an
 XBee.
 
+Code re-factorization to split apart growing xig.py into multiple
+library files.
+
+New streaming command parser should resolve issues where sessions
+could not be aborted if "xig://abort" was not sent in a single
+packet.
+
 Added the I/O Sample HTTP service.
 
 Added the iDigi RCI service.
