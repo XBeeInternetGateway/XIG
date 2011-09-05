@@ -6,6 +6,7 @@ Created on Sep 4, 2011
 
 import sys
 import random
+from copy import copy
 
 DIGI_PLATFORM_FLAG = False
 if sys.platform.startswith('digi'):

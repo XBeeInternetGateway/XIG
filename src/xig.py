@@ -20,14 +20,13 @@ APP_ARCHIVE = "WEB/python/_xig.zip"
 sys.path.insert(0, APP_ARCHIVE)
 
 # additional Python standard library imports
-from socket import gethostbyname_ex
 import string
 
 # Digi specific library module imports
 DIGI_PLATFORM_FLAG = False
 if sys.platform.startswith('digi'):
     DIGI_PLATFORM_FLAG = True
-    import rci, xbee
+    import rci
 
 # XIG library imports
 from library.xig_io_kernel import XigIOKernel
@@ -82,7 +81,8 @@ class Xig(object):
         self.__quit_flag = True
 
     def getLocalIP(self):
-        if not sys.platform.startswith('digi'):
+        if not DIGI_PLATFORM_FLAG:
+            from socket import gethostbyname_ex
             if sys.platform.startswith('darwin'):
                 return gethostbyname_ex('localhost')[2]
             else:

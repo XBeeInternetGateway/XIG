@@ -40,11 +40,14 @@ class HTTPSession(AbstractSession):
         self.__httpMethod = "GET"
         self.__httpRequest = ""
         self.__httpResponse = None
-        if sys.platform == "darwin":
-            self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.EAGAIN)
+        # Must use different constants for different platforms:
+        if sys.platform == "digi":
+            self.__eWouldBlockExcs = (errno.EWOULDBLOCK,)
+        elif sys.platform == "win32":
+            self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.WSAEWOULDBLOCK)
         else:
-            self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.WSAEWOULDBLOCK,
-                                      errno.EAGAIN)
+            # Sanity, a la Linux & Mac OSX
+            self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.EAGAIN)
               
         # Parse URL:
         parsedUrl = urlparse.urlsplit(url)

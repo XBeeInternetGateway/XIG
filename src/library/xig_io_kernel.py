@@ -19,6 +19,9 @@ DIGI_PLATFORM_FLAG = False
 if sys.platform.startswith('digi'):
     DIGI_PLATFORM_FLAG = True
 
+if DIGI_PLATFORM_FLAG:
+    import xbee
+
 class XigIOKernel(object):
     XBEE_S1_MAX_PAYLOAD = 100
     XBEE_S23_MAX_PAYLOAD = 72
