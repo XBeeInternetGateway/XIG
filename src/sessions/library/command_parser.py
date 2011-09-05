@@ -52,19 +52,19 @@ class StreamingCommandParser(object):
             match_buf = ""
             partial_match = True
             for i in range(min(len(self.__buf), len(self.__match_table))):
-                match_buf += self.__buf[i]
-                if match_buf in self.__command_map:
-                    matches.append(match_buf)
-                    self.__buf = self.__buf[len(match_buf):]
-                    partial_match = False
-                    break
-                
                 if self.__buf[i] not in self.__match_table[i]:
                     # match failure, take all characters processed this far
                     # and move to return buffer
                     partial_match = False
                     return_buf += match_buf
                     self.__buf = self.__buf[i+1:]
+                    break
+                
+                match_buf += self.__buf[i]
+                if match_buf in self.__command_map:
+                    matches.append(match_buf)
+                    self.__buf = self.__buf[len(match_buf):]
+                    partial_match = False
                     break
                 
             if not partial_match:

@@ -14,7 +14,7 @@ VERSION = "1.3.0a3"
 print "%s v%s starting." % (NAME, VERSION)
 print 'Unzipping and loading modules...'
 
-import sys
+import sys, traceback
 
 APP_ARCHIVE = "WEB/python/_xig.zip"
 sys.path.insert(0, APP_ARCHIVE)
@@ -200,7 +200,14 @@ class Xig(object):
 def main():
     # take off every Xig!
     xig = Xig()
-    ret = xig.go()
+    try:
+        ret = xig.go()
+    except:
+        traceback.print_exc(file=sys.stdout)
+        time.sleep(10)
+        # TODO: until shutdown may be propigated cleanly, allow XIG to squirt
+        #       out the exception before exiting (and ultimately causing a
+        #       reboot on the ConnectPort)
     sys.exit(ret)
 
     

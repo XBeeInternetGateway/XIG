@@ -46,7 +46,7 @@ class UDPSession(AbstractSession):
             self.__urlPort = int(portStr)
 
         # Create command handlers:
-        self.__command_parser.register_command(Command("xig//abort\r\n",
+        self.__command_parser.register_command(Command("xig://abort\r",
                                                 self.__commandAbortHandler))
         self.__command_parser.register_command(Command("xig://abort\n",
                                                 self.__commandAbortHandler))
@@ -64,7 +64,7 @@ class UDPSession(AbstractSession):
             
     def __do_error(self, error_msg):
         self.__toxbee_buf = "Xig-Error: " + error_msg + "\r\n"
-        self.close()
+        self.close(no_msg_override=True)
         self.__state = UDPSession.STATE_DRAINTOXBEE
     
     @staticmethod
@@ -89,12 +89,13 @@ class UDPSession(AbstractSession):
                   (note: session will end only by using xig://abort)
 """
     
-    def close(self):
+    def close(self, no_msg_override=False):
         try:
             self.__UDPSocket.close()
         except:
             pass
-        self.__toxbee_buf = "Xig: connection aborted\r\n"
+        if not no_msg_override:
+            self.__toxbee_buf = "Xig: connection aborted\r\n"
         self.__state = UDPSession.STATE_DRAINTOXBEE
         
     def isFinished(self):
@@ -156,7 +157,8 @@ class UDPSession(AbstractSession):
                         (self.__urlNetLoc, self.__urlPort))
             self.__fromxbee_buf = self.__fromxbee_buf[wrote:]
         except Exception, e:
-            self.__do_error('unexpected UDP socket error "%s"') % (str(e))
+            self.__do_error('unexpected UDP socket error "%s"' % (str(e)))
+            return 0
                 
         return wrote
     

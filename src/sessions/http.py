@@ -76,11 +76,11 @@ class HTTPSession(AbstractSession):
             self.__do_error("unable to perform HTTP request; invalid URL")
             
         # Setup command parser:
-        self.__command_parser.register_command(Command("abort\r\n",
+        self.__command_parser.register_command(Command("abort\r",
                                                 self.__commandAbortHandler))
         self.__command_parser.register_command(Command("abort\n",
                                                 self.__commandAbortHandler))
-        self.__command_parser.register_command(Command("xig//abort\r\n",
+        self.__command_parser.register_command(Command("xig://abort\r",
                                                 self.__commandAbortHandler))
         self.__command_parser.register_command(Command("xig://abort\n",
                                                 self.__commandAbortHandler))
