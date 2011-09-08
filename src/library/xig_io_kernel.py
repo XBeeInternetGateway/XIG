@@ -18,6 +18,8 @@ from xbee_xmit_stack import XBeeXmitStack
 DIGI_PLATFORM_FLAG = False
 if sys.platform.startswith('digi'):
     DIGI_PLATFORM_FLAG = True
+elif sys.platform.startswith('win'):
+    from win_socketpair import SocketPair as socketpair
 
 if DIGI_PLATFORM_FLAG:
     import xbee

@@ -20,8 +20,9 @@ from library.command_parser import Command, StreamingCommandParser
 class UDPSession(AbstractSession):
     STATE_INIT           = 0x0
     STATE_WRITING        = 0x1
-    STATE_DRAINTOXBEE    = 0x2
-    STATE_FINISHED       = 0x3
+    STATE_WRITESCLOSED   = 0x2
+    STATE_DRAINTOXBEE    = 0x3
+    STATE_FINISHED       = 0x4
     
     def __init__(self, xig_core, url, xbee_addr):
         self.__core = xig_core
@@ -99,8 +100,11 @@ class UDPSession(AbstractSession):
         self.__state = UDPSession.STATE_DRAINTOXBEE
         
     def isFinished(self):
-        # Take this opportunity to see if we should transistion to the
-        # finished state:
+        # Check states, transisition as necessary until finished:
+        if self.__state == UDPSession.STATE_WRITESCLOSED:
+            if not len(self.__fromxbee_buf):
+                self.__state = UDPSession.STATE_DRAINTOXBEE
+        
         if self.__state == UDPSession.STATE_DRAINTOXBEE:
             if not len(self.__toxbee_buf):
                 self.__state = UDPSession.STATE_FINISHED
@@ -118,7 +122,8 @@ class UDPSession(AbstractSession):
     
     def getWriteSockets(self):
         if (len(self.__fromxbee_buf) and
-            self.__state == UDPSession.STATE_WRITING):
+            self.__state in (UDPSession.STATE_WRITING,
+                             UDPSession.STATE_WRITESCLOSED)):
             return ([self.__UDPSocket])
         return []
     
@@ -132,6 +137,9 @@ class UDPSession(AbstractSession):
         self.__toxbee_buf += buf
     
     def appendXBeeToSessionBuffer(self, buf):
+        if self.__state not in (UDPSession.STATE_INIT,
+                                UDPSession.STATE_WRITING):
+            return
         self.__fromxbee_buf += self.__command_parser.parse(buf)
         if len(self.__fromxbee_buf) > self.__max_buf_size:
             sidx = len(self.__fromxbee_buf) - self.__max_buf_size
@@ -144,7 +152,8 @@ class UDPSession(AbstractSession):
         return 0 # stub, this should never be called
         
     def write(self, sd):     
-        if self.__state != UDPSession.STATE_WRITING:
+        if self.__state not in (UDPSession.STATE_WRITING,
+                                UDPSession.STATE_WRITESCLOSED):
             return 0
         
         write_amt = self.__max_buf_size - len(self.__fromxbee_buf)
@@ -163,5 +172,6 @@ class UDPSession(AbstractSession):
         return wrote
     
     def __commandAbortHandler(self):
-        self.close()
-        self.__read_buf = ""
+        self.__state = UDPSession.STATE_WRITESCLOSED
+        self.__toxbee_buf = "Xig: connection aborted\r\n"
+

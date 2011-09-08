@@ -4,6 +4,9 @@ Streaming Command Parser Helper Classes
 Allows for session objects which receive data character by character, blocks,
 or lines to easily match against a list of registered command names.
 
+This module intentionally avoids the use of Python's re module which is
+extremely expensive memory-wise on Digi ConnectPort gateways.
+
 Created on Aug 31, 2011
 
 @author: jordanh
@@ -31,7 +34,16 @@ class StreamingCommandParser(object):
     def register_command(self, command_obj):
         self.__command_map[command_obj.command_str] = command_obj
         self.__build_match_table_entry(command_obj.command_str)
-    
+
+    def __do_callback(self, match_str):
+        command = self.__command_map[match_str]
+        # call callback
+        try:
+            command.callback()
+        except Exception, e:
+            print 'CommandParser: error calling cb for cmd "%s": %s' % (
+                    command.command_str, str(e))
+       
     def parse(self, s):
         """\
         Parse a string against registered command, call callback
@@ -43,44 +55,36 @@ class StreamingCommandParser(object):
         """
         # accumulate our match buffer
         self.__buf += s
-        
-        
+                
         return_buf = ""
         matches = []
         
         while len(self.__buf):
             match_buf = ""
-            partial_match = True
+            
+            # generate indexes for longest potenial match:
             for i in range(min(len(self.__buf), len(self.__match_table))):
+                # check against match table:
                 if self.__buf[i] not in self.__match_table[i]:
                     # match failure, take all characters processed this far
                     # and move to return buffer
-                    partial_match = False
-                    return_buf += match_buf
+                    return_buf += match_buf + self.__buf[i]
                     self.__buf = self.__buf[i+1:]
                     break
-                
+                # character matches table entry, accumulate to match buffer:
                 match_buf += self.__buf[i]
+                # check if accumulated match buffer matches any commands:
                 if match_buf in self.__command_map:
                     matches.append(match_buf)
                     self.__buf = self.__buf[len(match_buf):]
-                    partial_match = False
+                    match_buf = ""
                     break
                 
-            if not partial_match:
-                continue
-            else:
-                # partial match, we're done here
-                break
+            # for all matches, process callbacks:
+            for match_str in matches:
+                self.__do_callback(match_str)
+            # as long as there are characters, keep checking the input buffer:
+            continue
 
-        for match_str in matches:
-            command = self.__command_map[match_str]
-            # call callback
-            try:
-                command.callback()
-            except Exception, e:
-                print 'CommandParser: error calling cb for cmd "%s": %s' % (
-                        command.command_str, str(e))
-            # wipe the match buffer up to the match length:
-        
+        # return non-matching characters:
         return return_buf

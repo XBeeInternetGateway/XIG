@@ -41,9 +41,9 @@ class HTTPSession(AbstractSession):
         self.__httpRequest = ""
         self.__httpResponse = None
         # Must use different constants for different platforms:
-        if sys.platform == "digi":
+        if sys.platform.startswith("digi"):
             self.__eWouldBlockExcs = (errno.EWOULDBLOCK,)
-        elif sys.platform == "win32":
+        elif sys.platform.startswith("win"):
             self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.WSAEWOULDBLOCK)
         else:
             # Sanity, a la Linux & Mac OSX
