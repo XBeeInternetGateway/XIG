@@ -41,10 +41,15 @@ class UDPSession(AbstractSession):
         print "UDP: session to %s" % (self.__urlNetLoc)
         
         # check for portnumber in url
-        self.__urlPort = 0
-        if ':' in self.__urlNetLoc:
-            self.__urlNetLoc, portStr = self.__urlNetLoc.split(':')
+        if ':' not in self.__urlNetLoc:
+            self.__do_error("UDP URL requires port number (e.g. udp://host:port)")
+            return
+        self.__urlNetLoc, portStr = self.__urlNetLoc.split(':')
+        try:
             self.__urlPort = int(portStr)
+        except ValueError:
+            self.__do_error("UDP port number must be integer")
+            return
 
         # Create command handlers:
         self.__command_parser.register_command(Command("xig://abort\r",
@@ -137,6 +142,7 @@ class UDPSession(AbstractSession):
         self.__toxbee_buf += buf
     
     def appendXBeeToSessionBuffer(self, buf):
+        # TODO continue debugging via printf here
         if self.__state not in (UDPSession.STATE_INIT,
                                 UDPSession.STATE_WRITING):
             return
@@ -165,6 +171,7 @@ class UDPSession(AbstractSession):
                         self.__fromxbee_buf[:write_amt], 0,
                         (self.__urlNetLoc, self.__urlPort))
             self.__fromxbee_buf = self.__fromxbee_buf[wrote:]
+            print "UDP: XMIT of %d bytes" % (wrote)
         except Exception, e:
             self.__do_error('unexpected UDP socket error "%s"' % (str(e)))
             return 0

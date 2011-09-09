@@ -53,13 +53,14 @@ class StreamingCommandParser(object):
         commands.  Returns an empty string if string partially
         matches.
         """
-        # accumulate our match buffer
         self.__buf += s
                 
         return_buf = ""
         matches = []
+        incomplete_match = False
         
-        while len(self.__buf):
+        # as long as there are characters, keep checking the input buffer:
+        while len(self.__buf) and not incomplete_match:
             match_buf = ""
             
             # generate indexes for longest potenial match:
@@ -79,12 +80,15 @@ class StreamingCommandParser(object):
                     self.__buf = self.__buf[len(match_buf):]
                     match_buf = ""
                     break
+                # check if we've been through everything in the input buffer:
+                if (i+1) == len(self.__buf):
+                    # we may need to receive more characters in a subsequent
+                    # call
+                    incomplete_match = True 
                 
-            # for all matches, process callbacks:
-            for match_str in matches:
-                self.__do_callback(match_str)
-            # as long as there are characters, keep checking the input buffer:
-            continue
+        # for all matches, process callbacks:
+        for match_str in matches:
+            self.__do_callback(match_str)
 
         # return non-matching characters:
         return return_buf
