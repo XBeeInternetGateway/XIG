@@ -99,7 +99,7 @@ class HTTPSession(AbstractSession):
                                              self.__core.getVersion()) }
         
         if self.__urlUsername is not None:
-            header['Authorization'] = "Basic %s" % (
+            headers['Authorization'] = "Basic %s" % (
                 base64.encodestring(
                     "%s:%s" % (self.__urlUsername, self.__urlPassword))[:-1]) 
 
