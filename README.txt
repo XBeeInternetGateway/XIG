@@ -38,7 +38,10 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
-2011/08/30 - XIG v1.3.0b1
+2011/09/14 - XIG v1.3.0
+
+Fixed  Issue #10  where URLs containing usernames and passwords 
+would cause an exception to be thrown.
 
 Architecture changes to allow for services (such as the I/O sample
 service) in addition to sessions with commands driven from an

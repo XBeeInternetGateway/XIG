@@ -2,6 +2,14 @@
 Created on Sep 4, 2011
 
 @author: jordanh
+
+The XBee XMit (transmit) Stack queues and manages application-level
+retries on noisy or lossy XBee networks.  Transmit retries are
+facilitated by a little known (and little documented) ConnectPort
+socket option feature XBS_SO_EP_TX_STATUS where TX_STATUS messages
+may be lined up with a transmit request id.  See the below
+implementation for details.
+
 '''
 
 import sys

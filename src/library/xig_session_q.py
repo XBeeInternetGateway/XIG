@@ -2,6 +2,12 @@
 Created on Sep 4, 2011
 
 @author: jordanh
+
+The XigSessionQ class definition.
+
+A XigSessionQ object is used by the XigIOKernel in order to control
+and queue multiple destinations waiting on the same XBee resource.
+
 '''
 
 

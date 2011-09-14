@@ -2,6 +2,15 @@
 Created on Sep 4, 2011
 
 @author: jordanh
+
+The XigInactiveSessionCommandParser is the default command parser.
+
+When there is no active sessions characters are accumulated into
+an object instance of this class, parsed and delimited by CR or LF
+characters by XBee address.
+
+The output of this parser is used by the XigIOKernel in order to
+feed complete commands to the various session classes.
 '''
 
 class XigInactiveSessionCommandParser(object):

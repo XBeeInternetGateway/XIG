@@ -3,7 +3,9 @@ Created on Sep 17, 2010
 
 @author: jordanh
 
-See XIG README.txt for more information.
+XBee Internet Gateway executable scripts.
+
+See http://code.google.com/p/xig/ or README.txt for more information.
 '''
 
 ## Global String Constants

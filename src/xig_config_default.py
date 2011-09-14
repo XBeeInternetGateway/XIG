@@ -1,4 +1,6 @@
 """\
+    XIG Configuration File
+
     Modify the contents of the below XigConfig object in order to
     change the configuration of the Xig.  Each option is
     commented as to what it does.

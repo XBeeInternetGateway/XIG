@@ -2,6 +2,10 @@
 Created on Sep 4, 2011
 
 @author: jordanh
+
+The XIG I/O kernel implements the I/O multiplexing and callbacks for the
+entirety of the XIG system.  One may say it is the "heart" of the XIG.
+
 '''
 import sys
 import errno
