@@ -11,7 +11,7 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.3.0b2"
+VERSION = "1.3.1"
 
 print "%s v%s starting." % (NAME, VERSION)
 print 'Unzipping and loading modules...'

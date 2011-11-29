@@ -49,6 +49,18 @@ class XigConfig(object):
     #
     # ?addr=[00:13:A2:00:4F:38:1B:7E]!&AD0=710&AD1=1...
     #io_sample_destination_url = "http://xbee-data.appspot.com/io_sample"
+    # 
+    # You can also set io_sample_destination_url to a dictionary.  If you
+    # use a dictionary there must be a key-value pair with a key named
+    # "default" and a default.  The other keys may be XBee 64-bit hardware
+    # addresses in the ConnectPort format "[00:11:22:33:44:55:66:77]!"
+    # mapping to specific URLs.
+    #
+    # io_sample_destination_url = {
+    #     "default": "http://xbee-data.appspot.com/io_sample",
+    #     "[00:13:a2:00:40:30:ff:07]!": "http://my.home.com/rx_io_data",
+    #     "[00:13:a2:00:40:4a:b9:e5]!": "http//some.otherplace.com/xbee_receive",
+    # }
 
     
     ## Open Sound Control

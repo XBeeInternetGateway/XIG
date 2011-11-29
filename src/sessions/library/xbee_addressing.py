@@ -18,9 +18,8 @@ def normalize_address(addr):
         return addr
 
     if not validate_address(addr):
-        raise ValueError, "XBee address '%s' invalid" % addr
-    if '[' not in addr:
-        addr = "[" + addr[0:len(addr)-1].lower() + "]!"
+        raise ValueError, "XBee address '%s' invalid" % addr    
+    addr = "[" + addr[0:len(addr)-1].lower() + "]!"
         
     return addr
 
