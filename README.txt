@@ -38,6 +38,14 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
+2011/11/29 - XIG v1.3.1
+
+Added support for multiple destinations to io_sample session.
+By setting the io_sample_destination_url to a dictionary mapping
+hardware address to destination URLs the XIG can now forward
+I/O sample information to multiple servers.
+
+
 2011/09/14 - XIG v1.3.0
 
 Fixed  Issue #10  where URLs containing usernames and passwords 
