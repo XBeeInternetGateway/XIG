@@ -140,7 +140,8 @@ class XBeeXmitStack(object):
         """\
         Process a TX status frame.
 
-        Performs internal accounting.
+        Performs internal accounting.  Returns True of a valid TX status
+        frame was handled, False otherwise.
         """
 
         tx_status = 0
@@ -149,11 +150,8 @@ class XBeeXmitStack(object):
         xmit_req = self.__xmit_table.find_xmit_req(xmit_id)
         
         if xmit_req is None:
-            return
-        
-        if xmit_id < 1:
-            print "XMIT FAIL: frame is not TX Status frame!"
-    
+            return False
+
         if cluster_id == 0x89:
             # X-API transmit status frame:
             print "XMIT INFO: X-API TX Status (id = %d)" % xmit_id
@@ -177,7 +175,7 @@ class XBeeXmitStack(object):
             print "XMIT GOOD: tx_status (id = %d)" % xmit_id
             self.__xmit_id_set.add(xmit_id)
             self.__xmit_table.expunge(xmit_id)
-            return
+            return True
         
         # Bad TX status!
         xmit_req.retries_remaining -= 1
@@ -186,12 +184,13 @@ class XBeeXmitStack(object):
                 addr[0], tx_status, tx_status) 
             self.__xmit_id_set.add(xmit_id)
             self.__xmit_table.expunge(xmit_id)
-            return
+            return True
         
         # Mark TX for retry:
         print "XMIT FAIL: to %s FAILED with tx status = 0x%02x, will retry." % (
             addr[0], tx_status)            
         xmit_req.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
+        return True
         
     # The below methods are used when the XIG is simulated on a PC,
     # these methods get re-bound in __init__ if a non-ConnectPort environment

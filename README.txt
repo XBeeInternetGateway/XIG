@@ -38,9 +38,22 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
+2011/12/15 - XIG v1.3.2
+
+Fixes issue #12 catching when the radio is in use by another Python
+program by printing an error message to console.
+
+Fixes issue #15 where data was being dropped due to XIG not using the
+proper maximum receive packet size.
+
+Found and fixed minor issue where XBee receive status messages were
+being stored in the rolling command buffer.  Fixing this issue leads
+to a small performance enhancement.
+
+
 2011/11/29 - XIG v1.3.1
 
-Added support for multiple destinations to io_sample session.
+Added support for multiple destinations to the io_sample session.
 By setting the io_sample_destination_url to a dictionary mapping
 hardware address to destination URLs the XIG can now forward
 I/O sample information to multiple servers.

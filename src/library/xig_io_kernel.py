@@ -29,9 +29,14 @@ if DIGI_PLATFORM_FLAG:
     import xbee
 
 class XigIOKernel(object):
-    XBEE_S1_MAX_PAYLOAD = 100
-    XBEE_S23_MAX_PAYLOAD = 72
-    XBEE_MIN_PAYLOAD = 48
+    XBEE_S1_MAX_TX = 100
+    XBEE_S1_MAX_RX = 100
+    
+    XBEE_S23_MAX_TX = 72
+    XBEE_S23_MAX_RX = 84
+    
+    XBEE_MIN_TX = 48
+    XBEE_MIN_RX = 100
     
     def __init__(self, xig_core):
         self.__core = xig_core
@@ -40,7 +45,8 @@ class XigIOKernel(object):
         self.__inactive_sess_cmd_parser = XigInactiveSessionCommandParser(xig_core)
         self.__iosample_subscribers = []
         self.__xig_sd = None
-        self.__xig_sd_max_io_sz = self.XBEE_MIN_PAYLOAD
+        self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
+        self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
         self.__xbee_version = None
 
         
@@ -52,22 +58,31 @@ class XigIOKernel(object):
             bind_addr = ('', 0, 0, 0)
             if xbee_series == '1':
                 bind_addr = ('', 0, 0, 0)
-                self.__xig_sd_max_io_sz = self.XBEE_S1_MAX_PAYLOAD
+                self.__xig_sd_max_tx_sz = self.XBEE_S1_MAX_TX
+                self.__xig_sd_max_rx_sz = self.XBEE_S1_MAX_RX
             elif xbee_series == '2' or xbee_series == '3':
                 bind_addr = ('', 0xe8, 0, 0)
                 try:
-                    self.__xig_sd_max_io_sz = struct.unpack(
+                    self.__xig_sd_max_tx_sz = struct.unpack(
                         "B", xbee.ddo_get_param(None, 'NP'))[0]
                 except:
-                    self.__xig_sd_max_io_sz = self.XBEE_S23_MAX_PAYLOAD
+                    self.__xig_sd_max_tx_sz = self.XBEE_S23_MAX_TX
                 source_routing_enabled = struct.unpack("B",
                     xbee.ddo_get_param(None, 'AR'))[0] != 0xff
                 if source_routing_enabled:
-                    self.__xig_sd_max_io_sz -= 20
+                    self.__xig_sd_max_tx_sz -= 20
+                self.__xig_sd_max_rx_sz = self.XBEE_S23_MAX_RX
             else:
                 bind_addr = ('', 0xe8, 0, 0)
-                self.__xig_sd_max_io_sz = self.XBEE_MIN_PAYLOAD
-            self.__xbee_sd.bind(bind_addr)
+                self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
+                self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
+                
+            try:
+                self.__xbee_sd.bind(bind_addr)
+            except Exception, e:
+                print "XIG-ERROR: unable to bind XIG to XBee (%s)" % repr(e)
+                print "XIG-ERROR: is another program running using the XBee?"
+                raise(e)
             
             # Enable XBee TX_STATUS reporting:
             self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
@@ -75,10 +90,12 @@ class XigIOKernel(object):
             print "Using PC-based UDP simulation mode on port %d..." % (
               self.__core.getConfig().xbee_sim_udp_port)
             self.__xbee_sd = socket(AF_INET, SOCK_DGRAM)
-            self.__xig_sd_max_io_sz = self.XBEE_MIN_PAYLOAD
+            self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
+            self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
             self.__xbee_sd.bind(('', self.__core.getConfig().xbee_sim_udp_port))
 
-        print "XBee MTU = %d bytes" % (self.__xig_sd_max_io_sz)
+        print "XBee MTU = %d bytes" % (self.__xig_sd_max_tx_sz)
+        print "XBee MRU = %d bytes" % (self.__xig_sd_max_rx_sz)
         # Put XBee socket into non-blocking mode:
         self.__xbee_sd.setblocking(0)
 
@@ -204,11 +221,11 @@ class XigIOKernel(object):
         # XBee read processing
         if self.__xbee_sd in rl:
             rl.remove(self.__xbee_sd)
-            buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_io_sz)
-            self.__xbee_xmit_stack.tx_status_recv(buf, addr)
+            buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_rx_sz)
+            was_tx_status = self.__xbee_xmit_stack.tx_status_recv(buf, addr)
             addr = self.__homogenizeXBeeSocketAddr(addr)
             print "RECV: %d bytes from %s" % (len(buf), repr(addr[0:4]))
-            if self.__ioSampleHook(buf, addr):
+            if was_tx_status or self.__ioSampleHook(buf, addr):
                 pass
             elif addr in self.__active_sessions:
                 # data is destined to session
@@ -230,7 +247,7 @@ class XigIOKernel(object):
             random.shuffle(pending_data_to_xbee_sessions)
             # Try a single write from all active sessions until we'd block:
             for sess in pending_data_to_xbee_sessions:
-                buf = sess.getSessionToXBeeBuffer()[0:self.__xig_sd_max_io_sz]
+                buf = sess.getSessionToXBeeBuffer()[0:self.__xig_sd_max_tx_sz]
                 try:
                     count = self.__xbee_xmit_stack.sendto(buf, 0, sess.getXBeeAddr())
                     sess.accountSessionToXBeeBuffer(count)
