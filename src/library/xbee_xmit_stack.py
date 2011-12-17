@@ -20,6 +20,7 @@ DIGI_PLATFORM_FLAG = False
 if sys.platform.startswith('digi'):
     DIGI_PLATFORM_FLAG = True
 
+DISABLE_XMIT_STACK = False
 
 class XBeeXmitStack(object):
     
@@ -105,6 +106,7 @@ class XBeeXmitStack(object):
         pass
             
     def __init__(self, xig_core, xbee_sd):
+        self.__core = xig_core
         self.__xbee_sd = xbee_sd
         self.__xmit_id_set = set(range(1,256))        
         self.__xmit_table = XBeeXmitStack.XmitTable()
@@ -135,6 +137,10 @@ class XBeeXmitStack(object):
             print "XMIT SEND: to %s (id = %d)" % (repr(xmit_req.addr[0:4]), xmit_req.addr[5])
             count = self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr)
             xmit_req.state = XBeeXmitStack.XmitRequest.STATE_OUTSTANDING
+            if not self.__core.isXBeeXmitStatusSupported():
+                # mark transmit as successful:
+                self.__xmit_id_set.add(xmit_req.addr[5])
+                self.__xmit_table.expunge(xmit_req.addr[5])
             
     def tx_status_recv(self, buf, addr):
         """\

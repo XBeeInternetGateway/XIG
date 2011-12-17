@@ -27,6 +27,7 @@ class XigInactiveSessionCommandParser(object):
         if addr not in self.__addr_cmd_buf_map:
             self.__addr_cmd_buf_map[addr] = ""
         cmd_buf = self.__addr_cmd_buf_map[addr] + buf
+        print "COMMAND BUF: %s" % (cmd_buf)
 
         if len(cmd_buf) > self.__global_max_buf_size:
             sidx = len(cmd_buf) - self.__global_max_buf_size

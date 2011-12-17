@@ -83,6 +83,12 @@ class Xig(object):
     def quit(self):
         self.__quit_flag = True
 
+    def isXBeeXmitStatusSupported(self):
+        if sys.platform == "digix3":
+            return False
+        
+        return True
+
     def getLocalIP(self):
         if not DIGI_PLATFORM_FLAG:
             from socket import gethostbyname_ex
@@ -97,8 +103,13 @@ class Xig(object):
         <query_state><boot_stats/></query_state>
 </rci_request>"""
         response = rci.process_request(query_string)
-        ip_beg = response.find("<ip>")
-        ip_end = response.find("</ip>")
+        ip_beg, ip_end = (0, 0)
+        if sys.platform == "digix3":
+            ip_beg = response.find("<ip_address>")+1
+            ip_end = response.find("</ip_address>")
+        else:
+            ip_beg = response.find("<ip>")
+            ip_end = response.find("</ip>")
         
         return response[ip_beg+4:ip_end].strip()            
 

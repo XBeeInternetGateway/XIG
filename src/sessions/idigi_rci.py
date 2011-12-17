@@ -98,6 +98,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         return str(error_tree.writestring())
         
     def __rci_callback(self, message):
+        #print "RCI: %s" % repr(message)
         try:
             xig_tree = ET.fromstring(message)
         except Exception, e:

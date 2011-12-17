@@ -85,7 +85,11 @@ class XigIOKernel(object):
                 raise(e)
             
             # Enable XBee TX_STATUS reporting:
-            self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
+            if self.__core.isXBeeXmitStatusSupported():
+                print "XBee reliable transmit enabled"
+                self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
+            else:
+                print "XBee transmit status not supported on this device."
         else:
             print "Using PC-based UDP simulation mode on port %d..." % (
               self.__core.getConfig().xbee_sim_udp_port)
@@ -106,7 +110,7 @@ class XigIOKernel(object):
             sd.setblocking(0)
         
         # Initialize XBeeXmitStack instance:
-        self.__xbee_xmit_stack = XBeeXmitStack(self, self.__xbee_sd)
+        self.__xbee_xmit_stack = XBeeXmitStack(self.__core, self.__xbee_sd)
 
 
     def __getXBeeVersion(self):
@@ -224,7 +228,8 @@ class XigIOKernel(object):
             buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_rx_sz)
             was_tx_status = self.__xbee_xmit_stack.tx_status_recv(buf, addr)
             addr = self.__homogenizeXBeeSocketAddr(addr)
-            print "RECV: %d bytes from %s" % (len(buf), repr(addr[0:4]))
+            #print "RECV: %d bytes from %s" % (len(buf), repr(addr[0:4]))
+            print "RECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf))
             if was_tx_status or self.__ioSampleHook(buf, addr):
                 pass
             elif addr in self.__active_sessions:
@@ -270,6 +275,7 @@ class XigIOKernel(object):
             sess.write(sd)
             
         # Command processing:
+        print "COMMANDS: %d commands" % len(new_xcommands)
         if len(new_xcommands):
             for xcommand in new_xcommands:
                 for session_class in self.__core.getSessionClasses():
