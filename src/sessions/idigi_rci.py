@@ -25,7 +25,7 @@ This message must be posted to iDigi using your proper iDigi
 user account credentials.  Visit http://www.idigi.com in order
 to create your free developer account.
 
-The payload of the <do_command> element is JSON formatted.  The
+The payload of the <do_command> element is XML formatted.  The
 structure for XIG commands is the following:
 
   <COMMAND_NAME param1="val1" param2="val2" ..>data</COMMAND_NAME>
@@ -55,6 +55,23 @@ Send hex-encoded binary data to a remote XBee:
 Response:
 
   <send_hexdata_response result="ok" />
+  
+Set a remote AT command parameter:
+
+  <!-- The apply flag is the equivalent of the AC command -->
+  <at hw_address="00:11:22:33:44:55:66:77!" command="D1" value="4" apply="True" />
+  
+Response:
+
+  <at_response command="D1" operation="set" result="ok"/>
+  
+Get a remote AT command parameter:
+
+  <at hw_address="00:11:22:33:44:55:66:77!" command="D1" />
+
+Response:
+
+  <at_response command="D1" operation="get" result="ok" type="int" value="0x4" />
 
 """
 
@@ -202,8 +219,8 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             value = str(e)
 
         # Normalize value and generate type information:
-        if operation == "get":
-            if command == "NI":
+        if operation == "get" or result != "ok":
+            if command == "NI" or result != "ok":
                 value = str(value)
                 type = "str"
             else:
@@ -221,9 +238,9 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         response_tree.set("command", command)
         response_tree.set("operation", operation)
         response_tree.set("result", result)        
-        if operation == "get":
+        if operation == "get" or result != "ok":
             response_tree.set("type", type)
-            response_tree.text = value
+            response_tree.set("value", value)
         response_tree = ET.ElementTree(response_tree)
         return str(response_tree.writestring())      
         
