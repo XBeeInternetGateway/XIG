@@ -33,7 +33,7 @@ class XigConfig(object):
     
 
     ## iDigi Data
-    idigi_data_max_rate_sec = 10    # maximum upload rate to iDigi in seconds
+    idigi_data_max_rate_sec = 60    # maximum upload rate to iDigi in seconds
     
     ## iDigi RCI
     

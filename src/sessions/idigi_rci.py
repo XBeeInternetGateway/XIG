@@ -189,6 +189,8 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         # interpret value:
         if command in ("NI","DN"):
             pass            # interpret value as string
+        if command in ("AC", "WR"):
+            value = ""
         elif value is None or len(value) == 0 or value.isspace():
             value = None    # will cause us to read instead of write param
         elif value.lower().startswith("0x"):
