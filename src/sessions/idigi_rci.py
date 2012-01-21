@@ -96,19 +96,17 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         error_tree.set("message", error_msg)
         error_tree = ET.ElementTree(error_tree)
         return str(error_tree.writestring())
+
+    def __rci_send_data(self, rci_xig_tree):
+        """\
+        Process a send_data node, rci_xig_tree is an ElementTree.
         
-    def __rci_callback(self, message):
-        #print "RCI: %s" % repr(message)
-        try:
-            xig_tree = ET.fromstring(message)
-        except Exception, e:
-            return self.__xml_err_msg(str(e))
-        
+        Node tag may be of type "send_data" or "send_hexdata". Returns a
+        string response.
+        """        
         destination = str(xig_tree.get("hw_address"))
         data = ""
         
-        # switch on command names, unhandled command names will generate
-        # an error:
         if xig_tree.tag == "send_data":
             data = str(xig_tree.text) or ""
             data = data.decode("string_escape")
@@ -147,7 +145,85 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         response_tree = ET.Element(xig_tree.tag + "_response")
         response_tree.set("result", "ok")
         response_tree = ET.ElementTree(response_tree)
-        return str(response_tree.writestring())
+        return str(response_tree.writestring())        
+
+    def __rci_at(self, xig_tree):
+        """\
+        Process a an "at" node, xig_tree is an ElementTree.
+        
+        Returns a string response.
+        """
+        destination = str(xig_tree.get("hw_address"))
+        command = str(xig_tree.get("command"))
+        value = str(xig_tree.get("value"))
+        
+        # interpret value:
+        if command in ("NI","DN"):
+            pass            # interpret value as string
+        elif len(value) == 0 or value.isspace():
+            value = None    # will cause us to read instead of write param
+        elif value.lower().startswith("0x"):
+            try:
+                value = int(value, 16)
+            except:
+                return self.__xml_err_msg("unable to parse hex int for cmd %s" % repr(command))
+        else:
+            try:
+                value = int(value)
+            except:
+                return self.__xml_err_msg("unable to parse int for cmd %s" % repr(command))
+        
+        # run command:
+        try:
+            result = ""
+            if value is not None:
+                value = xbee.ddo_write_param(destination, command, value)
+                result = "ok"
+            else:
+                value = xbee.ddo_read_param(destination, command)
+                result = "ok" 
+        except Exception, e:
+            result = "error"
+            value = str(e)
+
+        # Normalize value and generate type information:
+        if isinstance(value, int):
+            value = hex(value)
+            type = "int"
+        else:
+            value = str(value)
+            type = "str"
+                                                    
+        # generate the RCI response:
+        response_tree = ET.Element("at_response")
+        response_tree.set("command", command)
+        response_tree.set("result", result)
+        response_tree.set("type", type)
+        response_tree.text = value
+        response_tree = ET.ElementTree(response_tree)
+        return str(response_tree.writestring())      
+        
+        
+    def __rci_callback(self, message):
+        print "RCI: %s" % repr(message)
+        try:
+            xig_tree = ET.fromstring(message)
+        except Exception, e:
+            return self.__xml_err_msg(str(e))
+
+        result = ""
+        # switch on command names, unhandled command names will generate
+        # an error:
+        for node in xig_tree:
+            if node.tag in ("send_data", "send_hexdata"):
+                result += self.__rci_send_data(node)
+            elif node.tag == "at":
+                result += self.__rci_at(node)
+            else:
+                result += self.__xml_err_msg(
+                        "unknown command: %s" % str(node.tag))
+                
+        return result
         
         
 class iDigiRCISession(AbstractSession):

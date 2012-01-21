@@ -19,8 +19,9 @@ class XigConfig(object):
     #
     session_types = [
         "http",               # HTTP (fetch web pages)
+        "idigi_data",         # iDigi Data support (upload XBee data->iDigi)
         "idigi_rci",          # iDigi RCI (send data from iDigi to an XBee)
-        "udp",               # UDP URL destination support
+        #"udp",               # UDP URL destination support
         #"io_sample",          # XBee I/O Samples to HTTP
         #"osc",               # Send data to Open Sound Control server
     ]
@@ -30,11 +31,14 @@ class XigConfig(object):
     
     # No configuration options at this time.
     
+
+    ## iDigi Data
+    idigi_data_max_rate_sec = 10    # maximum upload rate to iDigi in seconds
     
     ## iDigi RCI
     
     # No configuration options at this time.
-    
+
 
     ## UDP URL destination support
     

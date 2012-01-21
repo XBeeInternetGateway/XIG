@@ -11,7 +11,7 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.3.2"
+VERSION = "1.4.0b1"
 
 print "%s v%s starting." % (NAME, VERSION)
 print 'Unzipping and loading modules...'
@@ -33,6 +33,7 @@ if sys.platform.startswith('digi'):
 
 # XIG library imports
 from library.xig_io_kernel import XigIOKernel
+from library.sched_async import SchedAsync
 
 # Windows specific library module imports:
 if sys.platform.startswith('win'):
@@ -74,6 +75,7 @@ class Xig(object):
         self.__session_classes = []
         self.__autostart_sessions = []
         self.__config = XigConfig()
+        self.__sched = SchedAsync("xig_sched", self)
  
         self.helpfile = ""
         
@@ -123,6 +125,16 @@ class Xig(object):
         # XigSession must always be last for proper command handling:
         return self.__session_classes + [sessions.XigSession]
 
+    def getAutostartSessions(self, obj_type=None):
+        if obj_type is None:
+            return self.__autostart_sessions
+        
+        for obj in self.__autostart_sessions:
+            if isinstance(obj, obj_type):
+                return obj
+            
+        return None 
+
     def getConfig(self):
         return self.__config
 
@@ -145,7 +157,11 @@ class Xig(object):
             previously to ioSampleSubscriberAdd()
         """
         self.__io_kernel.ioSubscriberRemove(func)
-                    
+    
+    def scheduleAfter(self, delay, action, *args):
+        return self.__sched.schedule_after(delay, action, *args)
+    
+                      
     def go(self):
         print "Loading and initializing configured session types..."
         for session_type in self.__config.session_types:
@@ -178,7 +194,9 @@ class Xig(object):
                             ipAddr=self.getLocalIP(),
                             sessionHelpText=sessionHelpText,
                             autostartHelpText=autostartHelpText))
-        self.helpfile = self.helpfile.replace('\n', '\r\n')        
+        self.helpfile = self.helpfile.replace('\n', '\r\n')      
+        print "Starting scheduler..." 
+        self.__sched.start() 
         print "XIG startup complete, ready to serve requests."
         while not self.__quit_flag:
             self.__io_kernel.ioLoop(timeout=None)

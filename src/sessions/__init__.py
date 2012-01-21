@@ -19,6 +19,7 @@ from xig import XigSession
 if sys.platform is None:
     # Add to this import list if you create more sessions:
     import http
+    import idigi_data
     import idigi_rci
     import io_sample
     import udp
@@ -27,6 +28,7 @@ if sys.platform is None:
 # Add to this map if you create more sessions: 
 SESSION_MODEL_CLASS_MAP = {
     "http": ["HTTPSession"],
+    "idigi_data": [ "iDigiDataAutostartSession", "iDigiDataSession" ],
     "idigi_rci": ["iDigiRCIAutostartSession", "iDigiRCISession"],
     "io_sample": ["ioSampleSessionAutostartSession"],
     "udp": ["UDPSession"],

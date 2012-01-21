@@ -62,6 +62,9 @@ class AbstractSession(object):
     def appendXBeeToSessionBuffer(self, buf):
         raise Exception, "not implemented"
     
+    def accountSessionToXBeeBuffer(self, count):
+        """Remove count bytes from buffer used to write to XBee"""
+    
     def read(self, sd):
         """
         Perform a read from active session socket. Returns count of bytes read.

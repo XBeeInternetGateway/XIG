@@ -275,7 +275,6 @@ class XigIOKernel(object):
             sess.write(sd)
             
         # Command processing:
-        print "COMMANDS: %d commands" % len(new_xcommands)
         if len(new_xcommands):
             for xcommand in new_xcommands:
                 for session_class in self.__core.getSessionClasses():
