@@ -31,6 +31,7 @@ to prevent the gateway from uploading too often and not having the time
 to processing incoming data from the XBee network.
 """
 
+import sys
 import time
 import threading
 from cgi import parse_qs
@@ -42,9 +43,11 @@ from abstract import AbstractSession
 
 import library.digi_ElementTree as ET
 from library.helpers import iso_date
-import library.idigi_data as idigi_data
 from library.io_sample import parse_is, sample_to_mv
 import library.xbee_addressing as xbee_addressing
+
+if sys.platform.startswith('digi'):
+    import library.idigi_data as idigi_data
 
 MAX_SAMPLE_Q_LEN = 256
 

@@ -69,6 +69,7 @@ import library.xbee_addressing as xbee_addressing
 
 if sys.platform.startswith('digi'):
     import rci
+    import xbee
 
 from abstract_autostart import AbstractAutostartSession
 from abstract import AbstractSession
@@ -97,7 +98,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         error_tree = ET.ElementTree(error_tree)
         return str(error_tree.writestring())
 
-    def __rci_send_data(self, rci_xig_tree):
+    def __rci_send_data(self, xig_tree):
         """\
         Process a send_data node, rci_xig_tree is an ElementTree.
         
@@ -154,58 +155,82 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         Returns a string response.
         """
         destination = str(xig_tree.get("hw_address"))
-        command = str(xig_tree.get("command"))
-        value = str(xig_tree.get("value"))
+        command = str(xig_tree.get("command")).upper()
+        if destination is None:
+            return self.__xml_err_msg('invalid hw_address "%s" (missing \'!\'?)' % destination)       
+        if command is None:
+            return self.__xml_err_msg('invalid command "%s"' % command)  
+        value = xig_tree.get("value")
+        if value is not None:
+            value = str(value)     
+        apply = False
+        try:
+            apply = bool(xig_tree.get("apply").lower() == "true")
+        except:
+            pass
         
         # interpret value:
         if command in ("NI","DN"):
             pass            # interpret value as string
-        elif len(value) == 0 or value.isspace():
+        elif value is None or len(value) == 0 or value.isspace():
             value = None    # will cause us to read instead of write param
         elif value.lower().startswith("0x"):
             try:
                 value = int(value, 16)
             except:
-                return self.__xml_err_msg("unable to parse hex int for cmd %s" % repr(command))
+                return self.__xml_err_msg(
+                            "unable to parse hex int for cmd %s" % repr(command))
         else:
             try:
                 value = int(value)
             except:
-                return self.__xml_err_msg("unable to parse int for cmd %s" % repr(command))
-        
+                return self.__xml_err_msg(
+                            "unable to parse int for cmd %s" % repr(command))
         # run command:
         try:
             result = ""
+            operation = "set"
             if value is not None:
-                value = xbee.ddo_write_param(destination, command, value)
+                value = xbee.ddo_set_param(destination, command, value, apply=apply)
                 result = "ok"
             else:
-                value = xbee.ddo_read_param(destination, command)
+                operation = "get"
+                value = xbee.ddo_get_param(destination, command)
                 result = "ok" 
         except Exception, e:
             result = "error"
             value = str(e)
 
         # Normalize value and generate type information:
-        if isinstance(value, int):
-            value = hex(value)
-            type = "int"
-        else:
-            value = str(value)
-            type = "str"
+        if operation == "get":
+            if command == "NI":
+                value = str(value)
+                type = "str"
+            else:
+                # unpack byte string:
+                try:
+                    value = hex(reduce(lambda s, x: (s << 8) + ord(x), value, 0))
+                    type = "int"
+                except:
+                    return self.__xml_err_msg(
+                                "unable to form result for %s" % repr(value))
+
                                                     
         # generate the RCI response:
         response_tree = ET.Element("at_response")
         response_tree.set("command", command)
-        response_tree.set("result", result)
-        response_tree.set("type", type)
-        response_tree.text = value
+        response_tree.set("operation", operation)
+        response_tree.set("result", result)        
+        if operation == "get":
+            response_tree.set("type", type)
+            response_tree.text = value
         response_tree = ET.ElementTree(response_tree)
         return str(response_tree.writestring())      
         
         
     def __rci_callback(self, message):
-        print "RCI: %s" % repr(message)
+        # sneakily re-root message string:
+        message = "<root>" + message + "</root>"
         try:
             xig_tree = ET.fromstring(message)
         except Exception, e:
