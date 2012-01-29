@@ -38,18 +38,6 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
-2012/01/29 - XIG v1.4.0
-
-Added idigi_data session allowing automatic I/O sample and free-form
-key/value data pairs to be upload to the iDigi Dia data service
-(see http://www.idigi.com).
-
-Enhanced the idigi_rci session to allow the setting of remote AT
-commands.
-
-Fixed issue #18, a crash caused due to a missing import statement.
-
-
 2011/12/15 - XIG v1.3.2
 
 Fixes issue #12 catching when the radio is in use by another Python

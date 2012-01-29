@@ -13,6 +13,7 @@ implementation for details.
 '''
 
 import sys
+import struct
 import random
 from copy import copy
 
