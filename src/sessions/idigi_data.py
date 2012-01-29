@@ -157,8 +157,12 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
         dl_addr = "XBee_" + ''.join(dl_addr.split(":")[4:])[:-3].upper()
         
         for io_pin in io_set.intersection(sample_set):
-            self._sample_add(dl_addr + "." + io_pin, 
-                             str(int(sample[io_pin])), "", iso_date())
+            unit = "bool"
+            value = str(bool(int(sample[io_pin])))
+            if io_pin in ad_set:
+                unit = "int"
+                value = str(int(sample[io_pin]))
+            self._sample_add(dl_addr + "." + io_pin, value, unit, iso_date())
 
 
 class iDigiDataSession(AbstractSession):  

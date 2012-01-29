@@ -82,6 +82,7 @@ from encodings import string_escape
 
 import library.digi_ElementTree as ET
 import library.xbee_addressing as xbee_addressing
+from library.io_sample import parse_is, sample_to_mv
 
 
 if sys.platform.startswith('digi'):
@@ -165,6 +166,30 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         response_tree = ET.ElementTree(response_tree)
         return str(response_tree.writestring())        
 
+    def __format_is_response_tree(self, is_data):
+        sample = parse_is(is_data)
+        # build pin sets:
+        ad_set = set(map(lambda d: "AD%d" % d, range(7)))
+        dio_set = set(map(lambda d: "DIO%d" % d, range(13)))
+        io_set = ad_set.union(dio_set)
+        sample_set = set(sample.keys())
+        
+        # build nodes:
+        new_nodes = [ ]
+        for io_pin in io_set.intersection(sample_set):
+            response_tree = ET.Element("io_pin")
+            response_tree.set("name", io_pin)
+            value = str(bool(int(sample[io_pin])))
+            if io_pin in ad_set:
+                value = str(int(sample[io_pin]))
+                response_tree.set("unit", "int")
+            else:
+                response_tree.set("unit", "bool")
+            response_tree.set("value", value)
+            new_nodes.append(response_tree)
+            
+        return new_nodes
+
     def __rci_at(self, xig_tree):
         """\
         Process a an "at" node, xig_tree is an ElementTree.
@@ -221,6 +246,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             value = str(e)
 
         # Normalize value and generate type information:
+        original_value = value
         if operation == "get" or result != "ok":
             if command == "NI" or result != "ok":
                 value = str(value)
@@ -243,6 +269,10 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         if operation == "get" or result != "ok":
             response_tree.set("type", type)
             response_tree.set("value", value)
+        # special decode for IS response:
+        if command == "IS" and operation == "get" and result == "ok":
+            for node in self.__format_is_response_tree(original_value):
+                response_tree.append(node)
         response_tree = ET.ElementTree(response_tree)
         return str(response_tree.writestring())      
         
