@@ -125,8 +125,13 @@ class HTTPSession(AbstractSession):
             self.close()
             self.__state = HTTPSession.STATE_FINISHED
             return
+        
+        try:    
+            self.__httpResponse = self.__httpConn.getresponse()
+        except socket.error, e:
+            self.__do_error("error while parsing HTTP response: %s" % repr(str(e)))
+            return
             
-        self.__httpResponse = self.__httpConn.getresponse()
         if self.__httpResponse.status != 200:
             print "HTTP: WARNING status = %d, reason = %s" % (
                 self.__httpResponse.status, self.__httpResponse.reason)
