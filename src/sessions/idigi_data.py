@@ -186,8 +186,10 @@ class iDigiDataSession(AbstractSession):
                 
         if "names" not in qs:
             self._do_error('required keyword "names" not present')
+            return
         if "values" not in qs:
-            self._do_error('required keyword "names" not present')
+            self._do_error('required keyword "values" not present')
+            return
 
         dl_addr = xbee_addressing.normalize_address(xbee_addr[0])
         # [00:11:22:33:44:aa:bb:cc:dd]! -> XBee_AABBCCDD
@@ -231,7 +233,7 @@ class iDigiDataSession(AbstractSession):
     @staticmethod
     def commandHelpText():
         return """\
- idigi_data:names=N1,N2,..Nn&values=V1,V2,..,VN,[units=U1,U2,..,Un]: 
+ idigi_data:names=N1,N2,..Nn&values=V1,V2,..,VN&[units=U1,U2,..,Un]: 
                 upload data sample to iDigi data service
 """
 
@@ -262,6 +264,10 @@ class iDigiDataSession(AbstractSession):
     def getXBeeToSessionBuffer(self):
         """Session contains data which needs to be written to session socket."""
         return ""
+
+    def appendXBeeToSessionBuffer(self, buf):
+        """Append data to be sent out to the session."""
+        return
 
     def accountSessionToXBeeBuffer(self, count):
         self.__write_buf = self.__write_buf[count:]

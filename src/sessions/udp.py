@@ -142,7 +142,6 @@ class UDPSession(AbstractSession):
         self.__toxbee_buf += buf
     
     def appendXBeeToSessionBuffer(self, buf):
-        # TODO continue debugging via printf here
         if self.__state not in (UDPSession.STATE_INIT,
                                 UDPSession.STATE_WRITING):
             return
