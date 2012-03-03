@@ -131,6 +131,9 @@ class HTTPSession(AbstractSession):
         except socket.error, e:
             self.__do_error("error while parsing HTTP response: %s" % repr(str(e)))
             return
+        except Exception, e:
+            self.__do_error("httplib exception: %s" % repr(str(e)))
+            return           
             
         if self.__httpResponse.status != 200:
             print "HTTP: WARNING status = %d, reason = %s" % (
