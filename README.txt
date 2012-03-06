@@ -38,7 +38,7 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
-2012/01/29 - XIG v1.4.2
+2012/03/06 - XIG v1.4.2
 
 Fixes issue #19; added additional exception handling around httplib
 and global exception handler to prevent XIG from crashing.
