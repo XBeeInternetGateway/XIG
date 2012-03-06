@@ -38,6 +38,21 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
+2012/01/29 - XIG v1.4.2
+
+Fixes issue #19; added additional exception handling around httplib
+and global exception handler to prevent XIG from crashing.
+
+Fixed gateway crash in idigi_data session.
+
+
+2012/01/29 - XIG v1.4.1
+
+Added parser for IS AT command. If you use the remote-AT command
+functionality via iDigi and execute an IS command on a remote
+XBee, the XIG will parse the IS packet for you.
+
+
 2012/01/29 - XIG v1.4.0
 
 Added idigi_data session allowing automatic I/O sample and free-form
