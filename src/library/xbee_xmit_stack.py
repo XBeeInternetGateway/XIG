@@ -141,6 +141,9 @@ class XBeeXmitStack(object):
         frame was handled, False otherwise.
         """
 
+        if (len(addr) != 6):
+            return False
+
         tx_status = 0
         cluster_id = addr[3]
         xmit_id = addr[5]
