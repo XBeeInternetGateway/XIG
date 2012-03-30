@@ -25,11 +25,12 @@ sys.path.insert(0, APP_ARCHIVE)
 # additional Python standard library imports
 import string
 
+# need to override socket by importing xbee.py first
+import xbee #@UnusedImport
+
 # Digi specific library module imports
-DIGI_PLATFORM_FLAG = False
-if sys.platform.startswith('digi'):
-    DIGI_PLATFORM_FLAG = True
-    import rci
+DIGI_PLATFORM_FLAG = True
+import rci
 
 # XIG library imports
 from library.xig_io_kernel import XigIOKernel

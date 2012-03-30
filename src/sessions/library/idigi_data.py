@@ -6,14 +6,10 @@ See idigi_pc.py to run on a PC.
 import sys  
 import os
 sys.path.append("WEB/python/idigi_data.zip")
-try:
-    # iDigi is built into Digi devices. You need to be running python on a Digi
-    # device with firmware support for iDigi to use this module.
-    import cwm as _idigi
-except:
-    # idigi_pc is an optional module that allows using idigi_data (in a limited way) 
-    # on a PC. 
-    import cwm_pc as _idigi
+
+# iDigi is built into Digi devices. You need to be running python on a Digi
+# device with firmware support for iDigi to use this module.
+import cwm as _idigi
 
 import digi_httplib as httplib
 from mimetypes import guess_type

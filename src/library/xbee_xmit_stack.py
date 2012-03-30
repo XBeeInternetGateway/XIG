@@ -17,10 +17,6 @@ import struct
 import random
 from copy import copy
 
-DIGI_PLATFORM_FLAG = False
-if sys.platform.startswith('digi'):
-    DIGI_PLATFORM_FLAG = True
-
 DISABLE_XMIT_STACK = False
 
 class XBeeXmitStack(object):
@@ -111,11 +107,6 @@ class XBeeXmitStack(object):
         self.__xbee_sd = xbee_sd
         self.__xmit_id_set = set(range(1,256))        
         self.__xmit_table = XBeeXmitStack.XmitTable()
-        
-        if not DIGI_PLATFORM_FLAG:
-            self.tx_status_recv = self._sim_tx_status_recv
-            self.sendto = self._sim_sendto
-            self.xmit = self._sim_xmit
         
     def sendto(self, buf, flags, addr):
         # See if we can take a new request:

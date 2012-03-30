@@ -19,10 +19,8 @@ from xig_session_q import XigSessionQ
 from xig_inactive_session_command_parser import XigInactiveSessionCommandParser
 from xbee_xmit_stack import XBeeXmitStack
 
-DIGI_PLATFORM_FLAG = False
-if sys.platform.startswith('digi'):
-    DIGI_PLATFORM_FLAG = True
-elif sys.platform.startswith('win'):
+DIGI_PLATFORM_FLAG = True
+if sys.platform.startswith('win'):
     from win_socketpair import SocketPair as socketpair
 
 if DIGI_PLATFORM_FLAG:

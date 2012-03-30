@@ -84,10 +84,8 @@ import library.digi_ElementTree as ET
 import library.xbee_addressing as xbee_addressing
 from library.io_sample import parse_is, sample_to_mv
 
-
-if sys.platform.startswith('digi'):
-    import rci
-    import xbee
+import rci
+import xbee
 
 from abstract_autostart import AbstractAutostartSession
 from abstract import AbstractSession
@@ -95,10 +93,6 @@ from abstract import AbstractSession
 class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
-        
-        if not sys.platform.startswith('digi'):
-            # this will not work on non-Digi platforms, early exit
-            return
         
         rci_thread = threading.Thread(name="XIG RCI Handler",
                          target=lambda: rci.add_rci_callback(
