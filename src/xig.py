@@ -38,12 +38,12 @@ from library.sched_async import SchedAsync
 
 # XIG Library imports
 import sessions
-# XIG default configuration import:
-from xig_config_default import XigConfig
 try:
     from xig_config import XigConfig
 except:
     print "  (no xig_config.py found, using default config)"
+    # XIG default configuration import:
+    from xig_config_default import XigConfig
 print 'done.'
 
 HELPFILE_TEMPLATE = """\
