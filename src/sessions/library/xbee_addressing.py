@@ -3,7 +3,7 @@
 """
 
 # imports
-from socket import *
+from socket import getaddrinfo, AF_ZIGBEE
 
 def normalize_address(addr):
     """\

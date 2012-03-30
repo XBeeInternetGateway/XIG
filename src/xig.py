@@ -36,10 +36,6 @@ import rci
 from library.xig_io_kernel import XigIOKernel
 from library.sched_async import SchedAsync
 
-# Windows specific library module imports:
-if sys.platform.startswith('win'):
-    from library.win_socketpair import SocketPair as socketpair
-    
 # XIG Library imports
 import sessions
 # XIG default configuration import:
@@ -244,7 +240,7 @@ def main():
     except:
         traceback.print_exc(file=sys.stdout)
         time.sleep(10)
-        # TODO: until shutdown may be propigated cleanly, allow XIG to squirt
+        # TODO: until shutdown may be propagated cleanly, allow XIG to squirt
         #       out the exception before exiting (and ultimately causing a
         #       reboot on the ConnectPort)
     sys.exit(ret)

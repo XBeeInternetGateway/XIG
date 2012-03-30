@@ -14,10 +14,10 @@ from library.command_parser import Command, StreamingCommandParser
 
 from abstract import AbstractSession
 
-# TODO: in a more perffect world, we would have a thread q to which we could
+# TODO: in a more perfect world, we would have a thread q to which we could
 #       dispatch blocking operations to, such as the blocking connect which
 #       occurs in this session.  The size of the thread q could be made
-#       to be configurable and taylored to the target Digi ConnectPort target
+#       to be configurable and tailored to the target Digi ConnectPort target
 #       environment.
 
 class HTTPSession(AbstractSession):

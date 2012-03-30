@@ -12,9 +12,8 @@ implementation for details.
 
 '''
 
-import sys
-import struct
 import random
+import struct
 from copy import copy
 
 DISABLE_XMIT_STACK = False
@@ -127,7 +126,7 @@ class XBeeXmitStack(object):
         for xmit_req in self.__xmit_table.generate_tx_queue():
             # Take care to strip off any transmit option bits:
             print "XMIT SEND: to %s (id = %d)" % (repr(xmit_req.addr[0:4]), xmit_req.addr[5])
-            count = self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr)
+            self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr)
             xmit_req.state = XBeeXmitStack.XmitRequest.STATE_OUTSTANDING
             if not self.__core.isXBeeXmitStatusSupported():
                 # mark transmit as successful:

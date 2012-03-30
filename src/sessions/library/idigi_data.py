@@ -4,7 +4,6 @@ push up data files to the iDigi server the device belongs to.
 See idigi_pc.py to run on a PC.
 """
 import sys  
-import os
 sys.path.append("WEB/python/idigi_data.zip")
 
 # iDigi is built into Digi devices. You need to be running python on a Digi
@@ -144,19 +143,19 @@ def _send_to_idigi (data, filename, collection, content_type, secure=True):
     if data == None or filename == None:
         return False
         
-    try:	
+    try:    
         host, token, path, port, securePort = _idigi._get_ws_parms()
-		
+        
         if secure == True:
             host = "%s:%d" % (host, securePort)
         else:
             host = "%s:%d" % (host, port)   
-			
+            
     except:
         host, token, path = _idigi._get_ws_parms()
         hostSplit = host.split(":")
         port = hostSplit[1]
-		
+        
     if host == None or host[0] == ":" or token == None or path == None or \
            port == None or port == 0:
         

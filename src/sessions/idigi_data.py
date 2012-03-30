@@ -31,26 +31,23 @@ to prevent the gateway from uploading too often and not having the time
 to processing incoming data from the XBee network.
 """
 
-import sys
 import time
 import threading
 from cgi import parse_qs
-from urllib import urlencode
-from exceptions import OverflowError
 
 from abstract_autostart import AbstractAutostartSession
 from abstract import AbstractSession
 
 import library.digi_ElementTree as ET
 from library.helpers import iso_date
-from library.io_sample import parse_is, sample_to_mv
+from library.io_sample import parse_is
 import library.xbee_addressing as xbee_addressing
 
-if sys.platform.startswith('digi'):
-    import library.idigi_data as idigi_data
+import library.idigi_data as idigi_data
 
 MAX_SAMPLE_Q_LEN = 256
 
+# TODO: only needed with versions of Python < 2.5
 def all(iterable):
     for element in iterable:
         if not element:
@@ -95,12 +92,12 @@ class iDigiDataUploader(object):
         try:
             self.__lock.acquire()
             try:
-              idigi_data.send_idigi_data(self.__format_doc(),
+                idigi_data.send_idigi_data(self.__format_doc(),
                                          filename,
                                          self.COLLECTION, self.SECURE)
-              print 'IDIGI_DATA: upload of %d samples successful' % \
+                print 'IDIGI_DATA: upload of %d samples successful' % \
                         len(self.__sample_q)
-              self.__sample_q = []
+                self.__sample_q = []
             except Exception, e:
                 print 'IDIGI_DATA: error during upload "%s"' % str(e)
         finally:
