@@ -1,0 +1,241 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>XIG</title>
+<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+<script src="/s/js/xig.js" type="text/javascript"></script>
+<script src="/s/js/index.js" type="text/javascript"></script>
+<style type="text/css">
+    @import url("https://ajax.googleapis.com/ajax/libs/dojo/1.7/dojo/resources/dojo.css");
+    @import url("https://ajax.googleapis.com/ajax/libs/dojo/1.7/dijit/themes/tundra/tundra.css");
+    @import url("https://ajax.googleapis.com/ajax/libs/dojo/1.7/dojox/grid/resources/tundraGrid.css");
+</style>
+
+<style type="text/css">
+#preloader {
+  width:100%; height:100%; margin:0; padding:0;
+  background:#ddd url("https://ajax.googleapis.com/ajax/libs/dojo/1.4/dojox/image/resources/images/loading.gif") no-repeat center center;
+  position:absolute;
+  z-index:999;
+}
+</style>
+
+<script src="https://www.google.com/jsapi" type="text/javascript"> </script>
+<script type="text/javascript">
+    djConfig = {afterOnLoad: true, 
+    			parseOnLoad: false, 
+    			isDebug: true,
+				modulePaths: { 
+    				"dojo": "https://ajax.googleapis.com/ajax/libs/dojo/1.7/dojo", 
+    				"dijit": "https://ajax.googleapis.com/ajax/libs/dojo/1.7/dijit", 
+    				"dojox": "https://ajax.googleapis.com/ajax/libs/dojo/1.7/dojox" 
+  				}}; 
+    google.load("dojo", "1.7");
+
+    function xbee_status() {
+        xig.xbee.get({at:'status', on_load:function(value) {dojo.byId('xbee-status').innerHTML=value;}});
+        xig.xbee.get({at:'eui', on_load:function(value) {dojo.byId('xbee-eui').innerHTML=value;}});         
+    }    
+    function idigi_status() {
+        dojo.xhrGet( {
+            url: "/idigi",
+            handleAs: "json",
+            load: function(value) {dojo.byId('idigi-status').innerHTML=value;}
+        });    	
+    }
+    
+    google.setOnLoadCallback(function(){
+    	dojo.require("dojo.parser");
+    	dojo.require("dojo.data.ItemFileWriteStore");
+		dojo.require("dijit.layout.BorderContainer");
+		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.Tooltip");
+        dojo.require("dojox.grid.DataGrid");
+        
+		dojo.addOnLoad(function() {
+            // parse the Dojo HTML tags and remove the loading screen
+            dojo.parser.parse();
+            
+            // initialize values on the page.
+            // iDigi settings
+            idigi_status();
+            // get the status every 2 seconds
+            setInterval('idigi_status();', 2000);
+            xig.settings.get({key:'device_id', on_load:function(value) {dojo.byId('idigi-device_id').innerHTML=value.slice(18);}});
+            xig.settings.get({key:'vendor_id', on_load:function(value) {dojo.byId('idigi-vendor_id').value=value;}});
+            xig.settings.get({key:'description', on_load:function(value) {dojo.byId('idigi-description').value=value;}});
+            
+            // XBee settings
+            xbee_status();
+            // get the status every 2 seconds
+            setInterval('xbee_status();', 2000);
+            xig.settings.get({key:'baud', on_load:function(value) {dojo.byId('xbee-baud').value=value;}});
+            dojo.xhrGet( {
+                url: "/serial_ports",
+                handleAs: "json",
+                sync: true,
+                load: function(com_ports) {
+                	var i;
+                	var com_port_select = dojo.byId('xbee-com_port');
+                	for (i in com_ports) {
+                	    var option=document.createElement("option");
+                	    option.text=com_ports[i];
+                		com_port_select.add(option, null);
+                	}
+                },
+                error: function(err) {alert(err);}
+            });
+            xig.settings.get({key:'com_port', on_load:function(value) {dojo.byId('xbee-com_port').value=value;}});
+            
+            // set up logging
+            xig.logs.init();
+            xig.logs.update();
+            setInterval('xig.logs.update();', 2000);
+            
+            /*set up layout*/
+            var layout = [[
+              {'name': 'ID', 'field': 'id', 'width': '35px'},
+              {'name': 'Timestamp', 'field': 'asctime', 'width': '150px'},
+              {'name': 'Severity', 'field': 'levelname', 'width': '75px'},
+              {'name': 'Logger', 'field': 'name', 'width': '100px'},
+              {'name': 'Message', 'field': 'msg', 'width': 'auto'}
+            ]];
+
+            /*create a new grid:*/
+            var grid = new dojox.grid.DataGrid({
+                id: 'grid',
+                store: xig.logs.store,
+                structure: layout,
+                rowSelector: '20px'},
+              document.createElement('div'));
+
+            /*append the new grid to the div*/
+            dojo.byId("logsGrid").appendChild(grid.domNode);
+
+            /*Call startup() to render the grid*/
+            grid.startup();            
+            
+            // remove the loading screen
+            dojo.fadeOut({
+                       node:"preloader",
+                       duration:200,
+                       onEnd: function(){
+                               dojo.style("preloader", "display", "none");
+                       }
+               }).play();
+        });     
+    });
+</script>	
+
+<link href="/s/css/index.css" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body class="tundra">
+<div id="preloader"></div>
+<div id="container" dojoType="dijit.layout.BorderContainer" gutters="false" livesplitters="true">
+    <div id="header" dojoType="dijit.layout.ContentPane" region="top" splitter="false">
+        <a class="left" href="http://code.google.com/p/xig/">
+           <img src="/s/images/logo.png" />
+        </a>
+	    <div id="top">
+	       XBee Internet Gateway
+		</div>
+	</div>
+    <div id="content_center" dojoType="dijit.layout.ContentPane" region="center" splitter="true">
+        <div class="status_section">        
+	        <div class="status">
+	            <h3 id="idigi" class="header">iDigi</h3>
+	            <br/>
+	            <div>
+		            <a class="img_box" href="https://www.idigi.com">
+		               <img src="/s/images/idigi-logo.gif" />
+		            </a>
+                    <div>
+	                    <div id="idigi-status-param" class="parameter">
+	                        <span class="key">Status: </span>
+	                        <div class="value" id="idigi-status"></div>
+	                    </div>
+                        <div class="parameter">
+                            <span class="key">Device ID: </span>
+                            <div class="value" id="idigi-device_id"></div>
+                        </div>
+                        <div class="parameter">
+                            <span class="key">Vendor ID: </span>
+                            <div class="value">
+                                <input id="idigi-vendor_id" onChange="xig.settings.set({key:'vendor_id', value:this.value});"></input>
+                            </div>
+                        </div>
+                        <div class="parameter">
+                            <span class="key">Description: </span>
+                            <div class="value">
+                                <input id="idigi-description" onChange="xig.settings.set({key:'description', value:this.value});"></input>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+	        </div>
+
+            <div class="status">
+                <h3 id="xbee" class="header">XBee</h3>
+                <br/>
+                <div>
+                    <a class="img_box" href="http://www.digi.com/products/wireless-wired-embedded-solutions/zigbee-rf-modules/zigbee-mesh-module/">
+                       <img height="100px" src="/s/images/xbee.png" />
+                    </a>
+                    <div>
+                        <div class="parameter">
+                            <span class="key">Status: </span>
+                            <div class="value" id="xbee-status"></div>
+                        </div>
+                        <div class="parameter">
+                            <span class="key">EUI-64: </span>
+                            <div class="value" id="xbee-eui"></div>
+                        </div>
+                        <div class="parameter">
+                            <span class="key">COM Port: </span>
+                            <div class="value">
+                                <select id="xbee-com_port" onChange="xig.settings.set({key:'com_port', value:this.value});"></select>
+                            </div>
+                        </div>
+                        <div class="parameter">
+                            <span class="key">Baud: </span>
+                            <div class="value">
+	                            <select id="xbee-baud" onChange="xig.settings.set({key:'baud', value:this.value});">
+	                                <option>1200</option>
+	                                <option>2400</option>
+	                                <option>4800</option>
+	                                <option>9600</option>
+	                                <option>19200</option>
+	                                <option>38400</option>                                
+	                                <option>57600</option>                                
+	                                <option>115200</option>                                
+	                                <option>230400</option>                                
+	                            </select>
+	                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class='logs'>
+            <h3 class='header'>Logs</h3>
+            <div id="logsGrid"></div>
+        </div>
+
+
+    </div>
+    <div id="footer" dojoType="dijit.layout.ContentPane" region="bottom" splitter="false">
+        Copyright (c) 2012 Digi International. All rights reserved.
+    </div>
+</div>
+
+<div dojoType="dijit.Tooltip" connectId="idigi" position="below">
+    iDigi Status and Settings.
+</div>	
+<div dojoType="dijit.Tooltip" connectId="xbee" position="below">
+    XBee Status and Settings.
+</div>  
+
+</body>
+</html>
