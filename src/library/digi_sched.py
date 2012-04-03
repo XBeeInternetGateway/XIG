@@ -39,7 +39,9 @@ changes made to support cleaner execution on Digi devices.
 import heapq
 from time import time as timefunc
 from threading import Condition
-import traceback
+
+import logging
+logger = logging.getLogger("xig.sched")
 
 __all__ = ["scheduler"]
 
@@ -179,7 +181,7 @@ class scheduler:
                         try:
                             action(*argument)
                         except Exception, e:
-                            print 'SCHED: exception during event "%s"' % str(e)
+                            logger.error('exception during event "%s"' % str(e))
                         self.__preemption_condition.acquire()
                         del event
                     else:

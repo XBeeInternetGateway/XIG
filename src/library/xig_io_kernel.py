@@ -19,6 +19,9 @@ from xig_session_q import XigSessionQ
 from xig_inactive_session_command_parser import XigInactiveSessionCommandParser
 from xbee_xmit_stack import XBeeXmitStack
 
+import logging
+logger = logging.getLogger("xig.io_kernel")
+
 DIGI_PLATFORM_FLAG = True
 if sys.platform.startswith('win'):
     from win_socketpair import SocketPair as socketpair
@@ -52,7 +55,7 @@ class XigIOKernel(object):
             self.__xbee_sd = socket(AF_XBEE, SOCK_DGRAM, XBS_PROT_TRANSPORT)
             self.__xbee_version = self.__getXBeeVersion()
             xbee_series = self.__xbee_version[0]
-            print "XBee Version = %s, Series = %s" % (self.__xbee_version, xbee_series)
+            logger.info("XBee Version = %s, Series = %s" % (self.__xbee_version, xbee_series))
             bind_addr = ('', 0, 0, 0)
             if xbee_series == '1':
                 bind_addr = ('', 0, 0, 0)
@@ -78,26 +81,25 @@ class XigIOKernel(object):
             try:
                 self.__xbee_sd.bind(bind_addr)
             except Exception, e:
-                print "XIG-ERROR: unable to bind XIG to XBee (%s)" % repr(e)
-                print "XIG-ERROR: is another program running using the XBee?"
+                logger.error("Unable to bind XIG to XBee (%s). Is another program running using the XBee?" % repr(e))
                 raise(e)
             
             # Enable XBee TX_STATUS reporting:
             if self.__core.isXBeeXmitStatusSupported():
-                print "XBee reliable transmit enabled"
+                logger.debug("XBee reliable transmit enabled")
                 self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
             else:
-                print "XBee transmit status not supported on this device."
+                logger.debug("XBee transmit status not supported on this device.")
         else:
-            print "Using PC-based UDP simulation mode on port %d..." % (
-              self.__core.getConfig().xbee_sim_udp_port)
+            logger.info("Using PC-based UDP simulation mode on port %d..." % (
+              self.__core.getConfig().xbee_sim_udp_port))
             self.__xbee_sd = socket(AF_INET, SOCK_DGRAM)
             self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
             self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
             self.__xbee_sd.bind(('', self.__core.getConfig().xbee_sim_udp_port))
 
-        print "XBee MTU = %d bytes" % (self.__xig_sd_max_tx_sz)
-        print "XBee MRU = %d bytes" % (self.__xig_sd_max_rx_sz)
+        logger.debug("XBee MTU = %d bytes" % (self.__xig_sd_max_tx_sz))
+        logger.debug("XBee MRU = %d bytes" % (self.__xig_sd_max_rx_sz))
         # Put XBee socket into non-blocking mode:
         self.__xbee_sd.setblocking(0)
 
@@ -166,8 +168,7 @@ class XigIOKernel(object):
             try:
                 func(buf, addr)
             except Exception, e:
-                print "IOSAMPLE: exception calling callback function"
-                
+                logger.error("Exception calling callback function: %s" % repr(e))
         return True
     
                     
@@ -226,8 +227,7 @@ class XigIOKernel(object):
             buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_rx_sz)
             was_tx_status = self.__xbee_xmit_stack.tx_status_recv(buf, addr)
             addr = self.__homogenizeXBeeSocketAddr(addr)
-            #print "RECV: %d bytes from %s" % (len(buf), repr(addr[0:4]))
-            print "RECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf))
+            logger.debug("RECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
             if was_tx_status or self.__ioSampleHook(buf, addr):
                 pass
             elif addr in self.__active_sessions:
@@ -262,7 +262,7 @@ class XigIOKernel(object):
                 except error, why:
                     # TODO: handle gracefully
                     if why[0] != errno.EWOULDBLOCK:
-                        print "IO sendto exception %s" % repr(why) 
+                        logger.error("sendto exception %s" % repr(why)) 
                         #raise error
                     break                
 

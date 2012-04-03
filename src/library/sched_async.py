@@ -41,6 +41,9 @@ import digi_sched as sched
 import threading
 from copy import copy
 
+import logging
+logger = logging.getLogger("xig.sched_async")
+
 # exception classes
 class SchedulerBadCallback(Exception):
     """Exception raised when a bad callback is passed to schedule_after"""
@@ -145,4 +148,4 @@ class SchedAsync(threading.Thread):
             try:
                 self.__sched.run()
             except Exception, e:
-                print 'SCHED: caught exception: "%s"' % (str(e))
+                logger.error('caught exception: "%s"' % (str(e)))

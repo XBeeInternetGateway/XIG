@@ -13,20 +13,26 @@ NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
 VERSION = "1.4.2"
 
-print "%s v%s starting." % (NAME, VERSION)
-print 'Unzipping and loading modules...'
-
-import sys, traceback
-import time
+import sys 
 
 APP_ARCHIVE = "WEB/python/_xig.zip"
 sys.path.insert(0, APP_ARCHIVE)
 
-# additional Python standard library imports
+# logging_stub will replace logging module on platforms that don't support logging.
+#NOTE: logging_stub MUST be imported before logging and ANY modules that import logging
+import library.logging_stub #@UnusedImport
+import logging
+import traceback
+import time
 import string
 
 # need to override socket by importing xbee.py first
 import xbee #@UnusedImport
+
+logger = logging.getLogger("xig")
+logger.setLevel(logging.DEBUG)
+
+logger.info("%s v%s starting." % (NAME, VERSION))
 
 # Digi specific library module imports
 DIGI_PLATFORM_FLAG = True
@@ -41,10 +47,9 @@ import sessions
 try:
     from xig_config import XigConfig
 except:
-    print "  (no xig_config.py found, using default config)"
+    logger.debug("No xig_config.py found, using default config")
     # XIG default configuration import:
     from xig_config_default import XigConfig
-print 'done.'
 
 HELPFILE_TEMPLATE = """\
 $appName $appVersion @ IP: $ipAddr
@@ -59,7 +64,7 @@ COMMANDS:
  help or xig://help:   displays this file
  quit or xig://quit:   quits program
  abort or xig://abort: aborts the current session
- time or xig://time:   prints the time in ISO format
+ time or xig://time:   returns the time in ISO format
 
 $sessionHelpText
 AUTO-STARTED SESSION SERVICES:
@@ -160,14 +165,14 @@ class Xig(object):
     
                       
     def go(self):
-        print "Loading and initializing configured session types..."
+        logger.info("Loading and initializing configured session types...")
         for session_type in self.__config.session_types:
             if session_type not in sessions.SESSION_MODEL_CLASS_MAP:
-                print 'unknown session type "%s", skipping.' % session_type
+                logger.warn('unknown session type "%s", skipping.' % session_type)
                 continue
             session_classes = sessions.SESSION_MODEL_CLASS_MAP[session_type]
-            print "Loading %s from %s..." % (repr(session_classes),
-                                             session_type)
+            logger.debug("Loading %s from %s..." % (repr(session_classes),
+                                                    session_type))
             for session_class in session_classes:
                 class_obj = sessions.classloader(
                               module_name="sessions." + session_type,
@@ -177,7 +182,7 @@ class Xig(object):
                 elif issubclass(class_obj, sessions.AbstractAutostartSession):
                     self.__autostart_sessions.append(class_obj(xig_core=self))
 
-        print "Formatting help text..."
+        logger.debug("Formatting help text...")
         sessionHelpText = "".join(map(lambda c: c.commandHelpText(),
                                         self.__session_classes))
         autostartHelpText = " (none)\n"
@@ -192,16 +197,15 @@ class Xig(object):
                             sessionHelpText=sessionHelpText,
                             autostartHelpText=autostartHelpText))
         self.helpfile = self.helpfile.replace('\n', '\r\n')      
-        print "Starting scheduler..." 
+        logger.info("Starting scheduler...") 
         self.__sched.start() 
-        print "XIG startup complete, ready to serve requests."
+        logger.info("XIG startup complete, ready to serve requests.")
         while not self.__quit_flag:
             try:
                 self.__io_kernel.ioLoop(timeout=None)
-            except:
-                print "-" * 60
-                print "Exception during I/O loop:"
-                traceback.print_exc(file=sys.stdout)          
+            except Exception, e:
+                logger.error("Exception during I/O loop: %s"%e)
+                traceback.print_exc(file=sys.stdout)    
         # run one last time, with feeling:
         self.__io_kernel.ioLoop(timeout=5.0)
         self.__io_kernel.shutdown()
@@ -237,7 +241,8 @@ def main():
     ret = -1
     try:
         ret = xig.go()
-    except:
+    except Exception, e:
+        logger.error("Problem in go(), exiting program: %s" % e)
         traceback.print_exc(file=sys.stdout)
         time.sleep(10)
         # TODO: until shutdown may be propagated cleanly, allow XIG to squirt

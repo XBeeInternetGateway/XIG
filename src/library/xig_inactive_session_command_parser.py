@@ -13,6 +13,9 @@ The output of this parser is used by the XigIOKernel in order to
 feed complete commands to the various session classes.
 '''
 
+import logging
+logger = logging.getLogger("xig.xsic")
+
 class XigInactiveSessionCommandParser(object):
     def __init__(self, xig_core):
         self.__global_max_buf_size = xig_core.getConfig().global_max_buf_size
@@ -48,7 +51,7 @@ class XigInactiveSessionCommandParser(object):
                     continue
                 cmds.append(self.XigInactiveSessionCommand(cmd_str, addr))
         except:
-            print "XISC error parsing command buffer, flushing."
+            logger.warning("Exception parsing command buffer, flushing.")
             self.__addr_cmd_buf_map[addr] = ""
             return [ ]
         
