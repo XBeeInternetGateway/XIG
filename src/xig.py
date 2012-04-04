@@ -206,10 +206,18 @@ class Xig(object):
             except Exception, e:
                 logger.error("Exception during I/O loop: %s"%e)
                 traceback.print_exc(file=sys.stdout)    
+        logger.info("Shutting down.")
         # run one last time, with feeling:
         self.__io_kernel.ioLoop(timeout=5.0)
         self.__io_kernel.shutdown()
-
+        
+        # unregister rci callback
+        #TODO: move this elsewhere?
+        try:
+            rci.stop_rci_callback("xig")
+        except:
+            pass
+        
         # From Digi support, to prevent the dreaded:
         # "zipimport.ZipImportError: bad local file header in WEB/python/_xig.zip" error
         import zipimport

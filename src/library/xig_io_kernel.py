@@ -288,5 +288,8 @@ class XigIOKernel(object):
                         break
 
     def shutdown(self):
+        # make sure to close the socket (this is needed when running on a PC).
+        if self.__xbee_sd:
+            self.__xbee_sd.close()
         del(self.__xbee_sd)
         
