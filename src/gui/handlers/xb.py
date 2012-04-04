@@ -39,6 +39,9 @@ class XbeeHandler:
                  0xAF : "Wrong link key",
                  0xFF : "Scanning..."  }
 
+    def poll(self):
+        #TODO: not sure how to get status values
+        return None
     
     def __call__(self, request):
         if request.method == 'GET':

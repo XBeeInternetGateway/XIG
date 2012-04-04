@@ -55,17 +55,20 @@ class XigApp(threading.Thread):
                     self.xig = xig.Xig()
                     # start XIG running forever
                     self.xig.go()
-            except Exception, e:
+            except:
                 pass
             self.xig = None
             time.sleep(1)
 
+    def get_power(self):
+        if self.xig and self.enable_xig:
+            return "on"
+        else:
+            return "off"
+
     def xig_handler(self, request):
         if request.method == 'GET':
-            if self.xig:
-                response = "on"
-            else:
-                response = "off"             
+            response = self.get_power()             
             return webob.Response(json.dumps(response), content_type='json')
         elif request.method == 'POST':
             state = request.POST.get('power', 'off')
@@ -76,14 +79,27 @@ class XigApp(threading.Thread):
                     self.xig.quit()
             else:
                 self.enable_xig = True
-                if self.xig:
-                    response = "on"
-                else:
-                    response = "off"             
+                response = self.get_power()       
             return webob.Response(json.dumps(response), content_type='json')            
         else:
             return webob.exc.HTTPMethodNotAllowed()        
-            
+    
+    def poll_handler(self, request):
+        if request.method == 'GET':
+            response = {'power': self.get_power()}
+            for key, handler in (('settings', self.settings_handler), 
+                                 ('logs', self.logs_handler),
+                                 ('serial_ports', self.serial_ports_handler),
+                                 ('idigi', self.idigi_handler),
+                                 ('xbee', self.xbee_handler)):
+                data = handler.poll()
+                if data is not None:
+                    response[key] = data
+            return webob.Response(json.dumps(response), content_type='json')
+        else:
+            return webob.exc.HTTPMethodNotAllowed()        
+        
+    
     @wsgify
     def __call__(self, request):
         if request.path_info_peek() in ['s', 'static', 'favicon.ico']:
@@ -110,6 +126,9 @@ class XigApp(threading.Thread):
         elif request.path in ['/xig']:
             # request for the main webpage
             return self.xig_handler(request)        
+        elif request.path in ['/poll']:
+            # request for the main webpage
+            return self.poll_handler(request)        
         else:
             return webob.exc.HTTPNotFound()
 

@@ -5,10 +5,33 @@ from simulator_settings import settings
 
 class SettingsHandler:
     
+    def __init__(self):
+        self.callbacks = {} # key, callback
+        self.poll_data = {} # key, value
+    
+    def callback(self, key, new_value, old_value):
+        self.poll_data[key] = new_value
+    
+    def poll(self):
+        poll_data = self.poll_data
+        self.poll_data = {}
+        return poll_data
+    
     def __call__(self, request):
         if request.method == 'GET':
             key = request.GET.get('key')
             if key:
+                notify = request.GET.get('notify')
+                if notify is not None:
+                    if notify and notify not in self.callbacks:
+                        # add a notify callback
+                        callback = lambda new_value, old_value, key=key: self.callback(key, new_value, old_value)
+                        settings.add_callback(key, callback)
+                        self.callbacks[key] = callback
+                    elif not notify and notify in self.callbacks:
+                        # remove callback
+                        settings.remove_callback(key, self.callbacks[key])
+                        del self.callbacks[key]
                 # return the value of a setting
                 value = str(settings.get(key, ''))
                 return webob.Response(json.dumps(value), content_type='json')

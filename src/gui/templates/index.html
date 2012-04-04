@@ -35,13 +35,6 @@
     function xbee_status() {
         xig.xbee.get({at:'status', on_load:function(value) {dojo.byId('xbee-status').innerHTML=value;}});
         xig.xbee.get({at:'eui', on_load:function(value) {dojo.byId('xbee-eui').innerHTML=value;}});         
-    }    
-    function idigi_status() {
-        dojo.xhrGet( {
-            url: "/idigi",
-            handleAs: "json",
-            load: function(value) {dojo.byId('idigi-status').innerHTML=value;}
-        });    	
     }
     
     google.setOnLoadCallback(function(){
@@ -49,7 +42,6 @@
     	dojo.require("dojo.data.ItemFileWriteStore");
 		dojo.require("dijit.layout.BorderContainer");
 		dojo.require("dijit.layout.ContentPane");
-		//dojo.require("dijit.form.ToggleButton");	
 		dojo.require("dijit.Tooltip");
         dojo.require("dojox.grid.DataGrid");
         
@@ -60,41 +52,25 @@
             // initialize xig javascript code
             xig.init();
             
+            //TODO: move handler functions to here from xig.js?
+            
+            // set up polling
+            setInterval('xig.poll();', 2000);
+            
             // initialize values on the page.
             // iDigi settings
-            idigi_status();
-            // get the status every 2 seconds
-            setInterval('idigi_status();', 2000);
-            xig.settings.get({key:'device_id', on_load:function(value) {dojo.byId('idigi-device_id').innerHTML=value.slice(18);}});
-            xig.settings.get({key:'vendor_id', on_load:function(value) {dojo.byId('idigi-vendor_id').value=value;}});
-            xig.settings.get({key:'description', on_load:function(value) {dojo.byId('idigi-description').value=value;}});
+            xig.settings.get({key:'device_id', notify: true, on_load:function(value) {dojo.byId('idigi-device_id').innerHTML=value.slice(18);}});
+            xig.settings.get({key:'vendor_id', notify: true, on_load:function(value) {dojo.byId('idigi-vendor_id').value=value;}});
+            xig.settings.get({key:'description', notify: true, on_load:function(value) {dojo.byId('idigi-description').value=value;}});
             
             // XBee settings
             xbee_status();
             // get the status every 2 seconds
             setInterval('xbee_status();', 2000);
-            xig.settings.get({key:'baud', on_load:function(value) {dojo.byId('xbee-baud').value=value;}});
-            dojo.xhrGet( {
-                url: "/serial_ports",
-                handleAs: "json",
-                sync: true,
-                load: function(com_ports) {
-                	var i;
-                	var com_port_select = dojo.byId('xbee-com_port');
-                	for (i in com_ports) {
-                	    var option=document.createElement("option");
-                	    option.text=com_ports[i];
-                		com_port_select.add(option, null);
-                	}
-                },
-                error: function(err) {alert(err);}
-            });
-            xig.settings.get({key:'com_port', on_load:function(value) {dojo.byId('xbee-com_port').value=value;}});
+            xig.settings.get({key:'baud', notify: true, on_load:function(value) {dojo.byId('xbee-baud').value=value;}});
+            xig.settings.get({key:'com_port', notify: true, on_load:function(value) {dojo.byId('xbee-com_port').value=value;}});
             
-            // set up logging
-            xig.logs.update();
-            setInterval('xig.logs.update();', 2000);
-            
+            // set up logging objects
             /*set up layout*/
             var layout = [[
               {'name': 'ID', 'field': 'id', 'width': '35px'},

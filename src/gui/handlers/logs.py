@@ -16,16 +16,24 @@ logger.addHandler(custom_handler)
 
 
 class LogsHandler:
-    def __call__(self, request):
+    def poll(self):
         global logs
+        response = []
+        # copy logs in thread-safe way
+        while logs:
+            record = logs.pop(0)
+            if not hasattr(record, 'asctime'):
+                record.asctime = time.ctime(record.created)
+            response.append(record.__dict__)
+        if not response:
+            return None
+        return response
+    
+    def __call__(self, request):
         if request.method == 'GET':
-            response = []
-            # copy logs in thread-safe way
-            while logs:
-                record = logs.pop(0)
-                if not hasattr(record, 'asctime'):
-                    record.asctime = time.ctime(record.created)
-                response.append(record.__dict__)
+            response = self.poll()
+            if not response:
+                response = []
             return webob.Response(json.dumps(response), content_type='json')
         else:
             return webob.exc.HTTPMethodNotAllowed()
