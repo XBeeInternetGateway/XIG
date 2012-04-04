@@ -125,86 +125,92 @@
 		  </div>
 		</div>
 	</div>
-    <div id="content_center" dojoType="dijit.layout.ContentPane" region="center" splitter="true">
-        <div class="status_section">        
-	        <div class="status">
-	            <h3 id="idigi" class="header">iDigi</h3>
-	            <br/>
-	            <div>
-		            <a class="img_box" href="https://www.idigi.com">
-		               <img src="/s/images/idigi-logo.gif" />
-		            </a>
-                    <div>
-	                    <div id="idigi-status-param" class="parameter">
-	                        <span class="key">Status: </span>
-	                        <div class="value" id="idigi-status"></div>
-	                    </div>
-                        <div class="parameter">
-                            <span class="key">Device ID: </span>
-                            <div class="value" id="idigi-device_id"></div>
-                        </div>
-                        <div class="parameter">
-                            <span class="key">Vendor ID: </span>
-                            <div class="value">
-                                <input id="idigi-vendor_id" onChange="xig.settings.set({key:'vendor_id', value:this.value});"></input>
-                            </div>
-                        </div>
-                        <div class="parameter">
-                            <span class="key">Description: </span>
-                            <div class="value">
-                                <input id="idigi-description" onChange="xig.settings.set({key:'description', value:this.value});"></input>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-	        </div>
-
-            <div class="status">
-                <h3 id="xbee" class="header">XBee</h3>
-                <br/>
-                <div>
-                    <a class="img_box" href="http://www.digi.com/products/wireless-wired-embedded-solutions/zigbee-rf-modules/zigbee-mesh-module/">
-                       <img height="100px" src="/s/images/xbee.png" />
-                    </a>
-                    <div>
-                        <div class="parameter">
-                            <span class="key">Status: </span>
-                            <div class="value" id="xbee-status"></div>
-                        </div>
-                        <div class="parameter">
-                            <span class="key">EUI-64: </span>
-                            <div class="value" id="xbee-eui"></div>
-                        </div>
-                        <div class="parameter">
-                            <span class="key">COM Port: </span>
-                            <div class="value">
-                                <select id="xbee-com_port" onChange="xig.settings.set({key:'com_port', value:this.value});"></select>
-                            </div>
-                        </div>
-                        <div class="parameter">
-                            <span class="key">Baud: </span>
-                            <div class="value">
-	                            <select id="xbee-baud" onChange="xig.settings.set({key:'baud', value:this.value});">
-	                                <option>1200</option>
-	                                <option>2400</option>
-	                                <option>4800</option>
-	                                <option>9600</option>
-	                                <option>19200</option>
-	                                <option>38400</option>                                
-	                                <option>57600</option>                                
-	                                <option>115200</option>                                
-	                                <option>230400</option>                                
-	                            </select>
-	                        </div>
-                        </div>
-                    </div>
-                </div>
+    <div id="content_center" dojoType="dijit.layout.ContentPane" region="center" splitter="false">
+        <div dojoType="dijit.layout.BorderContainer" gutters="false" livesplitters="true" splitter="true">
+            <div dojoType="dijit.layout.ContentPane" region="center" splitter="true">
+		        <div class="status_section">        
+			        <div class="status">
+			            <h3 id="idigi" class="header">iDigi</h3>
+			            <br/>
+			            <div>
+				            <a class="img_box" href="https://www.idigi.com">
+				               <img src="/s/images/idigi-logo.gif" />
+				            </a>
+		                    <div>
+			                    <div id="idigi-status-param" class="parameter">
+			                        <span class="key">Status: </span>
+			                        <div class="value" id="idigi-status"></div>
+			                    </div>
+		                        <div class="parameter">
+		                            <span class="key">Device ID: </span>
+		                            <div class="value" id="idigi-device_id"></div>
+		                        </div>
+		                        <div class="parameter">
+		                            <span class="key">Vendor ID: </span>
+		                            <div class="value">
+		                                <input id="idigi-vendor_id" onChange="xig.settings.set({key:'vendor_id', value:this.value});"></input>
+		                            </div>
+		                        </div>
+		                        <div class="parameter">
+		                            <span class="key">Description: </span>
+		                            <div class="value">
+		                                <input id="idigi-description" onChange="xig.settings.set({key:'description', value:this.value});"></input>
+		                            </div>
+		                        </div>
+		                    </div>
+		                </div>
+			        </div>
+		
+		            <div class="status">
+		                <h3 id="xbee" class="header">XBee</h3>
+		                <br/>
+		                <div>
+		                    <a class="img_box" href="http://www.digi.com/products/wireless-wired-embedded-solutions/zigbee-rf-modules/zigbee-mesh-module/">
+		                       <img height="100px" src="/s/images/xbee.png" />
+		                    </a>
+		                    <div>
+		                        <div class="parameter">
+		                            <span class="key">Status: </span>
+		                            <div class="value" id="xbee-status"></div>
+		                        </div>
+		                        <div class="parameter">
+		                            <span class="key">EUI-64: </span>
+		                            <div class="value" id="xbee-eui"></div>
+		                        </div>
+		                        <div class="parameter">
+		                            <span class="key">COM Port: </span>
+		                            <div class="value">
+		                                <select id="xbee-com_port" onChange="xig.settings.set({key:'com_port', value:this.value});"></select>
+		                            </div>
+		                        </div>
+		                        <div class="parameter">
+		                            <span class="key">Baud: </span>
+		                            <div class="value">
+			                            <select id="xbee-baud" onChange="xig.settings.set({key:'baud', value:this.value});">
+			                                <option>1200</option>
+			                                <option>2400</option>
+			                                <option>4800</option>
+			                                <option>9600</option>
+			                                <option>19200</option>
+			                                <option>38400</option>                                
+			                                <option>57600</option>                                
+			                                <option>115200</option>                                
+			                                <option>230400</option>                                
+			                            </select>
+			                        </div>
+		                        </div>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>
             </div>
-        </div>
-        <div id='logs'>
-            <h3 class='header'>Logs</h3>
-            <div id="logsGrid"></div>
-        </div>
+            <div id="logs_pane" dojoType="dijit.layout.ContentPane" region="bottom" splitter="true">
+		        <div id='logs'>
+		            <h3 class='header'>Logs</h3>
+		            <div id="logsGrid"></div>
+		        </div>
+		    </div>
+		</div>
     </div>
     <div id="footer" dojoType="dijit.layout.ContentPane" region="bottom" splitter="false">
         Copyright (c) 2012 Digi International. All rights reserved.

@@ -160,23 +160,28 @@ body {
 }
 
 /* logs */
+#logs_pane {
+	height: 450px;
+}
+
 #logs {
-    padding-top: 15px;
-    padding-left: 2%;
-    width: 96%;
-    float: left;
+    width: 100%;
     min-width: 400px;
+    height: 100%;
 }
 
 #logsGrid {
-	padding-top: 15px;
-	height: 100%;
+    position:absolute;
+    top:35px;
+    bottom:0px;
+    left:0px;
+    right: 0px;
 }
-
+   
 #grid {
     width: 100%;
+    min-height: 300px;
     height: 100%;
-    min-height: 400px;
 }
 
 /** Footer **/
