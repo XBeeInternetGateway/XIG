@@ -75,14 +75,12 @@ Response:
 
 """
 
-import sys
 import exceptions
 import threading
-from encodings import string_escape
 
 import library.digi_ElementTree as ET
 import library.xbee_addressing as xbee_addressing
-from library.io_sample import parse_is, sample_to_mv
+from library.io_sample import parse_is
 
 import rci
 import xbee
