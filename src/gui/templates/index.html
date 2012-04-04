@@ -49,12 +49,16 @@
     	dojo.require("dojo.data.ItemFileWriteStore");
 		dojo.require("dijit.layout.BorderContainer");
 		dojo.require("dijit.layout.ContentPane");
+		//dojo.require("dijit.form.ToggleButton");	
 		dojo.require("dijit.Tooltip");
         dojo.require("dojox.grid.DataGrid");
         
 		dojo.addOnLoad(function() {
             // parse the Dojo HTML tags and remove the loading screen
             dojo.parser.parse();
+
+            // initialize xig javascript code
+            xig.init();
             
             // initialize values on the page.
             // iDigi settings
@@ -88,7 +92,6 @@
             xig.settings.get({key:'com_port', on_load:function(value) {dojo.byId('xbee-com_port').value=value;}});
             
             // set up logging
-            xig.logs.init();
             xig.logs.update();
             setInterval('xig.logs.update();', 2000);
             
@@ -140,6 +143,10 @@
         </a>
 	    <div id="top">
 	       XBee Internet Gateway
+		</div>
+		<div id="power_div" class="right">
+		  <div id="power_button" class="power_icon" onClick="xig.power.toggle(true);">
+		  </div>
 		</div>
 	</div>
     <div id="content_center" dojoType="dijit.layout.ContentPane" region="center" splitter="true">
@@ -218,12 +225,10 @@
                 </div>
             </div>
         </div>
-        <div class='logs'>
+        <div id='logs'>
             <h3 class='header'>Logs</h3>
             <div id="logsGrid"></div>
         </div>
-
-
     </div>
     <div id="footer" dojoType="dijit.layout.ContentPane" region="bottom" splitter="false">
         Copyright (c) 2012 Digi International. All rights reserved.

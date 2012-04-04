@@ -1,4 +1,51 @@
 xig = {
+	"init": function() {
+		xig.power.init();
+		xig.logs.init();
+	},
+	"power": {
+		"state": "", // on or off
+		"init": function() {
+			xig.power.set_button_state("disabled");
+			xig.power.get_state();
+		},
+		"toggle": function(apply) { // turn on/off the power, whether to send the command to the server as well.
+			// send message to server to turn on power
+			if (xig.power.state == "off") {
+				xig.power.set("on");
+			} else {
+				xig.power.set("off");
+			}
+		},
+		"set": function(state) { // turn on power
+			// disable the button
+			xig.power.set_button_state("disabled");
+			dojo.xhrPost({
+	            url: "/xig",
+	            content: {"power": state},
+	            handleAs: "json",
+	            load: xig.power.set_button_state,
+	            error: xig.power.get_state
+			});
+		},
+		"set_button_state": function(state) { // enable the power button 
+			var power_button = dojo.byId('power_button');
+			power_button.className="power_icon "+state;
+			if (state == "disabled") {
+				power_button.disabled=true;
+			} else {
+				xig.power.state = state;
+				power_button.disabled=false;
+			}
+		},
+		"get_state": function() {
+			dojo.xhrGet( {
+	            url: "/xig",
+	            handleAs: "json",
+	            load: xig.power.set_button_state	            
+	        });			
+		}
+	},
 	"settings": {
 		"get": function(oArg) { // key, on_load, on_error
 	        if (oArg.on_load) {

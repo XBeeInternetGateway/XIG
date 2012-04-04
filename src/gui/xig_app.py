@@ -2,6 +2,7 @@ import webob
 import time
 from webob.dec import wsgify
 import threading
+import json
 
 # WSGI handlers
 import handlers.static
@@ -31,6 +32,7 @@ class XigApp(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.xig = None
+        self.enable_xig = True
         self.static_handler = handlers.static.StaticHandler()
         self.index_handler = handlers.index.IndexHandler()
         self.settings_handler = handlers.settings.SettingsHandler()
@@ -49,13 +51,38 @@ class XigApp(threading.Thread):
         while 1:
             try: 
                 # make sure rci and xbee are connected
-                if rci.connected() and xbee.ddo_get_param(None, "VR"):
+                if self.enable_xig and rci.connected() and xbee.ddo_get_param(None, "VR"):
                     self.xig = xig.Xig()
                     # start XIG running forever
                     self.xig.go()
             except Exception, e:
                 pass
+            self.xig = None
             time.sleep(1)
+
+    def xig_handler(self, request):
+        if request.method == 'GET':
+            if self.xig:
+                response = "on"
+            else:
+                response = "off"             
+            return webob.Response(json.dumps(response), content_type='json')
+        elif request.method == 'POST':
+            state = request.POST.get('power', 'off')
+            if state == "off":
+                self.enable_xig = False
+                response = "off"
+                if self.xig:
+                    self.xig.quit()
+            else:
+                self.enable_xig = True
+                if self.xig:
+                    response = "on"
+                else:
+                    response = "off"             
+            return webob.Response(json.dumps(response), content_type='json')            
+        else:
+            return webob.exc.HTTPMethodNotAllowed()        
             
     @wsgify
     def __call__(self, request):
@@ -80,6 +107,9 @@ class XigApp(threading.Thread):
         elif request.path in ['/logs']:
             # request for the main webpage
             return self.logs_handler(request)
+        elif request.path in ['/xig']:
+            # request for the main webpage
+            return self.xig_handler(request)        
         else:
             return webob.exc.HTTPNotFound()
 

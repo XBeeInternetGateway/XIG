@@ -66,6 +66,40 @@ body {
     color: #CCC;
 }
 
+#power_div {
+    padding: 5px;
+}
+
+.power_icon{
+    background: #222;    
+	background-image: url('/s/images/grey_power_button.png');
+    background-repeat: no-repeat;
+    background-size: 45px 45px;
+    width: 45px;
+    height: 45px;   
+    text-align: center;
+    border: 1px solid #222;
+}
+
+.power_icon:hover{
+    border: 1px solid #CCC;
+}
+
+.power_icon.disabled{
+    background: #222;
+    background-image: url('/s/images/grey_power_button.png');
+}
+
+.power_icon.on{
+    background: #222;
+    background-image: url('/s/images/green_power_button.png');
+}
+
+.power_icon.off{
+    background: #222;
+    background-image: url('/s/images/red_power_button.png');
+}
+
 /* center */
 
 /* Status section */
@@ -126,7 +160,7 @@ body {
 }
 
 /* logs */
-.logs {
+#logs {
     padding-top: 15px;
     padding-left: 2%;
     width: 96%;
