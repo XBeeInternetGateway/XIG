@@ -11,9 +11,9 @@ class CustomHandler(logging.Handler):
         logs.append(record)
 
 custom_handler = CustomHandler()
-for log_name in ('rci', 'edp', 'addp', 'xbee'):
-    logger = logging.getLogger(log_name)
-    logger.addHandler(custom_handler)
+logger = logging.getLogger('')
+logger.addHandler(custom_handler)
+
 
 class LogsHandler:
     def __call__(self, request):
