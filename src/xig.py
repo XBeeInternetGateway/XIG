@@ -202,7 +202,7 @@ class Xig(object):
         logger.info("XIG startup complete, ready to serve requests.")
         while not self.__quit_flag:
             try:
-                self.__io_kernel.ioLoop(timeout=None)
+                self.__io_kernel.ioLoop(timeout=1)
             except Exception, e:
                 logger.error("Exception during I/O loop: %s"%e)
                 traceback.print_exc(file=sys.stdout)    
