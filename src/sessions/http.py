@@ -8,9 +8,12 @@ import errno
 import urlparse
 import base64
 import socket
+import logging
 
 import library.digi_httplib as httplib
 from library.command_parser import Command, StreamingCommandParser
+
+logger = logging.getLogger('xig.http')
 
 from abstract import AbstractSession
 
@@ -106,8 +109,8 @@ class HTTPSession(AbstractSession):
         try:
             self.__httpConn.request(self.__httpMethod, self.__urlPath,
                                   self.__httpRequest, headers)
-            print "HTTP: successful %s of %s" % (self.__httpMethod,
-                                                 self.__url)
+            logger.info("successful %s of %s" % (self.__httpMethod,
+                                                 self.__url))
         except socket.gaierror, e:
             if not ignore_response:
                 self.__do_error("unable to perform HTTP request '%s'" % str(e))
@@ -136,8 +139,8 @@ class HTTPSession(AbstractSession):
             return           
             
         if self.__httpResponse.status != 200:
-            print "HTTP: WARNING status = %d, reason = %s" % (
-                self.__httpResponse.status, self.__httpResponse.reason)
+            logger.warning("status = %d, reason = %s" % (
+                self.__httpResponse.status, self.__httpResponse.reason))
         
         if self.__httpConn.sock is None:
             # Since socket is closed, read on file object will not block:
@@ -241,20 +244,20 @@ class HTTPSession(AbstractSession):
             buf = self.__httpResponse.read(read_amt)
         except socket.error, why:
             if why[0] not in self.__eWouldBlockExcs:
-                print "HTTP: read error %s" % errno.errorcode[why[0]]
+                logger.error("read error %s" % errno.errorcode[why[0]])
                 self.__state = HTTPSession.STATE_DRAIN
                 self.close()
             else:
                 return 0
         except httplib.IncompleteRead:
-            print "HTTP: incomplete read of HTTP 1.1 chunk"
+            logger.error("incomplete read of HTTP 1.1 chunk")
             self.__state = HTTPSession.STATE_DRAIN
             self.close()
             
         if (len(buf) == 0 or 
             self.__httpResponse.isclosed() or
             self.__httpResponse.length == 0):
-            print "HTTP: connection closed by remote server"
+            logger.info("connection closed by remote server")
             self.__state = HTTPSession.STATE_DRAIN
         
         self.__write_buf += buf
