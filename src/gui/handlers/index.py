@@ -6,11 +6,14 @@ class IndexHandler:
     def __call__(self, request):
         if request.method == 'GET':
             # return the main page
-            file = open(os.path.join(os.path.dirname(__file__), '..', 'templates', 'index.html'))
+            filename = os.path.join(os.path.dirname(__file__), '..', 'templates', 'index.html')
+            if not os.path.exists(filename):
+                filename = os.path.join(os.path.curdir, 'templates', 'index.html')
+            fp = open(filename) 
             try:
-                return webob.Response(file.read(), content_type='text/html')
+                return webob.Response(fp.read(), content_type='text/html')
             finally:
-                file.close()
+                fp.close()
         else:
             return wwebob.exc.HTTPMethodNotAllowed()
 
