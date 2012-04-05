@@ -53,25 +53,10 @@ class HTTPSession(AbstractSession):
             self.__eWouldBlockExcs = (errno.EWOULDBLOCK, errno.EAGAIN)
               
         # Parse URL:
-        parsedUrl = urlparse.urlsplit(url)
-        
-        self.__url = url
-        self.__urlScheme = parsedUrl[0]
-        self.__urlNetLoc = parsedUrl[1]
-        self.__urlPath = parsedUrl[2]
-        if len(parsedUrl[3]):
-            self.__urlPath += '?' + parsedUrl[3]
-        if len(parsedUrl[4]):
-            self.__urlPath += '#' + parsedUrl[4] 
         self.__urlUsername = None
         self.__urlPassword = ""
+        self.parse_url(url)
         
-        if '@' in self.__urlNetLoc:
-            self.__urlUsername, self.__urlNetLoc = self.__urlNetLoc.split('@')
-            
-        if self.__urlUsername is not None and ':' in self.__urlUsername:
-            self.__urlUsername, self.__urlPassword = self.__urlUsername.split(':')
-
         # Perform HTTP connection:
         try:
             self.__connect(ignore_response)
@@ -87,6 +72,25 @@ class HTTPSession(AbstractSession):
                                                 self.__commandAbortHandler))
         self.__command_parser.register_command(Command("xig://abort\n",
                                                 self.__commandAbortHandler))
+
+    def parse_url(self, url):
+        # Parse URL:
+        parsedUrl = urlparse.urlsplit(url)
+        
+        self.__url = url
+        self.__urlScheme = parsedUrl[0]
+        self.__urlNetLoc = parsedUrl[1]
+        self.__urlPath = parsedUrl[2]
+        if len(parsedUrl[3]):
+            self.__urlPath += '?' + parsedUrl[3]
+        if len(parsedUrl[4]):
+            self.__urlPath += '#' + parsedUrl[4] 
+        
+        if '@' in self.__urlNetLoc:
+            self.__urlUsername, self.__urlNetLoc = self.__urlNetLoc.split('@')
+            
+        if self.__urlUsername is not None and ':' in self.__urlUsername:
+            self.__urlUsername, self.__urlPassword = self.__urlUsername.split(':')
 
                     
     def __connect(self, ignore_response=False):
@@ -137,7 +141,15 @@ class HTTPSession(AbstractSession):
         except Exception, e:
             self.__do_error("httplib exception: %s" % repr(str(e)))
             return           
-            
+        
+        if self.__httpResponse.status in (300, 301, 302, 303):
+            # redirect
+            location = self.__httpResponse.msg.get('location').strip()
+            if location:
+                logger.info("redirect to %s" % (location))
+                self.parse_url(location)
+                self.__connect(ignore_response)
+        
         if self.__httpResponse.status != 200:
             logger.warning("status = %d, reason = %s" % (
                 self.__httpResponse.status, self.__httpResponse.reason))
