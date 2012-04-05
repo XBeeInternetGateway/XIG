@@ -1,12 +1,15 @@
 import sys
 sys.path.insert(0, "./library/cp4pc")
 sys.path.insert(0, ".")
+
+# need to import early (to overwrite socket and select)
+import xbee
+
 import webob
 import time
 from webob.dec import wsgify
 import threading
 import json
-import sys
 import logging
 
 # WSGI handlers
@@ -18,6 +21,7 @@ import handlers.xb
 import handlers.idigi
 import handlers.logs
 
+DEFAULT_PORT = 8000 #random number
 
 logger = logging.getLogger('')
 logger.addHandler(logging.StreamHandler(sys.__stdout__))
@@ -30,7 +34,6 @@ import xig
 
 # rci code and handlers
 import rci
-import xbee
 
 # set the version from XIG
 settings['version'] = xig.VERSION
@@ -54,7 +57,7 @@ class XigApp(threading.Thread):
         rci.set_wsgi_handler(self)
         
         # make sure a local port is set
-        settings.setdefault('local_port', 80)
+        settings.setdefault('local_port', DEFAULT_PORT)
            
     def run(self):
         while 1:
@@ -144,7 +147,5 @@ class XigApp(threading.Thread):
 if __name__ == "__main__":
     app = XigApp()
     app.start()
-    time.sleep(.2) #TODO: this is a hack to make things work correctly.  
-    # I think there might be a slight lag getting the web server started?
     import webbrowser
-    webbrowser.open("http://localhost:%d" % settings.get('local_port', 80))    
+    webbrowser.open("http://localhost:%d" % settings['local_port'])    
