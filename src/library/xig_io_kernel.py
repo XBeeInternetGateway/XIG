@@ -182,7 +182,6 @@ class XigIOKernel(object):
                 continue
             self.__active_sessions[dest] = (
                 self.__queued_sessions.dequeue_session(dest))
-        
         # Evaluate each active session:
         rl, wl, xl = ([self.__xbee_sd, self.__inner_sd], [], []) 
         sd_to_sess_map = {}
@@ -220,7 +219,6 @@ class XigIOKernel(object):
                 self.__inner_sd.recv(1)
             except:
                 pass
-        
         # XBee read processing
         if self.__xbee_sd in rl:
             rl.remove(self.__xbee_sd)
@@ -262,7 +260,7 @@ class XigIOKernel(object):
                 except error, why:
                     # TODO: handle gracefully
                     if why[0] != errno.EWOULDBLOCK:
-                        logger.error("sendto exception %s" % repr(why)) 
+                        logger.error("IO: exception on XBee xmit (%s)" % repr(why)) 
                         #raise error
                     break                
 

@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, "./library/cp4pc")
+sys.path.insert(0, ".")
 import webob
 import time
 from webob.dec import wsgify
