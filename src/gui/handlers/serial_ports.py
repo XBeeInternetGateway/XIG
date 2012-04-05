@@ -1,6 +1,10 @@
 import json
 import webob
-import serial.tools.list_ports
+import sys, glob
+try:
+    import serial.tools.list_ports
+except:
+    pass
 
 class SerialPortsHandler:
     
@@ -19,8 +23,19 @@ class SerialPortsHandler:
     def get_ports(self):
         # return list of serial ports
         com_ports = set()
-        for port, desc, port_type in serial.tools.list_ports.comports():
-            com_ports.add(port)
+        try:
+          for port, desc, port_type in serial.tools.list_ports.comports():
+              com_ports.add(port)
+        except:
+          pass
+        if len(com_ports):
+            return com_ports
+        try:
+            if sys.platform.startswith("darwin"):
+		    return set(glob.glob('/dev/tty.*') + glob.glob('/dev/cu.*'))
+	    return set(glob.glob('/dev/tty*') + glob.glob('/dev/cu*'))
+        except:
+            pass
         return com_ports
     
     def __call__(self, request):
