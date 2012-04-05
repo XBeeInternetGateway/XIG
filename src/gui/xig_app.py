@@ -3,6 +3,8 @@ import time
 from webob.dec import wsgify
 import threading
 import json
+import sys
+import logging
 
 # WSGI handlers
 import handlers.static
@@ -12,6 +14,10 @@ import handlers.serial_ports
 import handlers.xb
 import handlers.idigi
 import handlers.logs
+
+
+logger = logging.getLogger('')
+logger.addHandler(logging.StreamHandler(sys.__stdout__))
 
 # application settings
 from simulator_settings import settings
@@ -135,4 +141,7 @@ class XigApp(threading.Thread):
 if __name__ == "__main__":
     app = XigApp()
     app.start()
-    
+    time.sleep(.2) #TODO: this is a hack to make things work correctly.  
+    # I think there might be a slight lag getting the web server started?
+    import webbrowser
+    webbrowser.open("http://localhost:%d" % settings.get('local_port', 80))    
