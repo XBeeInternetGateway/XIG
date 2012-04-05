@@ -5,7 +5,9 @@ import webob
 class StaticHandler:
     
     def __init__(self):
-        self.static_folder = os.path.join(os.path.dirname(__file__), '..', 'static') #NOTE: this depends on the directory structure
+        self.static_folder = os.path.join(os.path.dirname(__file__), '..', 'static')
+        if not os.path.exists(self.static_folder):
+                self.static_folder = os.path.join(os.path.curdir, 'static')        
         
     def __call__(self, request):
         if request.method == 'GET':
