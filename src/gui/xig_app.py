@@ -23,8 +23,8 @@ import handlers.logs
 
 DEFAULT_PORT = 8000 #random number
 
-logger = logging.getLogger('')
-logger.addHandler(logging.StreamHandler(sys.__stdout__))
+logging.getLogger('').addHandler(logging.StreamHandler(sys.__stdout__))
+logger = logging.getLogger('xig.gui')
 
 # application settings
 from simulator_settings import settings
@@ -67,8 +67,8 @@ class XigApp(threading.Thread):
                     self.xig = xig.Xig()
                     # start XIG running forever
                     self.xig.go()
-            except:
-                pass
+            except Exception, e:
+                logger.error("Exception when running XIG: %s" % e)
             self.xig = None
             time.sleep(1)
 
@@ -121,25 +121,18 @@ class XigApp(threading.Thread):
             # request for the main webpage
             return self.index_handler(request)
         elif request.path in ['/settings']:
-            # request for the main webpage
             return self.settings_handler(request)
         elif request.path in ['/serial_ports']:
-            # request for the main webpage
             return self.serial_ports_handler(request)
         elif request.path in ['/xbee', '/Xbee', '/XBee']:
-            # request for the main webpage
             return self.xbee_handler(request)
         elif request.path in ['/idigi']:
-            # request for the main webpage
             return self.idigi_handler(request)
         elif request.path in ['/logs']:
-            # request for the main webpage
             return self.logs_handler(request)
         elif request.path in ['/xig']:
-            # request for the main webpage
             return self.xig_handler(request)        
         elif request.path in ['/poll']:
-            # request for the main webpage
             return self.poll_handler(request)        
         else:
             return webob.exc.HTTPNotFound()
