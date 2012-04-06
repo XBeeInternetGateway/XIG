@@ -36,7 +36,6 @@ logger.setLevel(logging.DEBUG)
 logger.info("%s v%s starting." % (NAME, VERSION))
 
 # Digi specific library module imports
-DIGI_PLATFORM_FLAG = True
 import rci
 
 # XIG library imports
@@ -95,13 +94,6 @@ class Xig(object):
 	return True
 
     def getLocalIP(self):
-	if not DIGI_PLATFORM_FLAG:
-	    from socket import gethostbyname_ex
-	    if sys.platform.startswith('darwin'):
-		return gethostbyname_ex('localhost')[2]
-	    else:
-		return gethostbyname_ex('')[2]
-
 	# Assume Digi platform:
 	query_string = """\
 <rci_request version="1.1">
