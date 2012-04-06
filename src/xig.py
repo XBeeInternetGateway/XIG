@@ -27,9 +27,6 @@ import traceback
 import time
 import string
 
-logger = logging.getLogger('')
-logger.addHandler(logging.StreamHandler(sys.__stdout__))
-
 # need to override socket by importing xbee.py first
 import xbee #@UnusedImport
 
@@ -264,5 +261,7 @@ def main():
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger('')
+    logger.addHandler(logging.StreamHandler(sys.__stdout__))
     ret = main()
     sys.exit(ret)
