@@ -15,7 +15,8 @@ VERSION = "1.5.0"
 
 import sys
 
-sys.path.insert(0, "./library/cp4pc")
+sys.path.insert(0, "./library/ext")
+sys.path.insert(0, "./library/ext/cp4pc")
 APP_ARCHIVE = "WEB/python/_xig.zip"
 sys.path.insert(0, APP_ARCHIVE)
 
