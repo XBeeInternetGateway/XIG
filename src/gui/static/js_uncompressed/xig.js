@@ -196,6 +196,33 @@ xig = {
         	}
 		}
 	},
+	"console": {
+		"send": function(data) {
+	        if (data) {
+				dojo.xhrPost( {
+		            url: "/xig_console",
+		            content: {data: data+'\r\n'},
+		            handleAs: "json",
+		        });
+				// display the data in the output window
+		        data = data.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+				dojo.byId('console-output').innerHTML += '<span class="input-color">'+data+'\\r\\n</span>';
+				// clear the input command.
+				dojo.byId('console-input').value = '';
+	        }
+		},
+		"update": function() {
+	        dojo.xhrGet( {
+	            url: "/xig_console",
+	            handleAs: "json",
+	            load: xig.console.handler
+	        });
+		},
+		"handler": function(data) {
+			data = data.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r/g, "\\r").replace(/\n/g, "\\n");
+			dojo.byId('console-output').innerHTML += '<span class="output-color">'+data+'</span>';
+		}
+	},
 	"logs": {
 		"store": null,
 		"id": 0,
