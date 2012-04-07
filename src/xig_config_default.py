@@ -92,8 +92,6 @@ class XigConfig(object):
     # session requests, such as the I/O service.
     global_max_dest_session_q_len = 8
     
-    # If the XIG is run on a PC for development or debugging purposes
-    # this setting controls which UDP port number acts as the XBee
-    # simulation.
-    xbee_sim_udp_port = 5649
+    # Controls which UDP port number to receive requests
+    xbee_udp_port = 5649
     

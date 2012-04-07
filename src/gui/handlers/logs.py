@@ -14,7 +14,6 @@ custom_handler = CustomHandler()
 logger = logging.getLogger('')
 logger.addHandler(custom_handler)
 
-
 class LogsHandler:
     def poll(self):
         global logs
@@ -31,9 +30,7 @@ class LogsHandler:
     
     def __call__(self, request):
         if request.method == 'GET':
-            response = self.poll()
-            if not response:
-                response = []
+            response = self.poll() or []
             return webob.Response(json.dumps(response), content_type='json')
         else:
             return webob.exc.HTTPMethodNotAllowed()

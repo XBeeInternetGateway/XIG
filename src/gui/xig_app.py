@@ -21,11 +21,12 @@ import handlers.serial_ports
 import handlers.xb
 import handlers.idigi
 import handlers.logs
+import handlers.xig_console
 
 DEFAULT_PORT = 8000 #random number
 
-logger = logging.getLogger('')
-logger.addHandler(logging.StreamHandler(sys.__stdout__))
+logging.getLogger('').addHandler(logging.StreamHandler(sys.__stdout__))
+logger = logging.getLogger('xig.gui')
 
 # application settings
 from simulator_settings import settings
@@ -53,6 +54,7 @@ class XigApp(threading.Thread):
         self.xbee_handler = handlers.xb.XbeeHandler()
         self.idigi_handler = handlers.idigi.idigiHandler()
         self.logs_handler = handlers.logs.LogsHandler()
+        self.xig_console_handler = handlers.xig_console.XigConsoleHandler()
         
         # register self as an HTTP handler
         rci.set_wsgi_handler(self)
@@ -66,10 +68,16 @@ class XigApp(threading.Thread):
                 # make sure rci and xbee are connected
                 if self.enable_xig and rci.connected() and xbee.ddo_get_param(None, "VR"):
                     self.xig = xig.Xig()
+                    try:
+                        # set port for xig_console_handler
+                        self.xig_console_handler.port = self.xig.getConfig().xbee_udp_port
+                    except:
+                        pass
                     # start XIG running forever
                     self.xig.go()
-            except:
-                pass
+            except Exception, e:
+                logger.error("Exception when running XIG: %s" % e)
+            self.xig_console_handler.port = None
             self.xig = None
             time.sleep(1)
 
@@ -104,7 +112,8 @@ class XigApp(threading.Thread):
                                  ('logs', self.logs_handler),
                                  ('serial_ports', self.serial_ports_handler),
                                  ('idigi', self.idigi_handler),
-                                 ('xbee', self.xbee_handler)):
+                                 ('xbee', self.xbee_handler),
+                                 ('console', self.xig_console_handler)):
                 data = handler.poll()
                 if data is not None:
                     response[key] = data
@@ -122,25 +131,20 @@ class XigApp(threading.Thread):
             # request for the main webpage
             return self.index_handler(request)
         elif request.path in ['/settings']:
-            # request for the main webpage
             return self.settings_handler(request)
         elif request.path in ['/serial_ports']:
-            # request for the main webpage
             return self.serial_ports_handler(request)
         elif request.path in ['/xbee', '/Xbee', '/XBee']:
-            # request for the main webpage
             return self.xbee_handler(request)
         elif request.path in ['/idigi']:
-            # request for the main webpage
             return self.idigi_handler(request)
         elif request.path in ['/logs']:
-            # request for the main webpage
             return self.logs_handler(request)
+        elif request.path in ['/xig_console']:
+            return self.xig_console_handler(request)        
         elif request.path in ['/xig']:
-            # request for the main webpage
             return self.xig_handler(request)        
         elif request.path in ['/poll']:
-            # request for the main webpage
             return self.poll_handler(request)        
         else:
             return webob.exc.HTTPNotFound()

@@ -13,7 +13,6 @@ import random
 import struct
 from socket import *
 from select import *
-import exceptions
 
 from xig_session_q import XigSessionQ
 from xig_inactive_session_command_parser import XigInactiveSessionCommandParser
@@ -50,53 +49,56 @@ class XigIOKernel(object):
         self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
         self.__xbee_version = None
 
-        
-        if DIGI_PLATFORM_FLAG:
-            self.__xbee_sd = socket(AF_XBEE, SOCK_DGRAM, XBS_PROT_TRANSPORT)
-            self.__xbee_version = self.__getXBeeVersion()
-            xbee_series = self.__xbee_version[0]
-            logger.info("XBee Version = %s, Series = %s" % (self.__xbee_version, xbee_series))
+        # set up XBee socket to receive commands on        
+        self.__xbee_sd = socket(AF_XBEE, SOCK_DGRAM, XBS_PROT_TRANSPORT)
+        self.__xbee_version = self.__getXBeeVersion()
+        xbee_series = self.__xbee_version[0]
+        logger.info("XBee Version = %s, Series = %s" % (self.__xbee_version, xbee_series))
+        bind_addr = ('', 0, 0, 0)
+        if xbee_series == '1':
             bind_addr = ('', 0, 0, 0)
-            if xbee_series == '1':
-                bind_addr = ('', 0, 0, 0)
-                self.__xig_sd_max_tx_sz = self.XBEE_S1_MAX_TX
-                self.__xig_sd_max_rx_sz = self.XBEE_S1_MAX_RX
-            elif xbee_series == '2' or xbee_series == '3':
-                bind_addr = ('', 0xe8, 0, 0)
-                try:
-                    self.__xig_sd_max_tx_sz = struct.unpack(
-                        "B", xbee.ddo_get_param(None, 'NP'))[0]
-                except:
-                    self.__xig_sd_max_tx_sz = self.XBEE_S23_MAX_TX
-                source_routing_enabled = struct.unpack("B",
-                    xbee.ddo_get_param(None, 'AR'))[0] != 0xff
-                if source_routing_enabled:
-                    self.__xig_sd_max_tx_sz -= 20
-                self.__xig_sd_max_rx_sz = self.XBEE_S23_MAX_RX
-            else:
-                bind_addr = ('', 0xe8, 0, 0)
-                self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
-                self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
-                
+            self.__xig_sd_max_tx_sz = self.XBEE_S1_MAX_TX
+            self.__xig_sd_max_rx_sz = self.XBEE_S1_MAX_RX
+        elif xbee_series == '2' or xbee_series == '3':
+            bind_addr = ('', 0xe8, 0, 0)
             try:
-                self.__xbee_sd.bind(bind_addr)
-            except Exception, e:
-                logger.error("Unable to bind XIG to XBee (%s). Is another program running using the XBee?" % repr(e))
-                raise(e)
-            
-            # Enable XBee TX_STATUS reporting:
-            if self.__core.isXBeeXmitStatusSupported():
-                logger.debug("XBee reliable transmit enabled")
-                self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
-            else:
-                logger.debug("XBee transmit status not supported on this device.")
+                self.__xig_sd_max_tx_sz = struct.unpack(
+                    "B", xbee.ddo_get_param(None, 'NP'))[0]
+            except:
+                self.__xig_sd_max_tx_sz = self.XBEE_S23_MAX_TX
+            source_routing_enabled = struct.unpack("B",
+                xbee.ddo_get_param(None, 'AR'))[0] != 0xff
+            if source_routing_enabled:
+                self.__xig_sd_max_tx_sz -= 20
+            self.__xig_sd_max_rx_sz = self.XBEE_S23_MAX_RX
         else:
-            logger.info("Using PC-based UDP simulation mode on port %d..." % (
-              self.__core.getConfig().xbee_sim_udp_port))
-            self.__xbee_sd = socket(AF_INET, SOCK_DGRAM)
+            bind_addr = ('', 0xe8, 0, 0)
             self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
             self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
-            self.__xbee_sd.bind(('', self.__core.getConfig().xbee_sim_udp_port))
+            
+        try:
+            self.__xbee_sd.bind(bind_addr)
+        except Exception, e:
+            logger.error("Unable to bind XIG to XBee (%s). Is another program running using the XBee?" % repr(e))
+            raise(e)
+        
+        # Enable XBee TX_STATUS reporting:
+        if self.__core.isXBeeXmitStatusSupported():
+            logger.debug("XBee reliable transmit enabled")
+            self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
+        else:
+            logger.debug("XBee transmit status not supported on this device.")
+            
+        #add socket to process commands from UDP port on 
+        self.__udp_sd = None
+        try:
+            xbee_udp_port = self.__core.getConfig().xbee_udp_port
+            if xbee_udp_port:
+                logger.info("Enabling UDP listener on port %d..." % (xbee_udp_port))
+                self.__udp_sd = socket(AF_INET, SOCK_DGRAM)
+                self.__udp_sd.bind(('', xbee_udp_port))
+        except Exception, e:
+            logger.warning("Exception when configuring UDP listener: %s" % (repr(e)))
 
         logger.debug("XBee MTU = %d bytes" % (self.__xig_sd_max_tx_sz))
         logger.debug("XBee MRU = %d bytes" % (self.__xig_sd_max_rx_sz))
@@ -118,6 +120,9 @@ class XigIOKernel(object):
     
     def __homogenizeXBeeSocketAddr(self, xbee_socket_addr):
         return xbee_socket_addr[0:4] + (0,0)
+    
+    def __isXBeeAddr(self, xbee_socket_addr):
+        return xbee_socket_addr[0].endswith("!")
     
     def xbeeAddrFromHwAddr(self, hw_addr,
                                ep=None, profile=None, cluster=None):
@@ -161,8 +166,9 @@ class XigIOKernel(object):
             return False
         
         if DIGI_PLATFORM_FLAG:
-            # Take care to strip off XBee option bits:
-            addr = addr[0:4] + (0,0)
+            #Take care to strip off XBee option bits 
+            # TODO: why, these could be potentially useful.
+            addr = self.__homogenizeXBeeSocketAddr(addr)
         
         for func in self.__iosample_subscribers:
             try:
@@ -186,6 +192,7 @@ class XigIOKernel(object):
         rl, wl, xl = ([self.__xbee_sd, self.__inner_sd], [], []) 
         sd_to_sess_map = {}
         pending_data_to_xbee_sessions = []
+        pending_data_to_udp_sessions = []
         for addr in self.__active_sessions.keys():
             sess = self.__active_sessions[addr]
             # If the session finished, reap it:
@@ -196,7 +203,12 @@ class XigIOKernel(object):
             new_rl, new_wl = (sess.getReadSockets(), sess.getWriteSockets())
             try:
                 if len(sess.getSessionToXBeeBuffer()) > 0:
-                    pending_data_to_xbee_sessions.append(sess)
+                    if self.__isXBeeAddr(sess.getXBeeAddr()):
+                        # this is for the XBee
+                        pending_data_to_xbee_sessions.append(sess)
+                    else:
+                        # this is for the UDP socket
+                        pending_data_to_udp_sessions.append(sess)
             except:
                 pass
             # Build reverse session map:
@@ -208,6 +220,13 @@ class XigIOKernel(object):
         # to the select write list:
         if len(pending_data_to_xbee_sessions):
             wl.append(self.__xbee_sd)
+        
+        # If UDP socket is defined add to read list.  
+        # Also add to write list if any session has data for the UDP socket
+        if self.__udp_sd:
+            rl.append(self.__udp_sd)
+            if len(pending_data_to_udp_sessions):
+                wl.append(self.__udp_sd)
         
         # Select active descriptors
         rl, wl, xl = select(rl, wl, xl, timeout)
@@ -233,8 +252,33 @@ class XigIOKernel(object):
                 self.__active_sessions[addr].appendXBeeToSessionBuffer(buf)
             else:
                 # data is command data:
-                new_xcommands = self.__inactive_sess_cmd_parser.parse(buf, addr)
-
+                for xcommand in self.__inactive_sess_cmd_parser.parse(buf, addr):
+                    for session_class in self.__core.getSessionClasses():
+                        sess = session_class.handleSessionCommand(self.__core, xcommand.command, addr)
+                        if sess is not None:
+                            # valid command handler found, enqueue session for
+                            # later processing:
+                            self.__queued_sessions.add(sess)
+                            break
+        
+        # UDP read processing
+        if self.__udp_sd in rl:
+            rl.remove(self.__udp_sd)
+            buf, addr = self.__udp_sd.recvfrom(1024) #large number
+            logger.debug("RECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
+            if addr in self.__active_sessions:
+                # data is destined to session
+                self.__active_sessions[addr].appendXBeeToSessionBuffer(buf)
+            else:
+                # data is command data:
+                for xcommand in self.__inactive_sess_cmd_parser.parse(buf, addr):
+                    for session_class in self.__core.getSessionClasses():
+                        sess = session_class.handleSessionCommand(self.__core, xcommand.command, addr)
+                        if sess is not None:
+                            # valid command handler found, enqueue session for
+                            # later processing:
+                            self.__queued_sessions.add(sess)
+                            break
                 
         # Session read processing
         random.shuffle(rl)
@@ -262,7 +306,21 @@ class XigIOKernel(object):
                     if why[0] != errno.EWOULDBLOCK:
                         logger.error("IO: exception on XBee xmit (%s)" % repr(why)) 
                         #raise error
-                    break                
+                    break
+
+        # UDP write processing
+        if self.__udp_sd in wl:
+            wl.remove(self.__udp_sd)
+            random.shuffle(pending_data_to_udp_sessions)
+            # Try a single write from all active sessions until we'd block:
+            for sess in pending_data_to_udp_sessions:
+                buf = sess.getSessionToXBeeBuffer()[0:512] #512 should be a safe size for UDP transmission
+                try:
+                    # send directly to UDP device
+                    count = self.__udp_sd.sendto(buf, 0, sess.getXBeeAddr())
+                    sess.accountSessionToXBeeBuffer(count)
+                except Exception, e:
+                    logger.error("exception when responding to UDP request (%s)" % repr(e))
 
         # Session write processing:
         random.shuffle(wl)
@@ -270,24 +328,9 @@ class XigIOKernel(object):
             sess = sd_to_sess_map[sd]
             sess.write(sd)
             
-        # Command processing:
-        if len(new_xcommands):
-            for xcommand in new_xcommands:
-                for session_class in self.__core.getSessionClasses():
-                    if DIGI_PLATFORM_FLAG:
-                        # Take care to strip off XBee option bits:
-                        addr = self.__homogenizeXBeeSocketAddr(addr)
-                    sess = session_class.handleSessionCommand(
-                                self.__core, xcommand.command, addr)
-                    if sess is not None:
-                        # valid command handler found, enqueue session for
-                        # later processing:
-                        self.__queued_sessions.add(sess)
-                        break
-
     def shutdown(self):
         # make sure to close the socket (this is needed when running on a PC).
         if self.__xbee_sd:
             self.__xbee_sd.close()
         del(self.__xbee_sd)
-        
+

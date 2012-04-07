@@ -77,4 +77,3 @@ class XigSession(AbstractSession):
         # Get the current time, add time zone adjustment, if any:
         time_str = time_helpers.iso_date(t=None, use_local_time_offset=True)          
         self.appendSessionToXBeeBuffer("Xig: " + time_str + "\r\n")
-                 
