@@ -1,5 +1,6 @@
 import sys
-sys.path.insert(0, "./library/cp4pc")
+sys.path.insert(0, "./library/ext")
+sys.path.insert(0, "./library/ext/cp4pc")
 sys.path.insert(0, ".")
 
 # need to import early (to overwrite socket and select)
