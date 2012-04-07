@@ -8,6 +8,8 @@ class StaticHandler:
         self.static_folder = os.path.join(os.path.dirname(__file__), '..', 'static')
         if not os.path.exists(self.static_folder):
                 self.static_folder = os.path.join(os.path.curdir, 'static')        
+        if not os.path.exists(self.static_folder):
+                self.static_folder = os.path.join(os.path.curdir, 'gui', 'static')        
         
     def __call__(self, request):
         if request.method == 'GET':

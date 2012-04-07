@@ -148,5 +148,7 @@ class XigApp(threading.Thread):
 if __name__ == "__main__":
     app = XigApp()
     app.start()
+    # magic sleep!
+    time.sleep(3.0)
     import webbrowser
     webbrowser.open("http://localhost:%d" % settings['local_port'])    
