@@ -61,7 +61,6 @@
             // initialize values on the page.
             // iDigi settings
             xig.settings.get({key:'device_id', notify: true, on_load:function(value) {dojo.byId('idigi-device_id').innerHTML=value.slice(18);}});
-            xig.settings.get({key:'vendor_id', notify: true, on_load:function(value) {dojo.byId('idigi-vendor_id').value=value;}});
             xig.settings.get({key:'description', notify: true, on_load:function(value) {dojo.byId('idigi-description').value=value;}});
             
             // XBee settings
@@ -146,12 +145,6 @@
 			                        <div class="parameter">
 			                            <span class="key">Device ID: </span>
 			                            <div class="value" id="idigi-device_id"></div>
-			                        </div>
-			                        <div class="parameter">
-			                            <span class="key">Vendor ID: </span>
-			                            <div class="value">
-			                                <input id="idigi-vendor_id" onChange="xig.settings.set({key:'vendor_id', value:this.value});"></input>
-			                            </div>
 			                        </div>
 			                        <div class="parameter">
 			                            <span class="key">Description: </span>
