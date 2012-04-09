@@ -244,7 +244,9 @@ class XigIOKernel(object):
             buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_rx_sz)
             was_tx_status = self.__xbee_xmit_stack.tx_status_recv(buf, addr)
             addr = self.__homogenizeXBeeSocketAddr(addr)
-            logger.debug("RECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
+            if not was_tx_status:
+                # don't print the bytes for TX status messages
+                logger.debug("RECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
             if was_tx_status or self.__ioSampleHook(buf, addr):
                 pass
             elif addr in self.__active_sessions:
