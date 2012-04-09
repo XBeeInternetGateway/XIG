@@ -244,6 +244,37 @@ xig = {
         		xig.logs.store.newItem(record);
         	}
         	xig.logs.store.save();			
+		},
+		"add": function(record) {
+			// record is an object with the following parameters: 
+			// msg: the actual message (required)
+			// levelname: string of one of the following: DEBUG, INFO, WARNING, ERROR (defaults to WARNING)
+			// name: name of the logger - will default to "webpage"
+			// asctime: a timestamp in string format that will default to now
+			if (record.msg == undefined) {
+				// bad error msg...  time for a popup
+				alert("Received a logging message that wasn't formatted properly");
+				return;
+			}
+			// set the ID
+			record.id = xig.logs.id;
+			xig.logs.id = xig.logs.id + 1;
+			if (record.levelname == undefined) {
+				record.levelname = "WARNING";
+			}
+			if (record.name == undefined) {
+				record.name = "webpage";
+			}
+			if (record.asctime == undefined) {
+				var now = new Date();
+				var d = now.toDateString(); // Mon Apr 09 2012
+				var t = now.toLocaleTimeString(); // 15:45:11
+				// combine to get - Mon Apr 09 15:45:11 2012
+				record.asctime = d.slice(0, -4) + t + d.slice(-5);
+			}
+    		// add record to store and save store
+			xig.logs.store.newItem(record);
+			xig.logs.store.save();
 		}
 	}
 };
