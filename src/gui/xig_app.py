@@ -55,6 +55,7 @@ class XigApp(threading.Thread):
         self.idigi_handler = handlers.idigi.idigiHandler()
         self.logs_handler = handlers.logs.LogsHandler()
         self.xig_console_handler = handlers.xig_console.XigConsoleHandler()
+        self.xig_console_handler.start() # this handler is a thread
         
         # register self as an HTTP handler
         rci.set_wsgi_handler(self)
