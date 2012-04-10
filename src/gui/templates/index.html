@@ -139,11 +139,11 @@
 				                        <span class="key">Status: </span>
 				                        <div class="value" id="idigi-status"></div>
 				                    </div>
-			                        <div class="parameter">
+			                        <div id="idigi-device_id-param" class="parameter">
 			                            <span class="key">Device ID: </span>
 			                            <div class="value" id="idigi-device_id"></div>
 			                        </div>
-			                        <div class="parameter">
+			                        <div id="idigi-description-param" class="parameter">
 			                            <span class="key">Description: </span>
 			                            <div class="value">
 			                                <input id="idigi-description" onChange="xig.settings.set({key:'description', value:this.value});"></input>
@@ -161,21 +161,21 @@
 			                       <img height="100px" src="/s/images/xbee.png" />
 			                    </a>
 			                    <div>
-			                        <div class="parameter">
+			                        <div id="xbee-status-param"class="parameter">
 			                            <span class="key">Status: </span>
 			                            <div class="value" id="xbee-status"></div>
 			                        </div>
-			                        <div class="parameter">
+			                        <div id="xbee-eui-param" class="parameter">
 			                            <span class="key">EUI-64: </span>
 			                            <div class="value" id="xbee-eui"></div>
 			                        </div>
-			                        <div class="parameter">
+			                        <div id="xbee-com_ports-param" class="parameter">
 			                            <span class="key">COM Port: </span>
 			                            <div class="value">
 			                                <select id="xbee-com_port" onChange="xig.settings.set({key:'com_port', value:this.value});"></select>
 			                            </div>
 			                        </div>
-			                        <div class="parameter">
+			                        <div id="xbee-baud-param" class="parameter">
 			                            <span class="key">Baud: </span>
 			                            <div class="value">
 				                            <select id="xbee-baud" onChange="xig.settings.set({key:'baud', value:this.value});">
@@ -184,10 +184,10 @@
 				                                <option>4800</option>
 				                                <option>9600</option>
 				                                <option>19200</option>
-				                                <option>38400</option>                                
-				                                <option>57600</option>                                
-				                                <option>115200</option>                                
-				                                <option>230400</option>                                
+				                                <option>38400</option>
+				                                <option>57600</option>
+				                                <option>115200</option>
+				                                <option>230400</option>
 				                            </select>
 				                        </div>
 			                        </div>
@@ -214,12 +214,47 @@
     </div>
 </div>
 
+<div dojoType="dijit.Tooltip" connectId="power_div" position="before">
+    Gives the status of the XIG.<br/>
+    Green - XIG is running.<br/>
+    Red - XIG is stopped.<br/>
+    Grey - Unknown/Transitioning.<br/>  
+    Click the button to start/stop the XIG.
+</div>  
+
 <div dojoType="dijit.Tooltip" connectId="idigi" position="below">
     iDigi Status and Settings.
-</div>	
+</div>
+<div dojoType="dijit.Tooltip" connectId="idigi-status-param" position="below">
+    iDigi Connection Status.  Will be either "Connected" or "Connecting..."
+</div>
+<div dojoType="dijit.Tooltip" connectId="idigi-device_id-param" position="below">
+    iDigi Device ID.  The full ID will have "00000000-00000000-" prepending to it.  This is based on a MAC address.
+</div>
+<div dojoType="dijit.Tooltip" connectId="idigi-description-param" position="below">
+    iDigi Description.  A user friendly description of the gateway that is sent to iDigi.
+</div>
+
 <div dojoType="dijit.Tooltip" connectId="xbee" position="below">
     XBee Status and Settings.
-</div>  
+</div>
+<div dojoType="dijit.Tooltip" connectId="xbee-status-param" position="below">
+    XBee Network Status.  Based on the ATAI value received from the gateway.
+</div>
+<div dojoType="dijit.Tooltip" connectId="xbee-eui-param" position="below">
+    XBee EUI-64 (also know as the extended address, serial number, or MAC address).
+</div>
+<div dojoType="dijit.Tooltip" connectId="xbee-com_ports-param" position="below">
+    XBee serial port for the PC.
+</div>
+<div dojoType="dijit.Tooltip" connectId="xbee-baud-param" position="below">
+    XBee serial port baud rate.  Will most likely be 9600 or 115200.
+</div>
+
+<div dojoType="dijit.Tooltip" connectId="console-input" position="above">
+    Use this input to send commands to the XBee Internet Gateway (XIG).
+    Send "help" to get a list of supported commands.
+</div>
 
 </body>
 </html>
