@@ -27,7 +27,7 @@ xig = {
 				if (xig[sys].handler != undefined){
 					xig[sys].handler(data[sys]);	
 				} else {
-					xig.logs.add("Missing handler for: "+sys);
+					xig.logs.add({msg: "Missing handler for: "+sys});
 				}
 				
 			}
@@ -42,14 +42,8 @@ xig = {
 		"error": function(status) {
 			// wait two seconds before polling again
 			setTimeout('xig.poll.send();', 2000);
-			// handle any errors
-			var sys;
-			for (sys in xig){
-				if (xig[sys].error != undefined){
-					xig[sys].error(status);
-				}
-			}
-			sys.logs.add("Poll error: "+status);
+			// report the errors
+			sys.logs.add({msg: "Poll error: "+status});
 		},
 	},
 	"power": {
