@@ -220,6 +220,7 @@ xig = {
 				dojo.byId('console-output').innerHTML += '<br/><span class="input-color">'+data+'<br/></span>';
 				// clear the input command.
 				dojo.byId('console-input').value = '';
+				xig.console.scroll();
 	        }
 		},
 		"update": function() {
@@ -233,6 +234,12 @@ xig = {
 			data = data.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
 					   .replace(/\r\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/\n/g, "<br/>");
 			dojo.byId('console-output').innerHTML += '<span class="output-color">'+data+'</span>';
+			xig.console.scroll();
+		},
+		"scroll": function() {
+			// scroll the window to the bottom to see the new input
+			var output_div = dojo.byId('console-output');
+			output_div.scrollTop = output_div.scrollHeight;
 		}
 	},
 	"logs": {
