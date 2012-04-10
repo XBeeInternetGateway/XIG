@@ -1,5 +1,6 @@
 import webob
 import json
+import threading
 
 from simulator_settings import settings
 
@@ -15,7 +16,7 @@ class SettingsHandler:
     def poll(self):
         poll_data = self.poll_data
         self.poll_data = {}
-        return poll_data
+        return poll_data or None
     
     def __call__(self, request):
         if request.method == 'GET':
