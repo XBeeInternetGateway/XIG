@@ -206,7 +206,7 @@ xig = {
 		        });
 				// display the data in the output window
 		        data = data.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-				dojo.byId('console-output').innerHTML += '<span class="input-color">'+data+'\\r\\n</span>';
+				dojo.byId('console-output').innerHTML += '<br/><span class="input-color">'+data+'<br/></span>';
 				// clear the input command.
 				dojo.byId('console-input').value = '';
 	        }
@@ -219,7 +219,8 @@ xig = {
 	        });
 		},
 		"handler": function(data) {
-			data = data.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\r/g, "\\r").replace(/\n/g, "\\n");
+			data = data.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+					   .replace(/\r\n/g, "<br/>").replace(/\r/g, "<br/>").replace(/\n/g, "<br/>");
 			dojo.byId('console-output').innerHTML += '<span class="output-color">'+data+'</span>';
 		}
 	},
