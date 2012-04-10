@@ -179,8 +179,6 @@ class XigIOKernel(object):
     
                     
     def ioLoop(self, timeout=0):
-        new_xcommands = []
-
         # Find all sessions waiting for active processing for each
         # unique destination:
         for dest in self.__queued_sessions.waiting_destinations():
@@ -294,7 +292,7 @@ class XigIOKernel(object):
             random.shuffle(pending_data_to_xbee_sessions)
             # Try a single write from all active sessions until we'd block:
             for sess in pending_data_to_xbee_sessions:
-                buf = sess.getSessionToXBeeBuffer()[0:self.__xig_sd_max_tx_sz]
+                buf = sess.getSessionToXBeeBuffer()[:self.__xig_sd_max_tx_sz]
                 try:
                     count = self.__xbee_xmit_stack.sendto(buf, 0, sess.getXBeeAddr())
                     sess.accountSessionToXBeeBuffer(count)
@@ -316,7 +314,7 @@ class XigIOKernel(object):
             random.shuffle(pending_data_to_udp_sessions)
             # Try a single write from all active sessions until we'd block:
             for sess in pending_data_to_udp_sessions:
-                buf = sess.getSessionToXBeeBuffer()[0:512] #512 should be a safe size for UDP transmission
+                buf = sess.getSessionToXBeeBuffer()[:512] #512 should be a safe size for UDP transmission
                 try:
                     # send directly to UDP device
                     count = self.__udp_sd.sendto(buf, 0, sess.getXBeeAddr())
