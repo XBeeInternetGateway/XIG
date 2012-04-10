@@ -46,6 +46,7 @@ class XigApp(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.xig = None
+        self.power = "off"
         self.enable_xig = True
         self.static_handler = handlers.static.StaticHandler()
         self.index_handler = handlers.index.IndexHandler()
@@ -88,6 +89,14 @@ class XigApp(threading.Thread):
         else:
             return "off"
 
+    def poll(self):
+        power = self.get_power()
+        if power != self.power:
+            self.power = power
+            return power
+        else:
+            return None
+
     def xig_handler(self, request):
         if request.method == 'GET':
             response = self.get_power()             
@@ -108,8 +117,9 @@ class XigApp(threading.Thread):
     
     def poll_handler(self, request):
         if request.method == 'GET':
-            response = {'power': self.get_power()}
-            for key, handler in (('settings', self.settings_handler), 
+            response = {}
+            for key, handler in (('power', self),
+                                 ('settings', self.settings_handler), 
                                  ('logs', self.logs_handler),
                                  ('serial_ports', self.serial_ports_handler),
                                  ('idigi', self.idigi_handler),
