@@ -54,10 +54,7 @@
             xig.init();
             
             //TODO: move handler functions to here from xig.js?
-            
-            // set up polling
-            setInterval('xig.poll();', 2000);
-            
+
             // initialize values on the page.
             // iDigi settings
             xig.settings.get({key:'device_id', notify: true, on_load:function(value) {dojo.byId('idigi-device_id').innerHTML=value.slice(18);}});

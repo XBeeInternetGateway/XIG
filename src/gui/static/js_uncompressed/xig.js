@@ -7,33 +7,50 @@ xig = {
 			}
 		}
 	},
-	"poll": function() {
-		dojo.xhrGet( {
-            url: "/poll",
-            handleAs: "json",
-            load: xig.handler,
-            error: xig.error
-        });		
-	},
-	"handler": function(data) {
-		var sys;
-		for (sys in data){
-			if (xig[sys].handler != undefined){
-				xig[sys].handler(data[sys]);	
+	"poll": {
+		"init": function() {
+			setTimeout("xig.poll.send();", 1000); // start polling after 1 second
+		},
+		"send": function() {
+			dojo.xhrGet( {
+	            url: "/poll",
+	            handleAs: "json",
+	            load: xig.poll.handler,
+	            error: xig.poll.error
+	        });		
+		},
+		"handler": function(data) {
+			var sys;
+			var some_response = false;
+			for (sys in data){
+				some_response = true;
+				if (xig[sys].handler != undefined){
+					xig[sys].handler(data[sys]);	
+				} else {
+					xig.logs.add("Missing handler for: "+sys);
+				}
+				
+			}
+			if (some_response) {
+				// poll immediately
+				xig.poll.send();
 			} else {
-				alert("Missing handler for: "+sys);
+				// wait two seconds before polling again
+				setTimeout('xig.poll.send();', 2000);
 			}
-			
-		}
-	},
-	"error": function(status) {
-		var sys;
-		for (sys in xig){
-			if (xig[sys].error != undefined){
-				xig[sys].error(status);
+		},
+		"error": function(status) {
+			// wait two seconds before polling again
+			setTimeout('xig.poll.send();', 2000);
+			// handle any errors
+			var sys;
+			for (sys in xig){
+				if (xig[sys].error != undefined){
+					xig[sys].error(status);
+				}
 			}
-		}
-		//alert("Poll error: "+status);
+			sys.logs.add("Poll error: "+status);
+		},
 	},
 	"power": {
 		"state": "", // on or off
