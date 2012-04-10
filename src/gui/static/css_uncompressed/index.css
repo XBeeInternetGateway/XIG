@@ -173,6 +173,7 @@ body {
 	right: 0;
 	overflow:auto;
 	padding: 5px;
+	word-break: break-all;
 }
 
 #console-output span.input-color{
@@ -180,7 +181,7 @@ body {
 }
 
 #console-output span.output-color{
-    color: #4A4;
+    color: #494;
 }
 
 #console-input-label{
