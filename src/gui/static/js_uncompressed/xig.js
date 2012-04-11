@@ -29,7 +29,6 @@ xig = {
 				} else {
 					xig.logs.add({msg: "Missing handler for: "+sys});
 				}
-				
 			}
 			if (some_response) {
 				// poll immediately
@@ -67,7 +66,6 @@ xig = {
 	            url: "/xig",
 	            content: {"power": state},
 	            handleAs: "json",
-	            //load: xig.power.set_button_state,
 	            error: xig.power.get_state
 			});
 		},
