@@ -8,6 +8,7 @@ xig = {
 		}
 	},
 	"poll": {
+		"connected": false,
 		"init": function() {
 			setTimeout("xig.poll.send();", 1000); // start polling after 1 second
 		},
@@ -17,9 +18,15 @@ xig = {
 	            handleAs: "json",
 	            load: xig.poll.handler,
 	            error: xig.poll.error
+	            //timeout: 5000,
 	        });		
 		},
 		"handler": function(data) {
+			if (xig.poll.connected == false) {
+				xig.poll.connected = true;
+				// switched from disconnected to connected
+				xig.logs.add({msg: "Connected to XIG server", levelname: "INFO"});
+			}
 			var sys;
 			var some_response = false;
 			for (sys in data){
@@ -43,6 +50,8 @@ xig = {
 			setTimeout('xig.poll.send();', 2000);
 			// report the errors
 			xig.logs.add({msg: "Poll error: "+status});
+			// set state to disconnected
+			xig.logs.connected = false;
 		},
 	},
 	"power": {
