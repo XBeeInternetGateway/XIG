@@ -45,6 +45,7 @@ class XigApp(threading.Thread):
     
     def __init__(self):
         threading.Thread.__init__(self)
+        threading.Thread.setDaemon(self, True)
         self.xig = None
         self.power = "off"
         self.enable_xig = True
@@ -163,16 +164,34 @@ class XigApp(threading.Thread):
 if __name__ == "__main__":
     app = XigApp()
     app.start()
+    
     url = "http://localhost:%d" % settings['local_port']
     
-    # make sure the app is serving
-    try:
-        import urllib2
-        page = urllib2.urlopen(url, timeout=5.0)
-    except:
-        pass # try to open the webpage from a standard browser anyway
+    # Make sure the app is serving
+    while 1:
+        try:
+            import urllib2
+            page = urllib2.urlopen(url, timeout=5.0)
+        except urllib2.URLError, e:
+            if e.reason.errno == 61:
+                # Port not bound yet? Try again after a delay.
+                time.sleep(1)
+                continue
+        except Exception, e:
+            pass # try to open the webpage from a standard browser anyway
+        break
     
-    # magic sleep!
-    #time.sleep(3.0)
     import webbrowser
     webbrowser.open(url)    
+
+    # Important! This little bit of hidden window trickery will allow
+    # the GUI to respond to O/S GUI events, e.g. allowing the OSX
+    # icon to no state "Application Not Responding"
+    import Tkinter as tk
+    root = tk.Tk()
+    root.withdraw()
+    def idle_loop():
+      root.after(100, idle_loop)
+    root.after(100, idle_loop)
+    root.mainloop()
+

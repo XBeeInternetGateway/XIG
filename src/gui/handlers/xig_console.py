@@ -7,6 +7,7 @@ import threading
 class XigConsoleHandler(threading.Thread):
     def __init__(self, port = None):
         threading.Thread.__init__(self)
+        threading.Thread.setDaemon(self,True)
         self.port = port
         self.udp_sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.received_data = ""

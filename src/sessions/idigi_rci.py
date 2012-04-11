@@ -95,6 +95,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         rci_thread = threading.Thread(name="XIG RCI Handler",
                          target=lambda: rci.add_rci_callback(
                              "xig", self.__rci_callback)) 
+        rci_thread.setDaemon(True)
         rci_thread.start()
 
     def helpText(self):

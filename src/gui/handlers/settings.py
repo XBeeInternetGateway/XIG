@@ -1,6 +1,5 @@
 import webob
 import json
-import threading
 
 from simulator_settings import settings
 
