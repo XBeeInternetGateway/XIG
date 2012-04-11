@@ -43,7 +43,7 @@ xig = {
 			// wait two seconds before polling again
 			setTimeout('xig.poll.send();', 2000);
 			// report the errors
-			sys.logs.add({msg: "Poll error: "+status});
+			xig.logs.add({msg: "Poll error: "+status});
 		},
 	},
 	"power": {
