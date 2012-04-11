@@ -163,7 +163,16 @@ class XigApp(threading.Thread):
 if __name__ == "__main__":
     app = XigApp()
     app.start()
+    url = "http://localhost:%d" % settings['local_port']
+    
+    # make sure the app is serving
+    try:
+        import urllib2
+        page = urllib2.urlopen(url, timeout=5.0)
+    except:
+        pass # try to open the webpage from a standard browser anyway
+    
     # magic sleep!
-    time.sleep(3.0)
+    #time.sleep(3.0)
     import webbrowser
-    webbrowser.open("http://localhost:%d" % settings['local_port'])    
+    webbrowser.open(url)    
