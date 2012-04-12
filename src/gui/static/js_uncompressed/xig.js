@@ -189,7 +189,13 @@ xig = {
 	        });    	
 		},
 		"handler": function(value) {
-			dojo.byId('idigi-status').innerHTML=value;
+        	dojo.byId('idigi-status').innerHTML=value;
+        	var status_div = dojo.byId('idigi-status-param');
+            if (value == "Connected") {
+            	status_div.className = "parameter success"; 
+            } else {
+            	status_div.className = "parameter error";
+            }        	
 	    }
 	},
 	"serial_ports": {

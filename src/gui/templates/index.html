@@ -33,7 +33,15 @@
     google.load("dojo", "1.7");
 
     function xbee_status() {
-        xig.xbee.get({at:'status', on_load:function(value) {dojo.byId('xbee-status').innerHTML=value;}});
+        xig.xbee.get({at:'status', on_load:function(value) {
+        	dojo.byId('xbee-status').innerHTML=value;
+        	var status_div = dojo.byId('xbee-status-param');
+            if (value == "Joined or Formed Network") {
+            	status_div.className = "parameter success"; 
+            } else {
+            	status_div.className = "parameter error";
+            }        	
+        }});
         xig.xbee.get({at:'eui', on_load:function(value) {dojo.byId('xbee-eui').innerHTML=value;}});         
     }
     

@@ -146,6 +146,13 @@ body {
 	width: auto !important;
 	width: 250px;
 }
+.parameter.error {
+	background-color: red;
+	color: black;
+}
+.parameter.success div.value {
+    color: #474;
+}
 
 .key {
 	text-align: right;
