@@ -265,7 +265,7 @@ class XigIOKernel(object):
         if self.__udp_sd in rl:
             rl.remove(self.__udp_sd)
             buf, addr = self.__udp_sd.recvfrom(1024) #large number
-            logger.debug("RECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
+	    logger.debug("UDPRECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
             if addr in self.__active_sessions:
                 # data is destined to session
                 self.__active_sessions[addr].appendXBeeToSessionBuffer(buf)
@@ -317,6 +317,7 @@ class XigIOKernel(object):
                 buf = sess.getSessionToXBeeBuffer()[:512] #512 should be a safe size for UDP transmission
                 try:
                     # send directly to UDP device
+                    logger.debug("UDPXMIT: %d bytes to %s" % (len(buf), repr(addr)))
                     count = self.__udp_sd.sendto(buf, 0, sess.getXBeeAddr())
                     sess.accountSessionToXBeeBuffer(count)
                 except Exception, e:

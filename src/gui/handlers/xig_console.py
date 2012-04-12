@@ -3,19 +3,23 @@ import json
 import socket
 import select
 import threading
+import logging
 
 class XigConsoleHandler(threading.Thread):
     def __init__(self, port = None):
         threading.Thread.__init__(self)
+        threading.Thread.setDaemon(self,True)
         self.port = port
         self.udp_sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.received_data = ""
         self.lock = threading.RLock() #used for self.received_data
+        self.logger = logging.getLogger('xig.gui')
     
     def run(self):
         while 1:
             while self.port and select.select([self.udp_sd], [], [], 5)[0]:
                 buf = self.udp_sd.recv(4096)
+                self.logger.debug("CONSOLE: got %d bytes" % len(buf))
                 self.lock.acquire()
                 self.received_data += buf
                 self.lock.release()
