@@ -49,6 +49,10 @@ body {
     min-width: 600px;
 }
 
+.list {
+	margin-left: 3em;
+}
+
 /** Container **/
 
 #container {

@@ -50,6 +50,7 @@
     	dojo.require("dojo.data.ItemFileWriteStore");
 		dojo.require("dijit.layout.BorderContainer");
 		dojo.require("dijit.layout.ContentPane");
+		dojo.require("dijit.TitlePane");
 		dojo.require("dijit.Tooltip");
 		dojo.require("dijit.layout.TabContainer");
         dojo.require("dojox.grid.DataGrid");
@@ -210,6 +211,65 @@
                     <div id="console-output">Use this interface to send and receive messages from the XBee Internet Gateway (XIG).</div>
                     <span id="console-input-label">Input:</span><input id="console-input" onChange="xig.console.send(this.value);"></input>
 		        </div>
+                <div dojoType="dijit.layout.ContentPane" title="Help">
+                    <div dojoType="dijit.TitlePane" title="Getting Started" open="true">
+                        The <a href="http://code.google.com/p/xig/">XBee Internet Gateway (XIG)</a> is an open source 
+                        gateway that provides:
+                        <ol class="list">
+                            <li>Read and write access to I/O on remote XBees securely from the internet.</li>
+                            <li>A simple serial interface to access internet resources (UDP, HTTP(s) (with optional basic authentication), and others) through the XBee.</li>
+                            <li>A simple serial interface to upload data to iDigi through the XBee.</li>
+                        </ol>
+                        The gateway code can be run on PC or a Digi ConnectPort X2/X3/X4/X8.
+                    </div>
+                    <div dojoType="dijit.TitlePane" title="What is xig_config.py?  Should I be concerned that it is missing?" open="false">
+                        "xig_config.py" is the custom configuration file for the XIG.  The XIG will try to import this 
+                        file before importing the standard default file "xig_config_default.py".  For most applications
+                        the default configuration file should be sufficient.  If you would like to
+                        customize the configuration of the XIG, copy the file "xig_config_default.py" to be 
+                        "xig_config.py" and make your changes there.  See the 
+                        <a href="http://code.google.com/p/xig/wiki/UserDocumentation#V._CONFIGURATION">user docs</a>
+                        for more information.
+                    </div>
+                    <div dojoType="dijit.TitlePane" title="My iDigi Connection isn't working" open="false">
+                        The XIG should automatically connect to developer.idigi.com.  Make sure your XIG gateway has
+                        internet access and can resolve developer.idigi.com.  You can test this on a PC by 
+                        running "ping developer.idigi.com" from a command line.  If you are running the XIG on a
+                        computer, make sure you are not using a Vendor ID on your iDigi account.  If you are running the
+                        XIG on a Digi ConnectPort, you can contact 
+                        <a href="http://www.digi.com/support/eservice/">Tech Support</a>.
+                    </div>
+                    <div dojoType="dijit.TitlePane" title="How do I connect to my XBee on a PC?" open="false">
+                        When running on a computer, the XIG connects to an XBee through a serial port.  This can use
+                        either a standard RS-232 port or a USB-serial adaptor.  Make sure to select the correct COM port
+                        and baud from the dropdown list on the Configuration tab.  If you are running on a Windows 
+                        computer, you can use <a href="http://www.digi.com/support/productdetail?pid=3352&type=utilities">X-CTU</a>
+                        to configure your XBee and test your connection to the XBee.  Make sure you have configured your
+                        XBee with the following settings:
+                        <ol>
+                            <li>Use an API mode firmware.</li>
+                            <li>Should probably be a coordinator (not strictly required, but makes things easier).</li>
+                            <li>Set ATAO=3 (allows the application to handle some ZDO commands)</li>
+                        </ol>
+                    </div>
+                    <div dojoType="dijit.TitlePane" title="Known Issues" open="false">
+                        <ul class="list">
+                            <li>Requests to "idigi_data:" do not work from Console (or when sent through UDP interface).</li>
+                            <li>PC application does not support Vendor Id iDigi connection through GUI.</li>
+                            <li>PC application only connects to developer iDigi server 
+                                (<a href="http://developer.idigi.com">developer.idigi.com</a>).</li>
+                        </ul>
+                    </div>
+                    <div dojoType="dijit.TitlePane" title="Resources" open="false">
+	                    Learn more about <a href="http://idigi.com">iDigi</a>.
+	                    <br/>
+	                    Learn more about <a href="http://code.google.com/p/xig/">XIG</a> 
+	                    (<a href="http://code.google.com/p/xig/wiki/UserDocumentation">User Docs</a>).
+	                    <br/>
+	                    Run the XIG on a Digi <a href="http://www.digi.com/products/wireless-routers-gateways/gateways/connectportx2gateways#overview">ConnectPort X2</a>, 
+	                    available <a href="http://www.sparkfun.com/products/10569">here</a>.
+                    </div>
+                </div>
             </div>
             <div id="logs_pane" dojoType="dijit.layout.ContentPane" region="bottom" splitter="true">
 		        <div id='logs'>
