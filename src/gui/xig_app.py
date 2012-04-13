@@ -67,19 +67,22 @@ class XigApp(threading.Thread):
            
     def run(self):
         while 1:
-            try: 
-                # make sure rci and xbee are connected
+            # make sure rci and xbee are connected
+            try:
                 if self.enable_xig and rci.connected() and xbee.ddo_get_param(None, "VR"):
-                    self.xig = xig.Xig()
-                    try:
-                        # set port for xig_console_handler
-                        self.xig_console_handler.port = self.xig.getConfig().xbee_udp_port
-                    except:
-                        pass
-                    # start XIG running forever
-                    self.xig.go()
-            except Exception, e:
-                logger.error("Exception when running XIG: %s" % e)
+                    try: 
+                        self.xig = xig.Xig()
+                        try:
+                            # set port for xig_console_handler
+                            self.xig_console_handler.port = self.xig.getConfig().xbee_udp_port
+                        except:
+                            pass
+                        # start XIG running forever
+                        self.xig.go()
+                    except Exception, e:
+                        logger.error("Exception when running XIG: %s" % e)
+            except:
+                pass # expected exception when ddo_get_param fails
             self.xig_console_handler.port = None
             self.xig = None
             time.sleep(1)
