@@ -177,6 +177,23 @@ xig = {
 	            load: oArg.on_load,
 	            error: oArg.on_error            
 	        });
+		},
+		"handler": function(values) {
+			var key;
+			for (key in values) {
+				var value = values[key];
+				if (key == "status") {
+		        	dojo.byId('xbee-status').innerHTML=value;
+		        	var status_div = dojo.byId('xbee-status-param');
+		            if (value == "Joined or Formed Network") {
+		            	status_div.className = "parameter success"; 
+		            } else {
+		            	status_div.className = "parameter error";
+		            }        						
+				} else if (key == "eui") {
+					dojo.byId('xbee-eui').innerHTML=value;
+				}
+			}
 		}
 	},
 	"idigi": {

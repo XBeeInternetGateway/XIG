@@ -39,9 +39,38 @@ class XbeeHandler:
                  0xAF : "Wrong link key",
                  0xFF : "Scanning..."  }
 
+    def __init__(self):
+        self.eui = None
+        self.status = None
+
+    def get_eui(self, addr=None):
+        # read SH and SL and return a EUI-64
+        try:
+            return ":".join("%02X"%ord(x) for x in xbee.ddo_get_param(addr, 'sh') + xbee.ddo_get_param(addr, 'sl'))
+        except:
+            return None
+    
+    def get_status(self, addr=None):
+        # read AI and return string value
+        try:
+            ai = ord(xbee.ddo_get_param(addr, 'ai'))
+            return self.AI_STATUS.get(ai, '0x%02X - Unknown Status' % ai)
+        except:
+            return "XBee Not Connected."
+
     def poll(self):
-        #TODO: not sure how to get status values
-        return None
+        # get the status and EUI values
+        response = {}
+        status = self.get_status()
+        if status != self.status or self.eui is None:
+            eui = self.get_eui()
+            if eui != self.eui:
+                response['eui'] = eui
+                self.eui = eui
+        if status != self.status:
+            response['status'] = status
+            self.status = status
+        return response or None
     
     def __call__(self, request):
         if request.method == 'GET':
@@ -49,18 +78,14 @@ class XbeeHandler:
             at = request.GET.get('at')
             if at:
                 if at == "status":
-                    # read AI and return string value
-                    try:
-                        ai = ord(xbee.ddo_get_param(addr, 'ai'))
-                    except Exception, e:
-                        return webob.Response(json.dumps("XBee Not Connected."), content_type='json')
-                    return webob.Response(json.dumps(self.AI_STATUS.get(ai, '0x%02X - Unknown Status' % ai)), content_type='json')
+                    status = self.get_status(addr)
+                    if addr is None:
+                        self.status = status #store our status for polling
+                    return webob.Response(json.dumps(status), content_type='json')
                 elif at == "eui":
-                    # read SH and SL and return a EUI-64
-                    try:
-                        eui = ":".join("%02X"%ord(x) for x in xbee.ddo_get_param(addr, 'sh') + xbee.ddo_get_param(addr, 'sl'))
-                    except:
-                        eui = ""
+                    eui = self.get_eui(addr)
+                    if addr is None:
+                        self.eui = eui # store our EUI for polling
                     return webob.Response(json.dumps(eui), content_type='json')
                 else:
                     # read AT parameter to return value
