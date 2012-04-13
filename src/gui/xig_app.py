@@ -191,7 +191,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     root.withdraw()
     def idle_loop():
-      root.after(100, idle_loop)
+        root.after(100, idle_loop)
     root.after(100, idle_loop)
     root.mainloop()
 
