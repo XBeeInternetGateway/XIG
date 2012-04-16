@@ -25,16 +25,16 @@ class SerialPortsHandler:
         # return list of serial ports
         com_ports = set()
         try:
-          for port, desc, port_type in serial.tools.list_ports.comports():
-              com_ports.add(port)
+            for port, desc, port_type in serial.tools.list_ports.comports():
+                com_ports.add(port)
         except:
-          pass
+            pass
         if len(com_ports):
             return com_ports
         try:
             if sys.platform.startswith("darwin"):
-		    return set(glob.glob('/dev/tty.*') + glob.glob('/dev/cu.*'))
-	    return set(glob.glob('/dev/tty*') + glob.glob('/dev/cu*'))
+                return set(glob.glob('/dev/tty.*') + glob.glob('/dev/cu.*'))
+            return set(glob.glob('/dev/tty*') + glob.glob('/dev/cu*'))
         except:
             pass
         return com_ports
