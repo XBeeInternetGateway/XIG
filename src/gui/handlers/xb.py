@@ -58,16 +58,16 @@ class XbeeHandler:
         except:
             return "XBee Not Connected."
 
-    def poll(self):
+    def poll(self, refresh=False):
         # get the status and EUI values
         response = {}
         status = self.get_status()
-        if status != self.status or self.eui is None:
+        if refresh or status != self.status or self.eui is None:
             eui = self.get_eui()
-            if eui != self.eui:
+            if refresh or eui != self.eui:
                 response['eui'] = eui
                 self.eui = eui
-        if status != self.status:
+        if refresh or status != self.status:
             response['status'] = status
             self.status = status
         return response or None

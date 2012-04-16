@@ -12,10 +12,11 @@ xig = {
 		"init": function() {
 			xig.poll.send(true);
 		},
-		"send": function() {
+		"send": function(refresh) {
 			dojo.xhrGet( {
 	            url: "/poll",
 	            handleAs: "json",
+	            content: {refresh:refresh},
 	            load: xig.poll.handler,
 	            error: xig.poll.error
 	            //timeout: 5000,
@@ -58,7 +59,6 @@ xig = {
 		"state": "", // on or off
 		"init": function() {
 			xig.power.set_button_state("disabled");
-			xig.power.get_state();
 		},
 		"toggle": function(apply) { // turn on/off the power, whether to send the command to the server as well.
 			// send message to server to turn on power
@@ -197,7 +197,6 @@ xig = {
 		}
 	},
 	"idigi": {
-		"init": function() {xig.idigi.update();},
 		"update": function() {
 	        dojo.xhrGet( {
 	            url: "/idigi",
@@ -216,7 +215,6 @@ xig = {
 	    }
 	},
 	"serial_ports": {
-		"init": function() {xig.serial_ports.update();},
 		"update": function() {
             dojo.xhrGet( {
                 url: "/serial_ports",

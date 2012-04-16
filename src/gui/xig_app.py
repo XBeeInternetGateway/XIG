@@ -93,9 +93,9 @@ class XigApp(threading.Thread):
         else:
             return "off"
 
-    def poll(self):
+    def poll(self, refresh=False):
         power = self.get_power()
-        if power != self.power:
+        if refresh or power != self.power:
             self.power = power
             return power
         else:
@@ -121,6 +121,7 @@ class XigApp(threading.Thread):
     
     def poll_handler(self, request):
         if request.method == 'GET':
+            refresh = bool(request.GET.get('refresh', False))
             response = {}
             for key, handler in (('power', self),
                                  ('settings', self.settings_handler), 
@@ -129,7 +130,7 @@ class XigApp(threading.Thread):
                                  ('idigi', self.idigi_handler),
                                  ('xbee', self.xbee_handler),
                                  ('console', self.xig_console_handler)):
-                data = handler.poll()
+                data = handler.poll(refresh)
                 if data is not None:
                     response[key] = data
             return webob.Response(json.dumps(response), content_type='json')

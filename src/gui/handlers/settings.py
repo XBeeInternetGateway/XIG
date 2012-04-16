@@ -12,7 +12,7 @@ class SettingsHandler:
     def callback(self, key, new_value, old_value):
         self.poll_data[key] = new_value
     
-    def poll(self):
+    def poll(self, refresh=False): #NOTE: refresh not used.
         poll_data = self.poll_data
         self.poll_data = {}
         return poll_data or None

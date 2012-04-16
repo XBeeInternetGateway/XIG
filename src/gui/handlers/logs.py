@@ -15,7 +15,7 @@ logger = logging.getLogger('')
 logger.addHandler(custom_handler)
 
 class LogsHandler:
-    def poll(self):
+    def poll(self, refresh=False): #NOTE: refresh not used
         global logs
         response = []
         # copy logs in thread-safe way

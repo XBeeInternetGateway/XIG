@@ -11,9 +11,9 @@ class SerialPortsHandler:
     def __init__(self):
         self.com_ports = set()
     
-    def poll(self):
+    def poll(self, refresh=False):
         new_ports = self.get_ports()
-        if new_ports != self.com_ports:
+        if refresh or new_ports != self.com_ports:
             # ports changed
             self.com_ports = new_ports
             l = list(new_ports)
@@ -41,9 +41,7 @@ class SerialPortsHandler:
     
     def __call__(self, request):
         if request.method == 'GET':
-            self.com_ports = self.get_ports()
-            com_ports = list(self.com_ports)
-            com_ports.sort()
+            com_ports = self.poll(True)
             return webob.Response(json.dumps(com_ports), content_type='json')
         else:
             return webob.exc.HTTPMethodNotAllowed()

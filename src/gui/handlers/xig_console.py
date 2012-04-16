@@ -29,7 +29,7 @@ class XigConsoleHandler(threading.Thread):
             raise Exception("No UDP target.")
         self.udp_sd.sendto(data, 0, ('localhost', self.port))
 
-    def poll(self):
+    def poll(self, refresh=False): #NOTE: refresh not used.
         if self.received_data:
             self.lock.acquire()
             response = self.received_data

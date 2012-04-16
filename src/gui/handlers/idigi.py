@@ -7,8 +7,8 @@ class idigiHandler:
     def __init__(self):
         self.connected = None
         
-    def poll(self):
-        if self.connected != rci.connected():
+    def poll(self, refresh=False):
+        if refresh or self.connected != rci.connected():
             return self.get_connected_string()
         return None
                 
