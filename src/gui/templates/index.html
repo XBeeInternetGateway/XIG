@@ -37,7 +37,6 @@
     	dojo.require("dojo.data.ItemFileWriteStore");
 		dojo.require("dijit.layout.BorderContainer");
 		dojo.require("dijit.layout.ContentPane");
-		dojo.require("dijit.TitlePane");
 		dojo.require("dijit.Tooltip");
 		dojo.require("dijit.layout.TabContainer");
         dojo.require("dojox.grid.DataGrid");
@@ -198,111 +197,113 @@
                     <span id="console-input-label">Input:</span><input id="console-input" onChange="xig.console.send(this.value);"></input>
 		        </div>
                 <div dojoType="dijit.layout.ContentPane" title="Help">
-                    <div dojoType="dijit.TitlePane" title="Getting Started" open="true">
-                        The <a href="http://code.google.com/p/xig/">XBee Internet Gateway (XIG)</a> is an open source 
-                        gateway that provides:
-                        <ol class="list">
-                            <li>Read and write access to I/O on remote XBees securely from the internet.</li>
-                            <li>A simple serial interface to access internet resources (UDP, HTTP(s) with optional basic authentication, and others) through the XBee.</li>
-                            <li>A simple serial interface to upload data to iDigi through the XBee.</li>
-                        </ol>
-                        The gateway code can be run on PC or a Digi ConnectPort X2/X3/X4/X8.
-                        
-                        <br/><br/>
-                        When running on a PC, the XBee should be configured with the following:
-                        <ul class="list">
-                            <li>API mode firmware (not AT mode firmware).</li>
-                            <li>ATAO = 3 (allows the application to handle some ZDO commands)</li>
-                            <li>Hardware flow control should be enabled (ATD7 = 1 and optionally ATD6 = 1)</li>
-                            <li>Coordinator firmware (not strictly required, but is easier)</li>
-                        </ul>
-                        <a href="http://www.digi.com/support/productdetail?pid=3352&type=utilities">X-CTU</a> can be 
-                        used to configure the XBee on a Windows computer.  Select the COM port and baud rate of the XBee
-                        on the configuration page.  If the connection is successful, the XBee status should show success
-                        and turn green.
-                        
-                        <br/><br/>
-                        The iDigi connection should be automatic on both the Connectport and PC.  Make sure the gateway
-                        has internet access (including a valid DNS server).
-                        
-                        <br/><br/>
-                        The status of the XIG code itself is displayed and controlled using the button in the upper
-                        right corner of this webpage.  The color gives the status of te XIG code:
-                        <ul class="list">
-                            <li>Green - XIG is running</li>
-                            <li>Red - XIG is stopped</li>
-                            <li>Grey - Unknown/Transitioning</li>
-                        </ul>
-                        Clicking on the button will cause the XIG to turn on/off.  The XIG will not run if the XBee or
-                        iDigi status has an error (which will be displayed in red).
-                        
-                        <br/><br/>
-                        The Console gives a user interface to for the XIG without using a remote XBee.  Type commands 
-                        into the "Input:" field and press enter to send to the XIG.  A couple of good example commands
-                        to try:
-                        <ul class="list">
-                            <li>help</li>
-                            <li>time</li>
-                            <li>http://google.com</li>
-                        </ul>
-                        NOTE: The idigi_data commands are not currently supported through the console.
-                        
-                        <br/><br/>
-                        The logs section on the bottom of the screen is included to give a more detailed view of what 
-                        is happening in the XIG.  The logs show the communication with remote XBees and can help debug
-                        applications.  The logs can be sorted by any of the columns (NOTE: sorting by the timestamp )
-                        does NOT give chronological order; it is better to sort by the ID column for that).
-                        
-                    </div>
-                    <div dojoType="dijit.TitlePane" title="What is xig_config.py?  Should I be concerned that it is missing?" open="false">
-                        "xig_config.py" is the custom configuration file for the XIG.  The XIG will try to import this 
-                        file before importing the standard default file "xig_config_default.py".  For most applications
-                        the default configuration file should be sufficient.  If you would like to
-                        customize the configuration of the XIG, copy the file "xig_config_default.py" to be 
-                        "xig_config.py" and make your changes there.  See the 
-                        <a href="http://code.google.com/p/xig/wiki/UserDocumentation#V._CONFIGURATION">user docs</a>
-                        for more information.
-                    </div>
-                    <div dojoType="dijit.TitlePane" title="My iDigi Connection isn't working" open="false">
-                        The XIG should automatically connect to developer.idigi.com.  Make sure your XIG gateway has
-                        internet access and can resolve developer.idigi.com.  You can test this on a PC by 
-                        running "ping developer.idigi.com" from a command line.  If you are running the XIG on a
-                        computer, make sure you are not using a Vendor ID on your iDigi account.  If you are running the
-                        XIG on a Digi ConnectPort, you can contact 
-                        <a href="http://www.digi.com/support/eservice/">Tech Support</a>.
-                    </div>
-                    <div dojoType="dijit.TitlePane" title="How do I connect to my XBee on a PC?" open="false">
-                        When running on a computer, the XIG connects to an XBee through a serial port.  This can use
-                        either a standard RS-232 port or a USB-serial adaptor.  Make sure to select the correct COM port
-                        and baud from the dropdown list on the Configuration tab.  If you are running on a Windows 
-                        computer, you can use <a href="http://www.digi.com/support/productdetail?pid=3352&type=utilities">X-CTU</a>
-                        to configure your XBee and test your connection to the XBee.  Make sure you have configured your
-                        XBee with the following settings:
-                        <ul class="list">
-                            <li>API mode firmware (not AT mode firmware).</li>
-                            <li>ATAO = 3 (allows the application to handle some ZDO commands)</li>
-                            <li>Hardware flow control should be enabled (ATD7 = 1 and optionally ATD6 = 1)</li>
-                            <li>Coordinator firmware (not strictly required, but is easier)</li>
-                        </ul>
-                    </div>
-                    <div dojoType="dijit.TitlePane" title="Known Issues" open="false">
-                        <ul class="list">
-                            <li>Requests to "idigi_data:" do not work from Console (or when sent through UDP interface).</li>
-                            <li>PC application does not support Vendor Id iDigi connection through GUI.</li>
-                            <li>PC application only connects to developer iDigi server 
-                                (<a href="http://developer.idigi.com">developer.idigi.com</a>).</li>
-                            <li>PC application requires XBee and iDigi to use Console (even though Console isn't using 
-                                XBee and may not be using iDigi).</li>
-                        </ul>
-                    </div>
-                    <div dojoType="dijit.TitlePane" title="Resources" open="false">
-	                    Learn more about <a href="http://idigi.com">iDigi</a>.
-	                    <br/>
-	                    Learn more about <a href="http://code.google.com/p/xig/">XIG</a> 
-	                    (<a href="http://code.google.com/p/xig/wiki/UserDocumentation">User Docs</a>).
-	                    <br/>
-	                    Run the XIG on a Digi <a href="http://www.digi.com/products/wireless-routers-gateways/gateways/connectportx2gateways#overview">ConnectPort X2</a>, 
-	                    available <a href="http://www.sparkfun.com/products/10569">here</a>.
+                    <div dojoType="dijit.layout.TabContainer" tabPosition="left-h" tabStrip="true">
+	                    <div dojoType="dijit.layout.ContentPane" title="Getting Started" open="true">
+	                        The <a href="http://code.google.com/p/xig/">XBee Internet Gateway (XIG)</a> is an open source 
+	                        gateway that provides:
+	                        <ol class="list">
+	                            <li>Read and write access to I/O on remote XBees securely from the internet.</li>
+	                            <li>A simple serial interface to access internet resources (UDP, HTTP(s) with optional basic authentication, and others) through the XBee.</li>
+	                            <li>A simple serial interface to upload data to iDigi through the XBee.</li>
+	                        </ol>
+	                        The gateway code can be run on PC or a Digi ConnectPort X2/X3/X4/X8.
+	                        
+	                        <br/><br/>
+	                        When running on a PC, the XBee should be configured with the following:
+	                        <ul class="list">
+	                            <li>API mode firmware (not AT mode firmware).</li>
+	                            <li>ATAO = 3 (allows the application to handle some ZDO commands)</li>
+	                            <li>Hardware flow control should be enabled (ATD7 = 1 and optionally ATD6 = 1)</li>
+	                            <li>Coordinator firmware (not strictly required, but is easier)</li>
+	                        </ul>
+	                        <a href="http://www.digi.com/support/productdetail?pid=3352&type=utilities">X-CTU</a> can be 
+	                        used to configure the XBee on a Windows computer.  Select the COM port and baud rate of the XBee
+	                        on the configuration page.  If the connection is successful, the XBee status should show success
+	                        and turn green.
+	                        
+	                        <br/><br/>
+	                        The iDigi connection should be automatic on both the Connectport and PC.  Make sure the gateway
+	                        has internet access (including a valid DNS server).
+	                        
+	                        <br/><br/>
+	                        The status of the XIG code itself is displayed and controlled using the button in the upper
+	                        right corner of this webpage.  The color gives the status of te XIG code:
+	                        <ul class="list">
+	                            <li>Green - XIG is running</li>
+	                            <li>Red - XIG is stopped</li>
+	                            <li>Grey - Unknown/Transitioning</li>
+	                        </ul>
+	                        Clicking on the button will cause the XIG to turn on/off.  The XIG will not run if the XBee or
+	                        iDigi status has an error (which will be displayed in red).
+	                        
+	                        <br/><br/>
+	                        The Console gives a user interface to for the XIG without using a remote XBee.  Type commands 
+	                        into the "Input:" field and press enter to send to the XIG.  A couple of good example commands
+	                        to try:
+	                        <ul class="list">
+	                            <li>help</li>
+	                            <li>time</li>
+	                            <li>http://google.com</li>
+	                        </ul>
+	                        NOTE: The idigi_data commands are not currently supported through the console.
+	                        
+	                        <br/><br/>
+	                        The logs section on the bottom of the screen is included to give a more detailed view of what 
+	                        is happening in the XIG.  The logs show the communication with remote XBees and can help debug
+	                        applications.  The logs can be sorted by any of the columns (NOTE: sorting by the timestamp )
+	                        does NOT give chronological order; it is better to sort by the ID column for that).
+	                        
+	                    </div>
+	                    <div dojoType="dijit.layout.ContentPane" title="What is xig_config.py?" open="false">
+	                        "xig_config.py" is the custom configuration file for the XIG.  The XIG will try to import this 
+	                        file before importing the standard default file "xig_config_default.py".  For most applications
+	                        the default configuration file should be sufficient.  If you would like to
+	                        customize the configuration of the XIG, copy the file "xig_config_default.py" to be 
+	                        "xig_config.py" and make your changes there.  See the 
+	                        <a href="http://code.google.com/p/xig/wiki/UserDocumentation#V._CONFIGURATION">user docs</a>
+	                        for more information.
+	                    </div>
+	                    <div dojoType="dijit.layout.ContentPane" title="iDigi Connection isn't working" open="false">
+	                        The XIG should automatically connect to developer.idigi.com.  Make sure your XIG gateway has
+	                        internet access and can resolve developer.idigi.com.  You can test this on a PC by 
+	                        running "ping developer.idigi.com" from a command line.  If you are running the XIG on a
+	                        computer, make sure you are not using a Vendor ID on your iDigi account.  If you are running the
+	                        XIG on a Digi ConnectPort, you can contact 
+	                        <a href="http://www.digi.com/support/eservice/">Tech Support</a>.
+	                    </div>
+	                    <div dojoType="dijit.layout.ContentPane" title="How do I connect to my XBee on a PC?" open="false">
+	                        When running on a computer, the XIG connects to an XBee through a serial port.  This can use
+	                        either a standard RS-232 port or a USB-serial adaptor.  Make sure to select the correct COM port
+	                        and baud from the dropdown list on the Configuration tab.  If you are running on a Windows 
+	                        computer, you can use <a href="http://www.digi.com/support/productdetail?pid=3352&type=utilities">X-CTU</a>
+	                        to configure your XBee and test your connection to the XBee.  Make sure you have configured your
+	                        XBee with the following settings:
+	                        <ul class="list">
+	                            <li>API mode firmware (not AT mode firmware).</li>
+	                            <li>ATAO = 3 (allows the application to handle some ZDO commands)</li>
+	                            <li>Hardware flow control should be enabled (ATD7 = 1 and optionally ATD6 = 1)</li>
+	                            <li>Coordinator firmware (not strictly required, but is easier)</li>
+	                        </ul>
+	                    </div>
+	                    <div dojoType="dijit.layout.ContentPane" title="Known Issues/Limitations" open="false">
+	                        <ul class="list">
+	                            <li>Requests to "idigi_data:" do not work from Console (or when sent through UDP interface).</li>
+	                            <li>PC application does not support Vendor Id iDigi connection through GUI.</li>
+	                            <li>PC application only connects to developer iDigi server 
+	                                (<a href="http://developer.idigi.com">developer.idigi.com</a>).</li>
+	                            <li>PC application requires XBee and iDigi to use Console (even though Console isn't using 
+	                                XBee and may not be using iDigi).</li>
+	                        </ul>
+	                    </div>
+	                    <div dojoType="dijit.layout.ContentPane" title="Resources" open="false">
+		                    Learn more about <a href="http://idigi.com">iDigi</a>.
+		                    <br/>
+		                    Learn more about <a href="http://code.google.com/p/xig/">XIG</a> 
+		                    (<a href="http://code.google.com/p/xig/wiki/UserDocumentation">User Docs</a>).
+		                    <br/>
+		                    Run the XIG on a Digi <a href="http://www.digi.com/products/wireless-routers-gateways/gateways/connectportx2gateways#overview">ConnectPort X2</a>, 
+		                    available <a href="http://www.sparkfun.com/products/10569">here</a>.
+	                    </div>
                     </div>
                 </div>
             </div>
