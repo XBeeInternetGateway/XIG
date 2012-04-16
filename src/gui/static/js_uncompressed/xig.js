@@ -10,7 +10,7 @@ xig = {
 	"poll": {
 		"connected": false,
 		"init": function() {
-			setTimeout("xig.poll.send();", 1000); // start polling after 1 second
+			xig.poll.send(true);
 		},
 		"send": function() {
 			dojo.xhrGet( {
