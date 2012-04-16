@@ -17,7 +17,8 @@ class SerialPortsHandler:
             # ports changed
             self.com_ports = new_ports
             l = list(new_ports)
-            return l.sort()
+            l.sort() #NOTE: sort() return None
+            return l
         return None
     
     def get_ports(self):
