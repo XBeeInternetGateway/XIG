@@ -44,7 +44,6 @@ class XigIOKernel(object):
         self.__iosample_subscribers = []
         self.__xig_sd = None
         self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
-        self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
         self.__xbee_version = None
 
         # set up XBee socket to receive commands on        
@@ -56,7 +55,6 @@ class XigIOKernel(object):
         if xbee_series == '1':
             bind_addr = ('', 0, 0, 0)
             self.__xig_sd_max_tx_sz = self.XBEE_S1_MAX_TX
-            self.__xig_sd_max_rx_sz = self.XBEE_S1_MAX_RX
         elif xbee_series == '2' or xbee_series == '3':
             bind_addr = ('', 0xe8, 0, 0)
             try:
@@ -68,11 +66,9 @@ class XigIOKernel(object):
                 xbee.ddo_get_param(None, 'AR'))[0] != 0xff
             if source_routing_enabled:
                 self.__xig_sd_max_tx_sz -= 20
-            self.__xig_sd_max_rx_sz = self.XBEE_S23_MAX_RX
         else:
             bind_addr = ('', 0xe8, 0, 0)
             self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
-            self.__xig_sd_max_rx_sz = self.XBEE_MIN_RX
             
         try:
             self.__xbee_sd.bind(bind_addr)
@@ -99,7 +95,6 @@ class XigIOKernel(object):
             logger.warning("Exception when configuring UDP listener: %s" % (repr(e)))
 
         logger.debug("XBee MTU = %d bytes" % (self.__xig_sd_max_tx_sz))
-        logger.debug("XBee MRU = %d bytes" % (self.__xig_sd_max_rx_sz))
         # Put XBee socket into non-blocking mode:
         self.__xbee_sd.setblocking(0)
 
@@ -236,7 +231,7 @@ class XigIOKernel(object):
         # XBee read processing
         if self.__xbee_sd in rl:
             rl.remove(self.__xbee_sd)
-            buf, addr = self.__xbee_sd.recvfrom(self.__xig_sd_max_rx_sz)
+            buf, addr = self.__xbee_sd.recvfrom(4096) #bigger than any possible XBee message size
             was_tx_status = self.__xbee_xmit_stack.tx_status_recv(buf, addr)
             addr = self.__homogenizeXBeeSocketAddr(addr)
             if not was_tx_status:
