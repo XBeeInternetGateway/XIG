@@ -21,12 +21,10 @@ from xbee_xmit_stack import XBeeXmitStack
 import logging
 logger = logging.getLogger("xig.io_kernel")
 
-DIGI_PLATFORM_FLAG = True
 if sys.platform.startswith('win'):
     from win_socketpair import SocketPair as socketpair
 
-if DIGI_PLATFORM_FLAG:
-    import xbee
+import xbee
 
 class XigIOKernel(object):
     XBEE_S1_MAX_TX = 100
@@ -165,10 +163,9 @@ class XigIOKernel(object):
             addr[2:4] != (0x0, 0x92)):
             return False
         
-        if DIGI_PLATFORM_FLAG:
-            #Take care to strip off XBee option bits 
-            # TODO: why, these could be potentially useful.
-            addr = self.__homogenizeXBeeSocketAddr(addr)
+        #Take care to strip off XBee option bits 
+        # TODO: why, these could be potentially useful.
+        addr = self.__homogenizeXBeeSocketAddr(addr)
         
         for func in self.__iosample_subscribers:
             try:
