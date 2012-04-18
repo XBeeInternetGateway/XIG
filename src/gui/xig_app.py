@@ -3,6 +3,10 @@ sys.path.insert(0, "./library/ext")
 sys.path.insert(0, "./library/ext/cp4pc")
 sys.path.insert(0, ".")
 
+if sys.version_info < (2, 7):
+    # should be run with Python version 2.7 or greater
+    raise Exception("Must use Python 2.7 or greater.")
+
 # need to import early (to overwrite socket and select)
 import xbee
 
