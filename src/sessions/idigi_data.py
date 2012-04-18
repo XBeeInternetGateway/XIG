@@ -47,12 +47,14 @@ import library.idigi_data as idigi_data
 
 MAX_SAMPLE_Q_LEN = 256
 
-# TODO: only needed with versions of Python < 2.5
-def all(iterable):
-    for element in iterable:
-        if not element:
-            return False
-    return True
+import sys
+if sys.version_info < (2, 5):
+    # only needed with versions of Python < 2.5
+    def all(iterable):
+        for element in iterable:
+            if not element:
+                return False
+        return True
 
 
 class iDigiDataUploader(object):
