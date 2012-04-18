@@ -265,7 +265,7 @@ class XigIOKernel(object):
         if self.__udp_sd in rl:
             rl.remove(self.__udp_sd)
             buf, addr = self.__udp_sd.recvfrom(1024) #large number
-	    logger.debug("UDPRECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
+            logger.debug("UDPRECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
             if addr in self.__active_sessions:
                 # data is destined to session
                 self.__active_sessions[addr].appendXBeeToSessionBuffer(buf)
