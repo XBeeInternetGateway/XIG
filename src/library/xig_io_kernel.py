@@ -11,8 +11,8 @@ import sys
 import errno
 import random
 import struct
-from socket import *
-from select import *
+import socket
+import select
 
 from xig_session_q import XigSessionQ
 from xig_inactive_session_command_parser import XigInactiveSessionCommandParser
@@ -48,7 +48,7 @@ class XigIOKernel(object):
         self.__xbee_version = None
 
         # set up XBee socket to receive commands on        
-        self.__xbee_sd = socket(AF_XBEE, SOCK_DGRAM, XBS_PROT_TRANSPORT)
+        self.__xbee_sd = socket.socket(socket.AF_XBEE, socket.SOCK_DGRAM, socket.XBS_PROT_TRANSPORT)
         self.__xbee_version = self.__getXBeeVersion()
         xbee_series = self.__xbee_version[0]
         logger.info("XBee Version = %s, Series = %s" % (self.__xbee_version, xbee_series))
@@ -83,7 +83,7 @@ class XigIOKernel(object):
         # Enable XBee TX_STATUS reporting:
         if self.__core.isXBeeXmitStatusSupported():
             logger.debug("XBee reliable transmit enabled")
-            self.__xbee_sd.setsockopt(XBS_SOL_EP, XBS_SO_EP_TX_STATUS, 1)
+            self.__xbee_sd.setsockopt(socket.XBS_SOL_EP, socket.XBS_SO_EP_TX_STATUS, 1)
         else:
             logger.debug("XBee transmit status not supported on this device.")
             
@@ -93,7 +93,7 @@ class XigIOKernel(object):
             xbee_udp_port = self.__core.getConfig().xbee_udp_port
             if xbee_udp_port:
                 logger.info("Enabling UDP listener on port %d..." % (xbee_udp_port))
-                self.__udp_sd = socket(AF_INET, SOCK_DGRAM)
+                self.__udp_sd = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.__udp_sd.bind(('', xbee_udp_port))
         except Exception, e:
             logger.warning("Exception when configuring UDP listener: %s" % (repr(e)))
@@ -224,7 +224,7 @@ class XigIOKernel(object):
                 wl.append(self.__udp_sd)
         
         # Select active descriptors
-        rl, wl, xl = select(rl, wl, xl, timeout)
+        rl, wl, xl = select.select(rl, wl, xl, timeout)
         
         # Drain any characters from our internal unblocking mechanism:
         if self.__inner_sd in rl:
