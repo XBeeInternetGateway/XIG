@@ -193,15 +193,3 @@ class XBeeXmitStack(object):
             addr[0], tx_status))
         xmit_req.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
         return True
-        
-    # The below methods are used when the XIG is simulated on a PC,
-    # these methods get re-bound in __init__ if a non-ConnectPort environment
-    # is detected:
-    def _sim_tx_status_recv(self, buf, addr):
-        logger.info("XBeeXmitStack._sim_tx_status_recv()")
-    def _sim_sendto(self, buf, flags, addr):
-        logger.info("XBeeXmitStack._sim_sendto()")
-        addr = addr[0:2]
-        return self.__xbee_sd.sendto(buf, flags, addr)
-    def _sim_xmit(self):
-        logger.info("XBeeXmitStack._sim_xmit()")
