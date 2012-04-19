@@ -11,10 +11,9 @@ from urllib import urlencode
 from exceptions import OverflowError
 
 from abstract_autostart import AbstractAutostartSession
-from abstract import AbstractSession
 from http import HTTPSession
 
-from library.io_sample import parse_is, sample_to_mv
+from library.io_sample import parse_is
 import library.xbee_addressing as xbee_addressing
 
 class ioSampleSessionAutostartSession(AbstractAutostartSession):
