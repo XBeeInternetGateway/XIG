@@ -79,7 +79,6 @@ import exceptions
 import threading
 
 import library.digi_ElementTree as ET
-import library.xbee_addressing as xbee_addressing
 from library.io_sample import parse_is
 
 import rci
@@ -139,11 +138,10 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             return self.__xml_err_msg("hw_address parameter missing")
 
         try:
-            destination = xbee_addressing.normalize_address(destination)
+            destination = self.__core.xbeeAddrTupleFromHwAddr(destination)
         except:
-            return self.__xml_err_msg('invalid hw_address "%s" (missing \'!\'?)' % destination)
+            return self.__xml_err_msg('invalid hw_address "%s"' % str(destination))
         
-        destination = self.__core.xbeeAddrFromHwAddr(destination)
         new_session = iDigiRCISession(xig_core=self.__core,
                                       url="",
                                       xbee_addr=destination)

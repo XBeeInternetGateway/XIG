@@ -14,29 +14,26 @@ from abstract_autostart import AbstractAutostartSession
 from http import HTTPSession
 
 from library.io_sample import parse_is
-import library.xbee_addressing as xbee_addressing
 
 class ioSampleSessionAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
-        self.__io_sample_destination_url = getattr(
+        self.__io_sample_destination_url = {}
+        # get configuration values
+        config_io_sample_destination_url = getattr(
             self.__core.getConfig(), "io_sample_destination_url", None)
         # normalize configuration to a dictionary:
-        if not isinstance(self.__io_sample_destination_url, dict):
-            self.__io_sample_destination_url = {
-                "default": self.__io_sample_destination_url }
-        elif "default" not in self.__io_sample_destination_url:
-            self.__io_sample_destination_url["default"] = None
-        # normalize all keys in dictionary:
-        for k in filter(lambda k: k != "default",
-                        self.__io_sample_destination_url.keys()):
-            v = self.__io_sample_destination_url[k]
-            del(self.__io_sample_destination_url[k])
-            try:
-                norm_k = xbee_addressing.normalize_address(k)
-                self.__io_sample_destination_url[norm_k] = v
-            except:
-                print "ioSample: unable to normalize %s" % repr(k)
+        if not isinstance(config_io_sample_destination_url, dict):
+            self.__default_destination_url = config_io_sample_destination_url
+        else:
+            self.__default_destination_url = config_io_sample_destination_url.pop('default', None)
+            # normalize all XBee address keys in dictionary:
+            for addr, url in config_io_sample_destination_url.iteritems():
+                try:
+                    xbee_addr = self.__core.xbeeAddrFromHwAddr(addr)
+                    self.__io_sample_destination_url[xbee_addr] = url
+                except:
+                    print "ioSample: unable to normalize %s" % repr(addr)
         
         self.__core.ioSampleSubcriberAdd(self.__ioSampleCallback)
 
@@ -45,7 +42,7 @@ class ioSampleSessionAutostartSession(AbstractAutostartSession):
  io_sample running, making requests to configured destinations
 """
 
-    def __ioSampleCallback(self, buf, addr):
+    def __ioSampleCallback(self, buf, addr_tuple):
         if self.__io_sample_destination_url is None:
             print "__ioSampleCallback(): no URL configured."
             return
@@ -62,16 +59,14 @@ class ioSampleSessionAutostartSession(AbstractAutostartSession):
         io_set = ad_set.union(dio_set)
         sample_set = set(sample.keys())
         
-        # normalize received address:
-        norm_addr = xbee_addressing.normalize_address(addr[0])
-        
         # find appropriate I/O sample URL destination:
-        dest_url = self.__io_sample_destination_url["default"]
-        if norm_addr in self.__io_sample_destination_url:
-            dest_url = self.__io_sample_destination_url[norm_addr]
-                           
+        dest_url = self.__io_sample_destination_url.get(addr_tuple.address, self.__default_destination_url)
+        if not dest_url:
+            # no url configured to send values
+            return
+            
         # built URL predicate:
-        url_pred = { "addr": norm_addr }
+        url_pred = { "addr": addr_tuple.address }
         for io_pin in io_set.intersection(sample_set):
             url_pred[io_pin] = str(int(sample[io_pin]))
         if "?" in dest_url:
@@ -81,7 +76,7 @@ class ioSampleSessionAutostartSession(AbstractAutostartSession):
         url = dest_url + url_pred
             
         # schedule HTTP session operation:
-        http_session = HTTPSession(self.__core, url, addr, True)
+        http_session = HTTPSession(self.__core, url, addr_tuple, True)
         try:
             self.__core.enqueueSession(http_session)
         except OverflowError:

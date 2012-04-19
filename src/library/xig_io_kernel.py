@@ -14,6 +14,7 @@ import struct
 import socket
 import select
 
+from library.addr import IP_Addr_Tuple, XBee_Addr_Tuple, XBee_Addr
 from xig_session_q import XigSessionQ
 from xig_inactive_session_command_parser import XigInactiveSessionCommandParser
 from xbee_xmit_stack import XBeeXmitStack
@@ -112,18 +113,17 @@ class XigIOKernel(object):
         return "%04X" % struct.unpack(">H", xbee.ddo_get_param(None, 'VR'))[0]
     
     def __homogenizeXBeeSocketAddr(self, xbee_socket_addr):
-        return xbee_socket_addr[0:4] + (0,0)
-    
-    def __isXBeeAddr(self, xbee_socket_addr):
-        return xbee_socket_addr[0].endswith("!")
-    
-    def xbeeAddrFromHwAddr(self, hw_addr,
-                               ep=None, profile=None, cluster=None):
+        return XBee_Addr_Tuple(xbee_socket_addr, options=0, transmission_id=0)
+
+    def xbeeAddrTupleFromHwAddr(self, hw_addr, **kwargs):
         xbee_series = self.__xbee_version[0]
         if xbee_series == 1:
-            return (hw_addr, ep or 0, profile or 0, cluster or 0, 0, 0)
+            return XBee_Addr_Tuple(address=hw_addr, **kwargs)
         else:
-            return (hw_addr, ep or 0xe8, profile or 0xc105, cluster or 0x11, 0, 0)
+            return XBee_Addr_Tuple((hw_addr, 0xE8, 0xC105, 0x0011), **kwargs)
+
+    def xbeeAddrFromHwAddr(self, hw_addr, **kwargs):
+        return XBee_Addr(address=hw_addr, **kwargs)
 
     def enqueueSession(self, session):
         """\
@@ -193,7 +193,7 @@ class XigIOKernel(object):
             new_rl, new_wl = (sess.getReadSockets(), sess.getWriteSockets())
             try:
                 if len(sess.getSessionToXBeeBuffer()) > 0:
-                    if self.__isXBeeAddr(sess.getXBeeAddr()):
+                    if isinstance(sess.getXBeeAddr(), XBee_Addr_Tuple):
                         # this is for the XBee
                         pending_data_to_xbee_sessions.append(sess)
                     else:
@@ -232,6 +232,7 @@ class XigIOKernel(object):
         if self.__xbee_sd in rl:
             rl.remove(self.__xbee_sd)
             buf, addr = self.__xbee_sd.recvfrom(4096) #bigger than any possible XBee message size
+            addr = XBee_Addr_Tuple(addr)
             was_tx_status = self.__xbee_xmit_stack.tx_status_recv(buf, addr)
             addr = self.__homogenizeXBeeSocketAddr(addr)
             if not was_tx_status:
@@ -257,6 +258,7 @@ class XigIOKernel(object):
         if self.__udp_sd in rl:
             rl.remove(self.__udp_sd)
             buf, addr = self.__udp_sd.recvfrom(1024) #large number
+            addr = IP_Addr_Tuple(addr)
             logger.debug("UDPRECV: %d bytes from %s (%s)" % (len(buf), repr(addr), repr(buf)))
             if addr in self.__active_sessions:
                 # data is destined to session
@@ -309,8 +311,9 @@ class XigIOKernel(object):
                 buf = sess.getSessionToXBeeBuffer()[:512] #512 should be a safe size for UDP transmission
                 try:
                     # send directly to UDP device
+                    addr = sess.getXBeeAddr()
                     logger.debug("UDPXMIT: %d bytes to %s" % (len(buf), repr(addr)))
-                    count = self.__udp_sd.sendto(buf, 0, sess.getXBeeAddr())
+                    count = self.__udp_sd.sendto(buf, 0, addr.socket_tuple())
                     sess.accountSessionToXBeeBuffer(count)
                 except Exception, e:
                     logger.error("exception when responding to UDP request (%s)" % repr(e))

@@ -225,9 +225,11 @@ class Xig(object):
         """
         self.__io_kernel.enqueueSession(session)
 
-    def xbeeAddrFromHwAddr(self, hw_addr, ep=None, profile=None, cluster=None):
-        return(self.__io_kernel.xbeeAddrFromHwAddr(hw_addr, ep, profile, cluster))
+    def xbeeAddrTupleFromHwAddr(self, hw_addr, **kwargs):
+        return self.__io_kernel.xbeeAddrTupleFromHwAddr(hw_addr,**kwargs)
 
+    def xbeeAddrFromHwAddr(self, hw_addr, **kwargs):
+        return self.__io_kernel.xbeeAddrFromHwAddr(hw_addr,**kwargs)
 
 def main():
     # take off every Xig!

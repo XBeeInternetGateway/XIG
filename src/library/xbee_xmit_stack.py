@@ -15,6 +15,7 @@ implementation for details.
 import random
 import struct
 from copy import copy
+from library.addr import XBee_Addr_Tuple
 
 import logging
 logger = logging.getLogger("xig.xmit")
@@ -36,10 +37,7 @@ class XBeeXmitStack(object):
             self.buf = buf
             self.flags = flags
             # Set the address given all info we've got plus transmit id:
-            self.addr = list((0,)*6)
-            self.addr[0:len(addr)] = addr
-            self.addr[5] = xmit_id
-            self.addr = tuple(self.addr)
+            self.addr = XBee_Addr_Tuple(addr, options=0, transmission_id = xmit_id)
             self.xmit_id = xmit_id
             self.state = XBeeXmitStack.XmitRequest.STATE_QUEUED          
     
@@ -127,13 +125,13 @@ class XBeeXmitStack(object):
     def xmit(self):
         for xmit_req in self.__xmit_table.generate_tx_queue():
             # Take care to strip off any transmit option bits:
-            logger.debug("SEND: to %s (id = %d)" % (repr(xmit_req.addr[0:4]), xmit_req.addr[5]))
-            self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr)
+            logger.debug("SEND: to %s (id = %d)" % (repr(xmit_req.addr.socket_tuple()[0:4]), xmit_req.addr.transmission_id))
+            self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr.socket_tuple())
             xmit_req.state = XBeeXmitStack.XmitRequest.STATE_OUTSTANDING
             if not self.__core.isXBeeXmitStatusSupported():
                 # mark transmit as successful:
-                self.__xmit_id_set.add(xmit_req.addr[5])
-                self.__xmit_table.expunge(xmit_req.addr[5])
+                self.__xmit_id_set.add(xmit_req.addr.transmission_id)
+                self.__xmit_table.expunge(xmit_req.addr.transmission_id)
             
     def tx_status_recv(self, buf, addr):
         """\
@@ -147,22 +145,22 @@ class XBeeXmitStack(object):
             return False
 
         tx_status = 0
-        cluster_id = addr[3]
-        xmit_id = addr[5]
+        
+        xmit_id = addr.transmission_id
         xmit_req = self.__xmit_table.find_xmit_req(xmit_id)
         
         if xmit_req is None:
             return False
 
-        if cluster_id == 0x89:
+        if addr.cluster_id == 0x89:
             # X-API transmit status frame:
             logger.info("X-API TX Status (id = %d)" % xmit_id)
             tx_status = ord(buf[2])
-        elif cluster_id == 0x8b:
+        elif addr.cluster_id == 0x8b:
             # X-API ZigBee transmit status frame:
             logger.info("X-API ZigBee TX Status (id = %d)" % xmit_id)
             tx_status = ord(buf[5])
-        elif cluster_id == 0:
+        elif addr.cluster_id == 0:
             # XBee driver status indication:
             logger.info("XBee driver status indication (id = %d)" % xmit_id)
             tx_status = struct.unpack("i", buf)[0]
@@ -183,13 +181,13 @@ class XBeeXmitStack(object):
         xmit_req.retries_remaining -= 1
         if xmit_req.retries_remaining <= 0:
             logger.warn("send to %s FAILED permanently with tx_status = 0x%08x (%d)" % (
-                addr[0], tx_status, tx_status) )
+                str(addr[0]), tx_status, tx_status) )
             self.__xmit_id_set.add(xmit_id)
             self.__xmit_table.expunge(xmit_id)
             return True
         
         # Mark TX for retry:
         logger.debug("send to %s FAILED with tx status = 0x%02x, will retry." % (
-            addr[0], tx_status))
+            str(addr[0]), tx_status))
         xmit_req.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
         return True

@@ -41,7 +41,6 @@ from abstract import AbstractSession
 import library.digi_ElementTree as ET
 from library.helpers import iso_date
 from library.io_sample import parse_is
-import library.xbee_addressing as xbee_addressing
 
 import library.idigi_data as idigi_data
 
@@ -55,6 +54,22 @@ if sys.version_info < (2, 5):
             if not element:
                 return False
         return True
+
+
+def addr2iDigiDataLabel(addr_tuple):
+    addr_str = addr_tuple.address.socket_str()
+    if addr_str[-1] == '!': #XBee address
+        # [00:11:22:33:44:aa:bb:cc:dd]! -> XBee_AABBCCDD
+        return "XBee_" + ''.join(addr_str.split(":")[4:])[:-3].upper()
+    elif '.' in addr_str: #IPv4 address
+        # 192.168.0.1 -> IPv4_192_168_0_1
+        return "IPv4_" + '_'.join(addr_str.split('.'))
+    elif ':' in addr_str: #IPv6 address
+        # FE80::0:1 -> IPv6_FE80__0_1
+        return "IPv6_" + '_'.join(addr_str.split(':'))        
+    else:
+        # error
+        raise Exception("Unrecognized addr: %s" % str(addr_tuple))
 
 
 class iDigiDataUploader(object):
@@ -150,18 +165,13 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
         io_set = ad_set.union(dio_set)
         sample_set = set(sample.keys())
         
-        # normalize received address:
-        dl_addr = xbee_addressing.normalize_address(addr[0])
-        # [00:11:22:33:44:aa:bb:cc:dd]! -> XBee_AABBCCDD
-        dl_addr = "XBee_" + ''.join(dl_addr.split(":")[4:])[:-3].upper()
-        
         for io_pin in io_set.intersection(sample_set):
             unit = "bool"
             value = str(bool(int(sample[io_pin])))
             if io_pin in ad_set:
                 unit = "int"
                 value = str(int(sample[io_pin]))
-            self._sample_add(dl_addr + "." + io_pin, value, unit, iso_date())
+            self._sample_add(addr2iDigiDataLabel(addr) + "." + io_pin, value, unit, iso_date())
 
 
 class iDigiDataSession(AbstractSession):  
@@ -190,9 +200,7 @@ class iDigiDataSession(AbstractSession):
             self._do_error('required keyword "values" not present')
             return
 
-        dl_addr = xbee_addressing.normalize_address(xbee_addr[0])
-        # [00:11:22:33:44:aa:bb:cc:dd]! -> XBee_AABBCCDD
-        dl_addr = "XBee_" + ''.join(dl_addr.split(":")[4:])[:-3].upper()
+        dl_addr = addr2iDigiDataLabel(xbee_addr)
         
         names_list = map(lambda n: dl_addr + "." + n,
                          qs["names"][0].split(','))            
