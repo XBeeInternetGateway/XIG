@@ -1,3 +1,0 @@
-[submodule "src/library/ext/cp4pc"]
-	path = src/library/ext/cp4pc
-	url = https://github.com/jordanh/cp4pc.git
