@@ -38,6 +38,12 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
+2012/04/23 - XIG v1.5.0b1
+
+Binary only release for Windows and Linux to test new XIG for PC
+builds.
+
+
 2012/03/06 - XIG v1.4.2
 
 Fixes issue #19; added additional exception handling around httplib
