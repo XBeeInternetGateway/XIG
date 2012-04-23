@@ -22,9 +22,6 @@ from xbee_xmit_stack import XBeeXmitStack
 import logging
 logger = logging.getLogger("xig.io_kernel")
 
-if sys.platform.startswith('win'):
-    from win_socketpair import SocketPair as socketpair
-
 import xbee
 
 class XigIOKernel(object):
@@ -101,7 +98,7 @@ class XigIOKernel(object):
 
         # Setup internal socket which can be used for unblocking the
         # internal event loop asynchronously:
-        self.__outer_sd, self.__inner_sd = socketpair()
+        self.__outer_sd, self.__inner_sd = socket.socketpair()
         for sd in [ self.__outer_sd, self.__inner_sd ]:
             sd.setblocking(0)
         
