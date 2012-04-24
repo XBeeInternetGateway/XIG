@@ -60,7 +60,7 @@ def addr2iDigiDataLabel(addr_tuple):
     addr_str = addr_tuple.address.socket_str()
     if addr_str[-1] == '!': #XBee address
         # [00:11:22:33:44:aa:bb:cc:dd]! -> XBee_AABBCCDD
-        return "XBee_" + ''.join(addr_str.split(":")[4:])[:-3].upper()
+        return "XBee_" + ''.join(addr_str.split(":")[4:])[:-2].upper()
     elif '.' in addr_str: #IPv4 address
         # 192.168.0.1 -> IPv4_192_168_0_1
         return "IPv4_" + '_'.join(addr_str.split('.'))
