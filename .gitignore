@@ -1,3 +1,5 @@
 # global glob patterns
 *.pyo
 *.pyc
+.DS_Store
+
