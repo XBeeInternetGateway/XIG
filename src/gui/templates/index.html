@@ -193,12 +193,13 @@
                     <div id="console-output">Use this interface to send and receive messages from the XBee Internet Gateway (XIG).  
                     Send messages using the "Input:" box below.
                     </div>
-                    <form onSubmit="return false;">
-                    <input type="text" style="visibility:hidden;display:none;" name="dummy"></input>
-                    <span id="console-input-label">Input:</span>
-                    <div id="console-input-wrapper">
-                        <input id="console-input" onChange="xig.console.send(this.value);"></input>
-                    </div>
+                    <form onSubmit="xig.console.send(this.input.value); return false;">
+	                    <input type="text" style="visibility:hidden;display:none;" name="dummy"></input>
+	                    <span id="console-input-label">Input:</span>
+	                    <div id="console-input-wrapper">
+	                        <input id="console-input" name="input"></input>
+	                    </div>
+	                    <input type="submit" style="height: 0px; width: 0px; border: none; padding: 0px;" hideFocus="true" />
                     </form>
 		        </div>
                 <div dojoType="dijit.layout.ContentPane" title="Help">
