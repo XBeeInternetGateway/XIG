@@ -1,8 +1,8 @@
 /* Global resets */
-*{ margin:0; padding:0; }
+*{ margin:0px; padding:0px; }
 
 h1, h2, h3 {
-    margin: 0;
+    margin: 0px;
 }
 
 /* General centering CSS */
@@ -39,8 +39,8 @@ h1, h2, h3 {
 html, body {
     height: 100%;
     width: 100%;
-    margin: 0;
-    padding: 0;
+    margin: 0px;
+    padding: 0px;
 }
 
 body {
@@ -81,11 +81,11 @@ body {
 }
 
 #power_div {
-    padding: 5px;
+    padding: 7px;
 }
 
 .power_icon{
-	background-image: url('/s/images/grey_power_button.png');
+	background-image: url('/s/images/grey_power_button_small.png');
     background-repeat: no-repeat;
     background-size: 45px 45px;
     width: 45px;
@@ -99,15 +99,15 @@ body {
 }
 
 .power_icon.disabled{
-    background-image: url('/s/images/grey_power_button.png');
+    background-image: url('/s/images/grey_power_button_small.png');
 }
 
 .power_icon.on{
-    background-image: url('/s/images/green_power_button.png');
+    background-image: url('/s/images/green_power_button_small.png');
 }
 
 .power_icon.off{
-    background-image: url('/s/images/red_power_button.png');
+    background-image: url('/s/images/red_power_button_small.png');
 }
 
 /* center */
@@ -171,16 +171,17 @@ body {
 }
 
 .value input {
-	text-align: right;
+	width: 100%;
 }
+
 
 /*console*/
 #console-output{
 	position: absolute;
-	top: 0;
-	bottom: 1.1em;
-	left: 0;
-	right: 0;
+	top: 0px;
+	bottom: 2em;
+	left: 0px;
+	right: 0px;
 	overflow:auto;
 	padding: 5px;
 	word-break: break-all;
@@ -196,21 +197,25 @@ body {
 
 #console-input-label{
     position: absolute;
-    height: 1em;
+    height: 1.3em;
     bottom: 1px;
-    left: 0;
+    left: 0px;
     padding-left: 5px;
     padding-bottom: 5px;
     width: 50px;
     background-color: #EEE;
 }
 
-#console-input{
-	position: absolute;
-    height: 1em;
+#console-input-wrapper{
+    position: absolute;
     bottom: 1px;
-    left: 50px;
-    right: 0;
+    left: 55px;
+    right: 5px;
+}
+
+#console-input{
+    width: 100%;
+    height: 100%;
 }
 
 /* logs */

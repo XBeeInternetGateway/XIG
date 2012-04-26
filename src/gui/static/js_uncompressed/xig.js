@@ -18,7 +18,8 @@ xig = {
 	            handleAs: "json",
 	            content: {refresh:refresh},
 	            load: xig.poll.handler,
-	            error: xig.poll.error
+	            error: xig.poll.error,
+	            preventCache: true,
 	            //timeout: 5000,
 	        });		
 		},
@@ -265,7 +266,7 @@ xig = {
 			xig.console.scroll();
 		},
 		"scroll": function() {
-			// scroll the window to the bottom to see the new input
+			// scroll the window to the bottom to see the new output
 			var output_div = dojo.byId('console-output');
 			output_div.scrollTop = output_div.scrollHeight;
 		}
