@@ -11,12 +11,13 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.0b2"
+VERSION = "1.5.0b3"
 
 import sys
 
 sys.path.insert(0, "./library/ext")
 sys.path.insert(0, "./library/ext/cp4pc")
+sys.path.insert(0, "./library/ext/serial")
 APP_ARCHIVE = "WEB/python/_xig.zip"
 sys.path.insert(0, APP_ARCHIVE)
 
@@ -28,11 +29,12 @@ import traceback
 import time
 import string
 
-# need to override socket by importing xbee.py first
-import xbee #@UnusedImport
-
+# start logging early, some messages emerge from xbee module import
 logger = logging.getLogger("xig")
 logger.setLevel(logging.DEBUG)
+
+# need to override socket by importing xbee.py first
+import xbee #@UnusedImport
 
 logger.info("%s v%s starting." % (NAME, VERSION))
 

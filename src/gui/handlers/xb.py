@@ -1,6 +1,7 @@
 import webob
 import json
 import zigbee as xbee
+import logging
 
 def binstring_to_int(value):
     """
@@ -42,6 +43,7 @@ class XbeeHandler:
     def __init__(self):
         self.eui = None
         self.status = None
+        self.logger = logging.getLogger('xig.gui')
 
     def get_eui(self, addr=None):
         # read SH and SL and return a EUI-64
@@ -55,7 +57,8 @@ class XbeeHandler:
         try:
             ai = ord(xbee.ddo_get_param(addr, 'ai'))
             return self.AI_STATUS.get(ai, '0x%02X - Unknown Status' % ai)
-        except:
+        except Exception, e:
+	    self.logger.debug("XBee Status: exception '%s'" % repr(e))
             return "XBee Not Connected."
 
     def poll(self, refresh=False):
