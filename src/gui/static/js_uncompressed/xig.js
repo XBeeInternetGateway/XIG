@@ -40,17 +40,8 @@ xig = {
 					xig.logs.add({msg: "Missing handler for: "+sys});
 				}
 			}
-			if (some_response) {
-				// poll immediately
-				xig.poll.send();
-			} else {
-				// wait two seconds before polling again
-				setTimeout('xig.poll.send();', 2000);
-			}
 		},
 		"error": function(status) {
-			// wait two seconds before polling again
-			setTimeout('xig.poll.send();', 2000);
 			// report the errors
 			xig.logs.add({msg: "Poll error: "+status});
 			// set state to disconnected
