@@ -34,7 +34,7 @@
     google.setOnLoadCallback(function(){
     	dojo.require("dojo.parser");
     	dojo.require("dojo.data.ItemFileWriteStore");
-		dojo.require("dijit.layout.BorderContainer");
+    	dojo.require("dijit.layout.BorderContainer");
 		dojo.require("dijit.layout.ContentPane");
 		dojo.require("dijit.Tooltip");
 		dojo.require("dijit.layout.TabContainer");
@@ -55,8 +55,24 @@
             xig.settings.get({key:'description', notify: true, on_load:function(value) {dojo.byId('idigi-description').value=value;}});
             
             // XBee settings
-            xig.settings.get({key:'baud', notify: true, on_load:function(value) {dojo.byId('xbee-baud').value=value;}});
-            xig.settings.get({key:'com_port', notify: true, on_load:function(value) {dojo.byId('xbee-com_port').value=value;}});
+            xig.settings.get({key:'baud', notify: true, on_load:function(value) {
+            	var select_obj = dojo.byId('xbee-baud');
+            	for(var i=0; i < select_obj.options.length; i++) {
+            		if (select_obj.options[i].value == value) {
+            			select_obj.options[i].selected = true;
+            			break;
+            		}
+            	}
+            }});
+            xig.settings.get({key:'com_port', notify: true, on_load:function(value) {
+                var select_obj = dojo.byId('xbee-com_port');
+                for(var i=0; i < select_obj.options.length; i++) {
+                    if (select_obj.options[i].value == value) {
+                        select_obj.options[i].selected = true;
+                        break;
+                    }
+                }            	
+            }});
             
             // set up logging objects
             /*set up layout*/
@@ -193,12 +209,13 @@
                     <div id="console-output">Use this interface to send and receive messages from the XBee Internet Gateway (XIG).  
                     Send messages using the "Input:" box below.
                     </div>
-                    <form onSubmit="return false;">
-                    <input type="text" style="visibility:hidden;display:none;" name="dummy"></input>
-                    <span id="console-input-label">Input:</span>
-                    <div id="console-input-wrapper">
-                        <input id="console-input" onChange="xig.console.send(this.value);"></input>
-                    </div>
+                    <form onSubmit="xig.console.send(this.input.value); return false;">
+	                    <input type="text" style="visibility:hidden;display:none;" name="dummy"></input>
+	                    <span id="console-input-label">Input:</span>
+	                    <div id="console-input-wrapper">
+	                        <input id="console-input" name="input"></input>
+	                    </div>
+	                    <input type="submit" style="height: 0px; width: 0px; border: none; padding: 0px;" hideFocus="true" />
                     </form>
 		        </div>
                 <div dojoType="dijit.layout.ContentPane" title="Help">

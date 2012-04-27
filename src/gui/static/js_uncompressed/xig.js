@@ -2,7 +2,7 @@ xig = {
 	"init": function() {
 		var sys;
 		for (sys in xig) {
-			if (xig[sys].init != undefined) {
+			if (typeof xig[sys].init != "undefined") {
 				xig[sys].init();
 			}
 		}
@@ -11,6 +11,7 @@ xig = {
 		"connected": false,
 		"init": function() {
 			xig.poll.send(true);
+			setInterval('xig.poll.send();', 1000);
 		},
 		"send": function(refresh) {
 			dojo.xhrGet( {
@@ -19,8 +20,8 @@ xig = {
 	            content: {refresh:refresh},
 	            load: xig.poll.handler,
 	            error: xig.poll.error,
-	            preventCache: true,
-	            //timeout: 5000,
+	            preventCache: true
+	            //timeout: 1000,
 	        });		
 		},
 		"handler": function(data) {
@@ -33,23 +34,18 @@ xig = {
 			var some_response = false;
 			for (sys in data){
 				some_response = true;
-				if (xig[sys].handler != undefined){
-					xig[sys].handler(data[sys]);	
+				if (typeof xig[sys].handler != "undefined"){
+					try {
+						xig[sys].handler(data[sys]);
+					} catch(err) {
+						xig.logs.add({msg: "Error when handling poll response: "+err.toString(), levelname: "WARNING"});
+					}
 				} else {
 					xig.logs.add({msg: "Missing handler for: "+sys});
 				}
 			}
-			if (some_response) {
-				// poll immediately
-				xig.poll.send();
-			} else {
-				// wait two seconds before polling again
-				setTimeout('xig.poll.send();', 2000);
-			}
 		},
 		"error": function(status) {
-			// wait two seconds before polling again
-			setTimeout('xig.poll.send();', 2000);
 			// report the errors
 			xig.logs.add({msg: "Poll error: "+status});
 			// set state to disconnected
@@ -76,7 +72,8 @@ xig = {
 	            url: "/xig",
 	            content: {"power": state},
 	            handleAs: "json",
-	            error: xig.power.get_state
+	            error: xig.power.get_state,
+	            preventCache: true
 			});
 		},
 		"set_button_state": function(state) { // enable the power button 
@@ -93,7 +90,8 @@ xig = {
 			dojo.xhrGet( {
 	            url: "/xig",
 	            handleAs: "json",
-	            load: xig.power.set_button_state	            
+	            load: xig.power.set_button_state,
+	            preventCache: true
 	        });			
 		},
 		"handler": function(state) {xig.power.set_button_state(state);}
@@ -112,7 +110,8 @@ xig = {
 		            content: content,
 		            handleAs: "json",
 		            load: oArg.on_load,
-		            error: oArg.on_error		            
+		            error: oArg.on_error,
+		            preventCache: true
 		        });
 	        } else {
 	        	var return_val;
@@ -122,9 +121,10 @@ xig = {
 		            handleAs: "json",
 		            sync: true,
 		            load: function(value) {return_val = value;},
-		            error: function() {return_val = "";}
+		            error: function() {return_val = "";},
+		            preventCache: true
 		        });
-				while(return_val == undefined);
+				while(typeof return_val == "undefined");
 				return return_val;
 	        }
 		},
@@ -134,7 +134,8 @@ xig = {
 	            content: {'key': oArg.key, 'value': oArg.value},
 	            handleAs: "json",
 	            load: oArg.on_load,
-	            error: oArg.on_error            
+	            error: oArg.on_error,
+	            preventCache: true
 	        });
 		},
 		"handler": function(data) {
@@ -154,7 +155,8 @@ xig = {
 		            content: {'at': oArg.at, 'addr': oArg.addr},
 		            handleAs: "json",
 		            load: oArg.on_load,
-		            error: oArg.on_error		            
+		            error: oArg.on_error,
+		            preventCache: true
 		        });
 	        } else {
 	        	var return_val;
@@ -164,9 +166,10 @@ xig = {
 		            handleAs: "json",
 		            sync: true,
 		            load: function(value) {return_val = value;},
-		            error: function() {return_val = "";}
+		            error: function() {return_val = "";},
+		            preventCache: true
 		        });
-				while(return_val == undefined);
+				while(typeof return_val == "undefined");
 				return return_val;
 	        }
 		},
@@ -176,7 +179,8 @@ xig = {
 	            content: {'at': oArg.at, 'addr': oArg.addr, 'value': oArg.value},
 	            handleAs: "json",
 	            load: oArg.on_load,
-	            error: oArg.on_error            
+	            error: oArg.on_error,
+	            preventCache: true
 	        });
 		},
 		"handler": function(values) {
@@ -202,7 +206,8 @@ xig = {
 	        dojo.xhrGet( {
 	            url: "/idigi",
 	            handleAs: "json",
-	            load: xig.idigi.handler
+	            load: xig.idigi.handler,
+	            preventCache: true
 	        });    	
 		},
 		"handler": function(value) {
@@ -222,7 +227,8 @@ xig = {
                 handleAs: "json",
                 sync: true,
                 load: xig.serial_ports.handler,
-            	error: function() {setTimeout("xig.serial_ports.update()", 2000);} //try again after two seconds on error
+            	error: function() {setTimeout("xig.serial_ports.update()", 2000);}, //try again after two seconds on error
+            	preventCache: true
             });		
 		},
 		"handler": function(com_ports){
@@ -243,6 +249,7 @@ xig = {
 		            url: "/xig_console",
 		            content: {data: data+'\r\n'},
 		            handleAs: "json",
+		            preventCache: true
 		        });
 				// display the data in the output window
 		        data = data.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -256,7 +263,8 @@ xig = {
 	        dojo.xhrGet( {
 	            url: "/xig_console",
 	            handleAs: "json",
-	            load: xig.console.handler
+	            load: xig.console.handler,
+	            preventCache: true
 	        });
 		},
 		"handler": function(data) {
@@ -280,7 +288,8 @@ xig = {
 	        dojo.xhrGet( {
 	            url: "/logs",
 	            handleAs: "json",
-	            load: xig.logs.handler
+	            load: xig.logs.handler,
+	            preventCache: true
 	        });
 		},
 		"handler": function(record_list){
@@ -299,7 +308,7 @@ xig = {
 			// levelname: string of one of the following: DEBUG, INFO, WARNING, ERROR (defaults to WARNING)
 			// name: name of the logger - will default to "webpage"
 			// asctime: a timestamp in string format that will default to now
-			if (record.msg == undefined) {
+			if (typeof record.msg == "undefined") {
 				// bad error msg...  time for a popup
 				alert("Received a logging message that wasn't formatted properly");
 				return;
@@ -307,13 +316,13 @@ xig = {
 			// set the ID
 			record.id = xig.logs.id;
 			xig.logs.id = xig.logs.id + 1;
-			if (record.levelname == undefined) {
+			if (typeof record.levelname == "undefined") {
 				record.levelname = "WARNING";
 			}
-			if (record.name == undefined) {
+			if (typeof record.name == "undefined") {
 				record.name = "webpage";
 			}
-			if (record.asctime == undefined) {
+			if (typeof record.asctime == "undefined") {
 				var now = new Date();
 				var d = now.toDateString(); // Mon Apr 09 2012
 				var t = now.toLocaleTimeString(); // 15:45:11
