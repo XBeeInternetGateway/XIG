@@ -55,8 +55,24 @@
             xig.settings.get({key:'description', notify: true, on_load:function(value) {dojo.byId('idigi-description').value=value;}});
             
             // XBee settings
-            xig.settings.get({key:'baud', notify: true, on_load:function(value) {dojo.byId('xbee-baud').value=value;}});
-            xig.settings.get({key:'com_port', notify: true, on_load:function(value) {dojo.byId('xbee-com_port').value=value;}});
+            xig.settings.get({key:'baud', notify: true, on_load:function(value) {
+            	var select_obj = dojo.byId('xbee-baud');
+            	for(var i=0; i < select_obj.options.length; i++) {
+            		if (select_obj.options[i].value == value) {
+            			select_obj.options[i].selected = true;
+            			break;
+            		}
+            	}
+            }});
+            xig.settings.get({key:'com_port', notify: true, on_load:function(value) {
+                var select_obj = dojo.byId('xbee-com_port');
+                for(var i=0; i < select_obj.options.length; i++) {
+                    if (select_obj.options[i].value == value) {
+                        select_obj.options[i].selected = true;
+                        break;
+                    }
+                }            	
+            }});
             
             // set up logging objects
             /*set up layout*/
