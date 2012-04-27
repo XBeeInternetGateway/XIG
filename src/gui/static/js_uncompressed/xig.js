@@ -11,6 +11,7 @@ xig = {
 		"connected": false,
 		"init": function() {
 			xig.poll.send(true);
+			setInterval('xig.poll.send();', 1000);
 		},
 		"send": function(refresh) {
 			dojo.xhrGet( {
