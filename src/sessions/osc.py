@@ -4,12 +4,17 @@ Created on May 31, 2011
 @author: Axel Roest
 based on HTTPSession by jordanh
 '''
+
 import errno
 # use our own urlparser which knows about the osc scheme
 import library.xig_urlparse as urlparse
 import base64
 import socket
 import library.OSCClient
+import logging
+
+logger = logging.getLogger("xig.osc")
+logger.setLevel(logging.INFO)
 
 from sessions.abstract import AbstractSession
 
@@ -67,7 +72,7 @@ class OSCSession(AbstractSession):
             for target in self.__targets:
                 self.__multiclient.setOSCTarget( target )
         
-        print "starting OSC connection to [%s] %s | %s | %s'" % (self.__urlScheme,self.__urlNetLoc,self.__urlPath, self.__urlParameters)
+        logger.info("starting OSC connection to [%s] %s | %s | %s'" % (self.__urlScheme,self.__urlNetLoc,self.__urlPath, self.__urlParameters))
 
         self.__connect()
                     

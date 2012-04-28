@@ -49,6 +49,17 @@ class LoggerStub:
     def setLevel(self, level):
         self.level = level
 
+class StreamHandler(object):
+    def __init__(*args):
+        pass
+
+    def setFormatter(*args):
+        pass
+
+class Formatter(object):
+    def __init__(*args):
+        pass
+
 def getLogger(name=None):
     return LoggerStub.loggers.get(name, LoggerStub(name))
 
@@ -69,3 +80,7 @@ def error(msg):
 
 def critical(msg):
     getLogger().critical(msg)
+
+def basicConfig():
+    pass
+

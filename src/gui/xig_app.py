@@ -29,7 +29,14 @@ import handlers.xig_console
 
 DEFAULT_PORT = 8000 #random number
 
-logging.getLogger('').addHandler(logging.StreamHandler(sys.__stdout__))
+# setup stderr logging:
+logger = logging.getLogger()
+handler = logging.StreamHandler(sys.stderr)
+formatter = logging.Formatter('%(name)s - %(message)s')
+handler.setFormatter(formatter)
+handler.setLevel(logging.INFO)
+logger.addHandler(handler)
+
 logger = logging.getLogger('xig.gui')
 
 # application settings

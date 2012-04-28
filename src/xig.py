@@ -25,18 +25,29 @@ sys.path.insert(0, APP_ARCHIVE)
 #NOTE: logging_stub MUST be imported before logging and ANY modules that import logging
 import library.logging_stub #@UnusedImport
 import logging
+
+if __name__ == "__main__":
+    logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(name)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logging.getLogger().setLevel(logging.INFO)
+
 import traceback
 import time
 import string
 
-# start logging early, some messages emerge from xbee module import
-logger = logging.getLogger("xig")
-logger.setLevel(logging.DEBUG)
-
 # need to override socket by importing xbee.py first
 import xbee #@UnusedImport
 
+# create our logger, setup log levels:
+logger = logging.getLogger("xig")
+logger.setLevel(logging.INFO)
 logger.info("%s v%s starting." % (NAME, VERSION))
+logging.getLogger("xig.io").setLevel(logging.DEBUG)
+logging.getLogger("cp4pc.xbee").setLevel(logging.WARNING)
+
 
 # Digi specific library module imports
 import rci
@@ -234,6 +245,12 @@ class Xig(object):
         return self.__io_kernel.xbeeAddrFromHwAddr(hw_addr,**kwargs)
 
 def main():
+    if hasattr(xbee, "_ready"):
+        # Specific wait for CP4PC XBee sub-system, _ready call not needed nor available
+        # on genuine ConnectPort
+        while not xbee._ready():
+            time.sleep(0.250)
+
     # take off every Xig!
     xig = Xig()
     ret = -1
@@ -250,7 +267,5 @@ def main():
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger('')
-    logger.addHandler(logging.StreamHandler(sys.__stdout__))
     ret = main()
     sys.exit(ret)

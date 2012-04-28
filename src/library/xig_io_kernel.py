@@ -20,7 +20,7 @@ from xig_inactive_session_command_parser import XigInactiveSessionCommandParser
 from xbee_xmit_stack import XBeeXmitStack
 
 import logging
-logger = logging.getLogger("xig.io_kernel")
+logger = logging.getLogger("xig.io")
 
 import xbee
 
@@ -309,7 +309,6 @@ class XigIOKernel(object):
                 try:
                     # send directly to UDP device
                     addr = sess.getXBeeAddr()
-                    logger.debug("UDPXMIT: %d bytes to %s" % (len(buf), repr(addr)))
                     count = self.__udp_sd.sendto(buf, 0, addr.socket_tuple())
                     sess.accountSessionToXBeeBuffer(count)
                 except Exception, e:

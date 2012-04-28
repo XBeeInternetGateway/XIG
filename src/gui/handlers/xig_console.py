@@ -19,7 +19,6 @@ class XigConsoleHandler(threading.Thread):
         while 1:
             while self.port and select.select([self.udp_sd], [], [], 5)[0]:
                 buf = self.udp_sd.recv(4096)
-                self.logger.debug("CONSOLE: got %d bytes" % len(buf))
                 self.lock.acquire()
                 self.received_data += buf
                 self.lock.release()

@@ -7,6 +7,7 @@ call remote URLs for each and every I/O sample packet it receives.
 
 """
 
+import logging
 from urllib import urlencode
 from exceptions import OverflowError
 
@@ -14,6 +15,9 @@ from abstract_autostart import AbstractAutostartSession
 from http import HTTPSession
 
 from library.io_sample import parse_is
+
+logger = logging.getLogger("xig.io_sample")
+logger.setLevel(logging.INFO)
 
 class ioSampleSessionAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
@@ -33,7 +37,7 @@ class ioSampleSessionAutostartSession(AbstractAutostartSession):
                     xbee_addr = self.__core.xbeeAddrFromHwAddr(addr)
                     self.__io_sample_destination_url[xbee_addr] = url
                 except:
-                    print "ioSample: unable to normalize %s" % repr(addr)
+                    logger.warning("ioSample: unable to normalize %s" % repr(addr))
         
         self.__core.ioSampleSubcriberAdd(self.__ioSampleCallback)
 
@@ -44,13 +48,13 @@ class ioSampleSessionAutostartSession(AbstractAutostartSession):
 
     def __ioSampleCallback(self, buf, addr_tuple):
         if self.__io_sample_destination_url is None:
-            print "__ioSampleCallback(): no URL configured."
+            logger.info("__ioSampleCallback(): no URL configured.")
             return
         
         try:
             sample = parse_is(buf)
         except:
-            print "__ioSampleCallback(): bad I/O sample format"
+            logger.warning("__ioSampleCallback(): bad I/O sample format")
             return
         
         # build pin sets:

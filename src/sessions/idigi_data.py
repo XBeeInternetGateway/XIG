@@ -31,6 +31,7 @@ to prevent the gateway from uploading too often and not having the time
 to processing incoming data from the XBee network.
 """
 
+import logging
 import time
 import threading
 from cgi import parse_qs
@@ -45,6 +46,9 @@ from library.io_sample import parse_is
 import library.idigi_data as idigi_data
 
 MAX_SAMPLE_Q_LEN = 256
+
+logger = logging.getLogger("xig.idigi_data")
+logger.setLevel(logging.INFO)
 
 import sys
 if sys.version_info < (2, 5):
@@ -112,11 +116,10 @@ class iDigiDataUploader(object):
                 idigi_data.send_idigi_data(self.__format_doc(),
                                          filename,
                                          self.COLLECTION, self.SECURE)
-                print 'IDIGI_DATA: upload of %d samples successful' % \
-                        len(self.__sample_q)
+                logger.info('upload of %d samples successful' % len(self.__sample_q))
                 self.__sample_q = []
             except Exception, e:
-                print 'IDIGI_DATA: error during upload "%s"' % str(e)
+                idigi_data.warning('error during upload "%s"' % str(e))
         finally:
             self.__lock.release()
 
@@ -156,7 +159,7 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
         try:
             sample = parse_is(buf)
         except:
-            print "__ioSampleCallback(): bad I/O sample format"
+            logger.warning("__ioSampleCallback(): bad I/O sample format")
             return
         
         # build pin sets:

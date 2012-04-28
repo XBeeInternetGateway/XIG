@@ -9,8 +9,12 @@ architecture.  Sessions are now continuous until they terminate
 with xig://abort command.
 '''
 import socket
+import logging
 
 from sessions.abstract import AbstractSession
+
+logger = logging.getLogger("xig.udp")
+logger.setLevel(logging.INFO)
 
 # use our own urlparser which knows about the udp scheme
 import library.xig_urlparse as urlparse
@@ -38,7 +42,7 @@ class UDPSession(AbstractSession):
         self.__urlScheme = parsedUrl[0]
         self.__urlNetLoc = parsedUrl[1]
         
-        print "UDP: session to %s" % (self.__urlNetLoc)
+        logger.info("session to %s" % (self.__urlNetLoc))
         
         # check for portnumber in url
         if ':' not in self.__urlNetLoc:
@@ -170,7 +174,7 @@ class UDPSession(AbstractSession):
                         self.__fromxbee_buf[:write_amt], 0,
                         (self.__urlNetLoc, self.__urlPort))
             self.__fromxbee_buf = self.__fromxbee_buf[wrote:]
-            print "UDP: XMIT of %d bytes" % (wrote)
+            logger.info("XMIT of %d bytes" % (wrote))
         except Exception, e:
             self.__do_error('unexpected UDP socket error "%s"' % (str(e)))
             return 0
