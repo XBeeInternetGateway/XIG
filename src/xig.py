@@ -245,10 +245,11 @@ class Xig(object):
         return self.__io_kernel.xbeeAddrFromHwAddr(hw_addr,**kwargs)
 
 def main():
-    if hasattr(xbee, "_ready"):
-        # Specific wait for CP4PC XBee sub-system, _ready call not needed nor available
-        # on genuine ConnectPort
-        while not xbee._ready():
+    # make sure the XBee is connected and available.  This is only really an issue on a PC.
+    while 1:
+        try:
+            xbee.ddo_get_param('VR')
+        except:
             time.sleep(0.250)
 
     # take off every Xig!
