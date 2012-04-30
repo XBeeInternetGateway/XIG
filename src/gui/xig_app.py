@@ -76,6 +76,14 @@ class XigApp(threading.Thread):
         # make sure a local port is set
         settings.setdefault('local_port', DEFAULT_PORT)
            
+        # add callbacks to restart XIG if serial port changes
+        settings.add_callback('com_port', lambda new, old: self.xig_quit())
+        settings.add_callback('baud', lambda new, old: self.xig_quit())
+   
+    def xig_quit(self):
+        if self.xig:
+            self.xig.quit()
+           
     def run(self):
         while 1:
             # make sure rci and xbee are connected
@@ -121,8 +129,7 @@ class XigApp(threading.Thread):
             if state == "off":
                 self.enable_xig = False
                 response = "off"
-                if self.xig:
-                    self.xig.quit()
+                self.xig_quit()
             else:
                 self.enable_xig = True
                 response = self.get_power()       
