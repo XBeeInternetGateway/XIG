@@ -17,6 +17,9 @@ import threading
 import json
 import logging
 
+import subprocess
+import uuid
+
 # WSGI handlers
 import handlers.static
 import handlers.index
@@ -75,11 +78,30 @@ class XigApp(threading.Thread):
         
         # make sure a local port is set
         settings.setdefault('local_port', DEFAULT_PORT)
+
+        if sys.platform == 'darwin':
+	    # special settings handling for OSX
+            self.__osx_settings() 
            
         # add callbacks to restart XIG if serial port changes
         settings.add_callback('com_port', lambda new, old: self.xig_quit())
         settings.add_callback('baud', lambda new, old: self.xig_quit())
-   
+  
+    def __osx_settings(self):
+        p1 = subprocess.Popen(['/usr/sbin/ioreg', '-rd1', '-c', 'IOPlatformExpertDevice'], stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(['grep', 'IOPlatformUUID'], stdin=p1.stdout, stdout=subprocess.PIPE)
+        output = p2.communicate()[0]
+        darwin_uuid = output[output.find(' = "')+4:output.rfind('"')].strip()
+        logger.info("Mac UUID is %s" % repr(darwin_uuid))
+        set_darwin_uuid = settings.get('darwin_uuid', '')
+        if darwin_uuid != set_darwin_uuid:
+            logger.info("Mac UUID changed, updating MAC and iDigi Device ID")
+            settings['darwin_uuid'] = darwin_uuid
+            settings['mac'] = uuid.getnode()
+            settings['device_id'] = "00000000-00000000-%06XFF-FF%06X" % ((settings.get('mac', 0x000000000000) & 0xFFFFFF000000) >> (8*3),
+                                                                          settings.get('mac', 0x000000000000) & 0x0000000FFFFFF)
+
+
     def xig_quit(self):
         if self.xig:
             self.xig.quit()
