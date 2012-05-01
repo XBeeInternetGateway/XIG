@@ -1,3 +1,4 @@
+#!/usr/bin/python2.7
 '''
 Created on Sep 17, 2010
 
@@ -248,7 +249,8 @@ def main():
     # make sure the XBee is connected and available.  This is only really an issue on a PC.
     while 1:
         try:
-            xbee.ddo_get_param('VR')
+            xbee.ddo_get_param(None, 'VR')
+            break
         except:
             time.sleep(0.250)
 
