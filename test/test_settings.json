@@ -1,0 +1,5 @@
+{
+    "test-xbee-com_port": "/dev/tty.usbserial-000012FD",
+    "test-xbee-baud": 115200
+}
+
