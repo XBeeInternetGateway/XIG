@@ -3,7 +3,7 @@
 import sys
 sys.path.insert(0, "..")
 
-from classes.test_case_base import TestCaseBase
+from common.test_case_base import TestCaseBase
 
 class TestXigRun(TestCaseBase):
     def test_xig_run(self):

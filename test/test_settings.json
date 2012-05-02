@@ -1,5 +1,10 @@
 {
     "test-xbee-com_port": "/dev/tty.usbserial-000012FD",
-    "test-xbee-baud": 115200
+    "test-xbee-baud": 115200,
+
+    "idigi-username": "user",
+    "idigi-password": "p@$$w0rd",
+    "idigi-server": "developer.idigi.com",
+    "idigi-device_id": "00000000-00000000-283737FF-FF1C7B40"
 }
 
