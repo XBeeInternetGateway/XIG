@@ -12,7 +12,7 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.0b5"
+VERSION = "1.5.0b6"
 
 import sys
 
@@ -93,9 +93,9 @@ class Xig(object):
         self.__autostart_sessions = []
         self.__config = XigConfig()
         self.__sched = SchedAsync("xig_sched", self)
-        
+
         self.helpfile = ""
-        
+
         self.__quit_flag = False
         self.__io_kernel = XigIOKernel(xig_core=self)
 
@@ -121,7 +121,7 @@ class Xig(object):
         else:
             ip_beg = response.find("<ip>")
             ip_end = response.find("</ip>")
-    
+
         return response[ip_beg+4:ip_end].strip()
 
     def getShortName(self):

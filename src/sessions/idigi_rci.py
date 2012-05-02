@@ -1,4 +1,4 @@
-"""\ 
+"""\
 iDigi RCI Session implementation.  Allows you to send data from the
 Internet to an XBee via the iDigi cloud service.
 
@@ -46,25 +46,25 @@ Send data to a remote XBee:
 
 Response:
 
-  <send_data_response result="ok" />  
-   
+  <send_data_response result="ok" />
+
 Send hex-encoded binary data to a remote XBee:
 
   <send_hexdata hw_address="00:11:22:33:44:55:66:77!">4A4B4C</send_hexdata>
-                 
+
 Response:
 
   <send_hexdata_response result="ok" />
-  
+
 Set a remote AT command parameter:
 
   <!-- The apply flag is the equivalent of the AC command -->
   <at hw_address="00:11:22:33:44:55:66:77!" command="D1" value="4" apply="True" />
-  
+
 Response:
 
   <at_response command="D1" operation="set" result="ok"/>
-  
+
 Get a remote AT command parameter:
 
   <at hw_address="00:11:22:33:44:55:66:77!" command="D1" />
@@ -90,10 +90,10 @@ from abstract import AbstractSession
 class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
-        
+
         rci_thread = threading.Thread(name="XIG RCI Handler",
                          target=lambda: rci.add_rci_callback(
-                             "xig", self.__rci_callback)) 
+                             "xig", self.__rci_callback))
         rci_thread.setDaemon(True)
         rci_thread.start()
 
@@ -111,29 +111,28 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __rci_send_data(self, xig_tree):
         """\
         Process a send_data node, rci_xig_tree is an ElementTree.
-        
+
         Node tag may be of type "send_data" or "send_hexdata". Returns a
         string response.
-        """        
+        """
         destination = str(xig_tree.get("hw_address"))
         data = ""
-        
+
         if xig_tree.tag == "send_data":
             data = str(xig_tree.text) or ""
-            data = data.decode("string_escape")
         elif xig_tree.tag == "send_hexdata":
             data = str(xig_tree.text) or ""
             data = filter(lambda c: c in "0123456789abcdef", data.lower())
             # Pythonic decode of hex data to binary string:
             try:
-                data = ''.join([chr(int(''.join(t),16)) for t in 
+                data = ''.join([chr(int(''.join(t),16)) for t in
                              zip(*[iter(data)]*2) ])
             except:
                 return self.__xml_err_msg("bad hexdata given")
         else:
             return self.__xml_err_msg(
                     "unknown command: %s" % str(xig_tree.tag))
-                
+
         if destination is None:
             return self.__xml_err_msg("hw_address parameter missing")
 
@@ -141,7 +140,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             destination = self.__core.xbeeAddrTupleFromHwAddr(destination)
         except:
             return self.__xml_err_msg('invalid hw_address "%s"' % str(destination))
-        
+
         new_session = iDigiRCISession(xig_core=self.__core,
                                       url="",
                                       xbee_addr=destination)
@@ -150,12 +149,12 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             self.__core.enqueueSession(new_session)
         except exceptions.OverflowError:
             return self.__xml_err_msg("queue full for destination")
-        
+
         # generate the RCI response:
         response_tree = ET.Element(xig_tree.tag + "_response")
         response_tree.set("result", "ok")
         response_tree = ET.ElementTree(response_tree)
-        return str(response_tree.writestring())        
+        return str(response_tree.writestring())
 
     def __format_is_response_tree(self, is_data):
         sample = parse_is(is_data)
@@ -164,7 +163,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         dio_set = set(map(lambda d: "DIO%d" % d, range(13)))
         io_set = ad_set.union(dio_set)
         sample_set = set(sample.keys())
-        
+
         # build nodes:
         new_nodes = [ ]
         for io_pin in io_set.intersection(sample_set):
@@ -178,30 +177,30 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
                 response_tree.set("unit", "bool")
             response_tree.set("value", value)
             new_nodes.append(response_tree)
-            
+
         return new_nodes
 
     def __rci_at(self, xig_tree):
         """\
         Process a an "at" node, xig_tree is an ElementTree.
-        
+
         Returns a string response.
         """
         destination = str(xig_tree.get("hw_address"))
         command = str(xig_tree.get("command")).upper()
         if destination is None:
-            return self.__xml_err_msg('invalid hw_address "%s" (missing \'!\'?)' % destination)       
+            return self.__xml_err_msg('invalid hw_address "%s" (missing \'!\'?)' % destination)
         if command is None:
-            return self.__xml_err_msg('invalid command "%s"' % command)  
+            return self.__xml_err_msg('invalid command "%s"' % command)
         value = xig_tree.get("value")
         if value is not None:
-            value = str(value)     
+            value = str(value)
         apply = False
         try:
             apply = bool(xig_tree.get("apply").lower() == "true")
         except:
             pass
-        
+
         # interpret value:
         if command in ("NI","DN"):
             pass            # interpret value as string
@@ -231,7 +230,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             else:
                 operation = "get"
                 value = xbee.ddo_get_param(destination, command)
-                result = "ok" 
+                result = "ok"
         except Exception, e:
             result = "error"
             value = str(e)
@@ -251,12 +250,12 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
                     return self.__xml_err_msg(
                                 "unable to form result for %s" % repr(value))
 
-                                                    
+
         # generate the RCI response:
         response_tree = ET.Element("at_response")
         response_tree.set("command", command)
         response_tree.set("operation", operation)
-        response_tree.set("result", result)        
+        response_tree.set("result", result)
         if operation == "get" or result != "ok":
             response_tree.set("type", type)
             response_tree.set("value", value)
@@ -265,9 +264,9 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             for node in self.__format_is_response_tree(original_value):
                 response_tree.append(node)
         response_tree = ET.ElementTree(response_tree)
-        return str(response_tree.writestring())      
-        
-        
+        return str(response_tree.writestring())
+
+
     def __rci_callback(self, message):
         # sneakily re-root message string:
         message = "<root>" + message + "</root>"
@@ -287,22 +286,22 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             else:
                 result += self.__xml_err_msg(
                         "unknown command: %s" % str(node.tag))
-                
+
         return result
-        
-        
+
+
 class iDigiRCISession(AbstractSession):
     """\
     An abstract Internet session, used to facilitate the gatewaying of
     data between the Internet domain and an XBee node.
     """
-    
+
     def __init__(self, xig_core, url, xbee_addr):
-        self.__core = xig_core 
+        self.__core = xig_core
         self.__xbee_addr = xbee_addr
-        self.__write_buf = ""     
+        self.__write_buf = ""
         # no URLs are handled by this session, do nothing with the URL
-                               
+
     @staticmethod
     def handleSessionCommand(xig_core, cmd_str, xbee_addr):
         # New sessions may not be started by an XBee-initiated command,
@@ -313,7 +312,7 @@ class iDigiRCISession(AbstractSession):
     def commandHelpText():
         # supports no URL commands, return no help text
         return ""
-         
+
     def isFinished(self):
         return len(self.__write_buf) == 0
 
@@ -322,25 +321,25 @@ class iDigiRCISession(AbstractSession):
 
     def getReadSockets(self):
         return []
-    
+
     def getWriteSockets(self):
         return []
 
     def getSessionToXBeeBuffer(self):
         return self.__write_buf
-    
+
     def getXBeeToSessionBuffer(self):
         return ""
 
     def appendSessionToXBeeBuffer(self, buf):
         self.__write_buf += buf
-        
+
     def appendXBeeToSessionBuffer(self, buf):
         return
-        
+
     def accountSessionToXBeeBuffer(self, count):
         self.__write_buf = self.__write_buf[count:]
-        
+
     def accountXBeeToSessionBuffer(self, count):
         return
-                 
+
