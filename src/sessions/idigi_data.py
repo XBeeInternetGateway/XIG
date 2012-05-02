@@ -61,16 +61,15 @@ if sys.version_info < (2, 5):
 
 
 def addr2iDigiDataLabel(addr_tuple):
-    addr_str = addr_tuple.address.socket_str()
-    if addr_str[-1] == '!': #XBee address
+    if addr_tuple[0][-1] == '!': #XBee address
         # [00:11:22:33:44:aa:bb:cc:dd]! -> XBee_AABBCCDD
-        return "XBee_" + ''.join(addr_str.split(":")[4:])[:-2].upper()
-    elif '.' in addr_str: #IPv4 address
+        return "XBee_" + ''.join(addr_tuple[0].split(":")[4:])[:-2].upper()
+    elif '.' in addr_tuple[0]: #IPv4 address
         # 192.168.0.1 -> IPv4_192_168_0_1
-        return "IPv4_" + '_'.join(addr_str.split('.'))
-    elif ':' in addr_str: #IPv6 address
+        return "IPv4_" + '_'.join(addr_tuple[0].split('.'))
+    elif ':' in addr_tuple[0]: #IPv6 address
         # FE80::0:1 -> IPv6_FE80__0_1
-        return "IPv6_" + '_'.join(addr_str.split(':'))        
+        return "IPv6_" + '_'.join(addr_tuple[0].split(':'))        
     else:
         # error
         raise Exception("Unrecognized addr: %s" % str(addr_tuple))

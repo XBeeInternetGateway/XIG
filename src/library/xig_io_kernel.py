@@ -309,7 +309,7 @@ class XigIOKernel(object):
                 try:
                     # send directly to UDP device
                     addr = sess.getXBeeAddr()
-                    count = self.__udp_sd.sendto(buf, 0, addr.socket_tuple())
+                    count = self.__udp_sd.sendto(buf, 0, addr)
                     sess.accountSessionToXBeeBuffer(count)
                 except Exception, e:
                     logger.error("exception when responding to UDP request (%s)" % repr(e))

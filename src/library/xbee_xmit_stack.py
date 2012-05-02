@@ -125,8 +125,8 @@ class XBeeXmitStack(object):
     def xmit(self):
         for xmit_req in self.__xmit_table.generate_tx_queue():
             # Take care to strip off any transmit option bits:
-            logger.debug("SEND: to %s (id = %d)" % (repr(xmit_req.addr.socket_tuple()[0:4]), xmit_req.addr.transmission_id))
-            self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr.socket_tuple())
+            logger.debug("SEND: to %s (id = %d)" % (repr(xmit_req.addr[0:4]), xmit_req.addr.transmission_id))
+            self.__xbee_sd.sendto(xmit_req.buf, xmit_req.flags, xmit_req.addr)
             xmit_req.state = XBeeXmitStack.XmitRequest.STATE_OUTSTANDING
             if not self.__core.isXBeeXmitStatusSupported():
                 # mark transmit as successful:
@@ -181,13 +181,13 @@ class XBeeXmitStack(object):
         xmit_req.retries_remaining -= 1
         if xmit_req.retries_remaining <= 0:
             logger.warn("send to %s FAILED permanently with tx_status = 0x%08x (%d)" % (
-                str(addr[0]), tx_status, tx_status) )
+                addr[0], tx_status, tx_status) )
             self.__xmit_id_set.add(xmit_id)
             self.__xmit_table.expunge(xmit_id)
             return True
         
         # Mark TX for retry:
         logger.debug("send to %s FAILED with tx status = 0x%02x, will retry." % (
-            str(addr[0]), tx_status))
+            addr[0], tx_status))
         xmit_req.state = XBeeXmitStack.XmitRequest.STATE_QUEUED
         return True
