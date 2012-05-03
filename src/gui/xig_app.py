@@ -10,6 +10,7 @@ if sys.version_info < (2, 7):
 # need to import early (to overwrite socket and select)
 import xbee
 
+import argparse
 import webob
 import time
 from webob.dec import wsgify
@@ -19,6 +20,7 @@ import logging
 
 import subprocess
 import uuid
+
 
 # WSGI handlers
 import handlers.static
@@ -56,7 +58,7 @@ settings['version'] = xig.VERSION
 
 
 class XigApp(threading.Thread):
-    
+
     def __init__(self):
         threading.Thread.__init__(self)
         threading.Thread.setDaemon(self, True)
@@ -72,21 +74,21 @@ class XigApp(threading.Thread):
         self.logs_handler = handlers.logs.LogsHandler()
         self.xig_console_handler = handlers.xig_console.XigConsoleHandler()
         self.xig_console_handler.start() # this handler is a thread
-        
+
         # register self as an HTTP handler
         rci.set_wsgi_handler(self)
-        
+
         # make sure a local port is set
         settings.setdefault('local_port', DEFAULT_PORT)
 
         if sys.platform == 'darwin':
 	    # special settings handling for OSX
-            self.__osx_settings() 
-           
+            self.__osx_settings()
+
         # add callbacks to restart XIG if serial port changes
         settings.add_callback('com_port', lambda new, old: self.xig_quit())
         settings.add_callback('baud', lambda new, old: self.xig_quit())
-  
+
     def __osx_settings(self):
         p1 = subprocess.Popen(['/usr/sbin/ioreg', '-rd1', '-c', 'IOPlatformExpertDevice'], stdout=subprocess.PIPE)
         p2 = subprocess.Popen(['grep', 'IOPlatformUUID'], stdin=p1.stdout, stdout=subprocess.PIPE)
@@ -105,13 +107,13 @@ class XigApp(threading.Thread):
     def xig_quit(self):
         if self.xig:
             self.xig.quit()
-           
+
     def run(self):
         while 1:
             # make sure rci and xbee are connected
             try:
                 if self.enable_xig and rci.connected() and xbee.ddo_get_param(None, "VR"):
-                    try: 
+                    try:
                         self.xig = xig.Xig()
                         try:
                             # set port for xig_console_handler
@@ -144,7 +146,7 @@ class XigApp(threading.Thread):
 
     def xig_handler(self, request):
         if request.method == 'GET':
-            response = self.get_power()             
+            response = self.get_power()
             return webob.Response(json.dumps(response), content_type='json')
         elif request.method == 'POST':
             state = request.POST.get('power', 'off')
@@ -154,17 +156,17 @@ class XigApp(threading.Thread):
                 self.xig_quit()
             else:
                 self.enable_xig = True
-                response = self.get_power()       
-            return webob.Response(json.dumps(response), content_type='json')            
+                response = self.get_power()
+            return webob.Response(json.dumps(response), content_type='json')
         else:
-            return webob.exc.HTTPMethodNotAllowed()        
-    
+            return webob.exc.HTTPMethodNotAllowed()
+
     def poll_handler(self, request):
         if request.method == 'GET':
             refresh = bool(request.GET.get('refresh', False))
             response = {}
             for key, handler in (('power', self),
-                                 ('settings', self.settings_handler), 
+                                 ('settings', self.settings_handler),
                                  ('logs', self.logs_handler),
                                  ('serial_ports', self.serial_ports_handler),
                                  ('idigi', self.idigi_handler),
@@ -175,9 +177,9 @@ class XigApp(threading.Thread):
                     response[key] = data
             return webob.Response(json.dumps(response), content_type='json')
         else:
-            return webob.exc.HTTPMethodNotAllowed()        
-        
-    
+            return webob.exc.HTTPMethodNotAllowed()
+
+
     @wsgify
     def __call__(self, request):
         if request.path_info_peek() in ['s', 'static', 'favicon.ico']:
@@ -197,20 +199,27 @@ class XigApp(threading.Thread):
         elif request.path in ['/logs']:
             return self.logs_handler(request)
         elif request.path in ['/xig_console']:
-            return self.xig_console_handler(request)        
+            return self.xig_console_handler(request)
         elif request.path in ['/xig']:
-            return self.xig_handler(request)        
+            return self.xig_handler(request)
         elif request.path in ['/poll']:
-            return self.poll_handler(request)        
+            return self.poll_handler(request)
         else:
             return webob.exc.HTTPNotFound()
 
 if __name__ == "__main__":
+    # Parse command line options:
+    parser = argparse.ArgumentParser(description="XBee Internet Gateway (XIG) with Web GUI.")
+    parser.add_argument('--no-browser', dest="no_browser", action="store_true",
+                        help="do not launch the web browser")
+    args = parser.parse_args()
+
+    # Start the app:
     app = XigApp()
     app.start()
-    
+
     url = "http://localhost:%d" % settings['local_port']
-    
+
     # Make sure the app is serving
     while 1:
         try:
@@ -224,18 +233,33 @@ if __name__ == "__main__":
         except Exception, e:
             pass # try to open the webpage from a standard browser anyway
         break
-    
-    import webbrowser
-    webbrowser.open(url)    
+
+    if not args.no_browser:
+        # launch the web browser:
+        import webbrowser
+        webbrowser.open(url)
 
     # Important! This little bit of hidden window trickery will allow
     # the GUI to respond to O/S GUI events, e.g. allowing the OSX
     # icon to no state "Application Not Responding"
-    import Tkinter as tk
-    root = tk.Tk()
-    root.withdraw()
-    def idle_loop():
+    sleepyTime = False
+    try:
+        import Tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+        def idle_loop():
+            root.after(100, idle_loop)
         root.after(100, idle_loop)
-    root.after(100, idle_loop)
-    root.mainloop()
+        root.mainloop()
+    except ImportError:
+        logger.warning("Tkinter not available, running as command-line only.")
+        sleepyTime = True
+    except tk._tkinter.TclError:
+        logger.info("No window manager available, will run as command-line only.")
+        sleepyTime = True
+
+    # Prevent daemon threads from exiting
+    if sleepyTime:
+        while 1:
+            time.sleep(10)
 
