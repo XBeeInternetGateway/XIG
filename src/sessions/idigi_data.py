@@ -1,4 +1,4 @@
-"""\ 
+"""\
 iDigi Data Session
 
 Include this session in your configuration to enable the automatic upload of
@@ -20,7 +20,7 @@ You may also upload data to iDigi by using the following URL syntax:
     idigi_data:names=N1,N2,..Nn&values=V1,V2,..,VN,[units=U1,U2,..,Un]
     idigi_data:names=temp,humidity,alarm&values=21,40,False&units=C,RH%,bool
 
-Where the entire name/value string is urlencoded (of type 
+Where the entire name/value string is urlencoded (of type
 application/x-www-form-urlencoded).  Data will then appear on iDigi with
 a ddInstanceName of XBee_AABBCC where AABBCC is the DL of the XBee the
 data arrive from and a ddChannelNameset to NAME[0..N].
@@ -69,7 +69,7 @@ def addr2iDigiDataLabel(addr_tuple):
         return "IPv4_" + '_'.join(addr_tuple[0].split('.'))
     elif ':' in addr_tuple[0]: #IPv6 address
         # FE80::0:1 -> IPv6_FE80__0_1
-        return "IPv6_" + '_'.join(addr_tuple[0].split(':'))        
+        return "IPv6_" + '_'.join(addr_tuple[0].split(':'))
     else:
         # error
         raise Exception("Unrecognized addr: %s" % str(addr_tuple))
@@ -79,7 +79,7 @@ class iDigiDataUploader(object):
     FILENAME_PREFIX="xig_"
     COLLECTION="xig_data"
     SECURE=False
-    
+
     def __init__(self, xig_core, max_rate_sec, max_sample_q_len):
         self.__core = xig_core
         self.__max_rate_sec = max_rate_sec
@@ -88,23 +88,23 @@ class iDigiDataUploader(object):
         self.__lock = threading.RLock()
 
     def sample_add(self, name, value, unit, timestamp):
-        sample = { "name": name, "value": value, 
+        sample = { "name": name, "value": value,
                    "unit": unit, "timestamp": timestamp }
-        
+
         if len(self.__sample_q) > self.__max_sample_q_len:
             self.__sample_q.pop(0)
-            
+
         self.__sample_q.append(sample)
 
     def __format_doc(self):
         doc = ET.Element("idigi_data")
         doc.set("compact", "True")
-        
+
         for sample in self.__sample_q:
             elem = ET.Element("sample")
             map(lambda k: elem.set(k, sample[k]), sample.keys())
             doc.append(elem)
-        
+
         return ET.ElementTree(doc).writestring()
 
     def upload(self):
@@ -132,8 +132,8 @@ class iDigiDataUploader(object):
                 self.upload()
         finally:
             self.reschedule()
-            
-                
+
+
 
 class iDigiDataAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
@@ -160,13 +160,13 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
         except:
             logger.warning("__ioSampleCallback(): bad I/O sample format")
             return
-        
+
         # build pin sets:
         ad_set = set(map(lambda d: "AD%d" % d, range(7)))
         dio_set = set(map(lambda d: "DIO%d" % d, range(13)))
         io_set = ad_set.union(dio_set)
         sample_set = set(sample.keys())
-        
+
         for io_pin in io_set.intersection(sample_set):
             unit = "bool"
             value = str(bool(int(sample[io_pin])))
@@ -176,25 +176,25 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
             self._sample_add(addr2iDigiDataLabel(addr) + "." + io_pin, value, unit, iso_date())
 
 
-class iDigiDataSession(AbstractSession):  
+class iDigiDataSession(AbstractSession):
     def __init__(self, xig_core, url, xbee_addr):
         self.__core = xig_core
         self.__idigi_data_autostart = xig_core.getAutostartSessions(
                                             obj_type=iDigiDataAutostartSession)
         self.__xbee_addr = xbee_addr
         self.__write_buf = ""
-        
+
         if not url.startswith("idigi_data:"):
             self.do_error('url does not start with "idigi_data:"')
             return
-        
+
         qs = url.split(":")[1]
         try:
             qs = parse_qs(qs)
         except:
             self._do_error("unable to parse sample string")
             return
-                
+
         if "names" not in qs:
             self._do_error('required keyword "names" not present')
             return
@@ -203,9 +203,9 @@ class iDigiDataSession(AbstractSession):
             return
 
         dl_addr = addr2iDigiDataLabel(xbee_addr)
-        
+
         names_list = map(lambda n: dl_addr + "." + n,
-                         qs["names"][0].split(','))            
+                         qs["names"][0].split(','))
         param_lists = [ names_list, qs["values"][0].split(',') ]
 
         if "units" in qs:
@@ -223,31 +223,31 @@ class iDigiDataSession(AbstractSession):
         # submit samples:
         for sample_params in zip(*param_lists):
             self.__idigi_data_autostart._sample_add(*sample_params)
-            
+
     @staticmethod
     def handleSessionCommand(xig_core, cmd_str, xbee_addr):
         """
         Attempt to handle an in-session command given by cmd_str from
         xbee_addr
-        
+
         If cmd_str is valid, return True.  If the command is not valid
         (or incomplete), return False.
         """
-        
+
         if cmd_str.startswith("idigi_data:"):
             return iDigiDataSession(xig_core, cmd_str, xbee_addr)
-        
+
         return None
 
     @staticmethod
     def commandHelpText():
         return """\
- idigi_data:names=N1,N2,..Nn&values=V1,V2,..,VN&[units=U1,U2,..,Un]: 
+ idigi_data:names=N1,N2,..Nn&values=V1,V2,..,VN&[units=U1,U2,..,Un]:
                 upload data sample to iDigi data service
 """
 
     def _do_error(self, err_str):
-        self.__write_buf = "Xig-Error: idigi_data " + err_str
+        self.__write_buf = "Xig-Error: idigi_data " + err_str + "\r\n"
 
     def close(self):
         return
@@ -265,7 +265,7 @@ class iDigiDataSession(AbstractSession):
     def getWriteSockets(self):
         """Returns a list of active non-blocking socket objects which may be read"""
         return []
-    
+
     def getSessionToXBeeBuffer(self):
         """Session contains data which needs to be written to XBee socket."""
         return self.__write_buf
