@@ -12,7 +12,7 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.0b6"
+VERSION = "1.5.0b7"
 
 import sys
 
