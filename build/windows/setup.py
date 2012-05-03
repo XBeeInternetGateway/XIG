@@ -19,13 +19,15 @@ print "Creating Binary"
 
 relative_dirs = ['../../src',
                  '../../src/gui',
+                 '../../src/library/ext',
+                 '../../src/library/ext/serial',
                  '../../src/library/ext/cp4pc']
 dirs = [os.path.abspath(dir) for dir in relative_dirs]
 main_file = os.path.join(dirs[1], 'xig_app.py')
 
 python_modules = []
 for dir in dirs:
-    sys.path.append(dir)
+    sys.path.insert(0, dir)
     for filename in os.listdir(dir):
         try:
             if filename[-3:] == ".py":
@@ -33,12 +35,12 @@ for dir in dirs:
         except:
             pass
 
-setup(console=[ 
+setup(console=[
                {
                 "script": main_file,
                 "icon_resources": [(1, 'xig.ico')]
                 }
-               ], 
+               ],
       options={
                "py2exe": {
                          "includes": python_modules,
