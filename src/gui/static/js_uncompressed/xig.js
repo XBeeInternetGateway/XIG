@@ -231,14 +231,46 @@ xig = {
             	preventCache: true
             });		
 		},
-		"handler": function(com_ports){
+		"handler": function(new_list){
         	var i;
         	var com_port_select = dojo.byId('xbee-com_port');
-        	// TODO: do a merge of COM Ports
-        	for (i in com_ports) {
-        	    var option=document.createElement("option");
-        	    option.text=com_ports[i];
-        		com_port_select.add(option, null);			
+        	var select_index = 0;
+        	var new_index = 0;
+        	while (1) {
+        		// merge the new items into the select options
+        		// this relies on both lists being ordered
+        		if(select_index >= com_port_select.options.length) {
+        			// no more items in select, add the rest of the new items.
+                	for (; new_index < new_list.length; new_index++) {
+                	    var option=document.createElement("option");
+                	    option.text=new_list[new_index];
+                		com_port_select.add(option, null); // add to end of list			
+                	}
+                	break;
+        		} else if (new_index >= new_list.length) {
+        			// remove any remaining items from select list
+        			while(select_index < com_port_select.options.length) {
+        				com_port_select.remove(select_index); 
+        			}
+        			break;
+        		} 
+        		// start comparing current values
+        		var new_value = new_list[new_index];
+        		var select_value = com_port_select.options[select_index].value;
+        		if (select_value == new_value) {
+        			// matching value, increment both counters
+        			new_index++;
+        			select_index++;
+        		} else if (select_value > new_value) {
+        			// new value to insert into select
+            	    var option=document.createElement("option");
+            	    option.text=new_value;
+            		com_port_select.add(option, com_port_select.options[select_index++]);
+            		new_index++;
+        		} else if (select_value < new_value) {
+        			// need to remove value from the select list
+        			com_port_select.remove(select_index);
+        		}
         	}
 		}
 	},
