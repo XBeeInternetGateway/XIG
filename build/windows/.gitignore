@@ -1,3 +1,9 @@
+settings.json
 /build
 /dist
 /settings.json
+
+/dist/*
+/build/*
+/xig_*
+*.zip
