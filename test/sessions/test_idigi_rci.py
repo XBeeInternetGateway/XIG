@@ -20,6 +20,51 @@ class TestiDigiRCI(TestCaseBase):
         TestCaseBase.stopTestXBee(self)
         TestCaseBase.stopXig(self)
 
+    def test_at_read_multiple(self):
+        """
+        Tests the <send_data> command, sending ASCII data to a remote node.
+        """
+
+        # message to send to server
+        idigi_message = """\
+<sci_request version="1.0">
+<send_message>
+ <targets>
+   <device id="%s"/>
+ </targets>
+ <rci_request version="1.1">
+   <do_command target="xig">
+     <at hw_address="%s" command="NI" />
+     <at hw_address="%s" command="SH" />
+     <at hw_address="%s" command="SL" />
+   </do_command>
+ </rci_request>
+</send_message>
+</sci_request>"""
+
+        idigi = iDigiClient(self.settings["idigi-username"],
+                            self.settings["idigi-password"],
+                            self.settings["idigi-server"])
+
+        hw_addr = TestCaseBase.getTestXBeeAddr(self)
+        hw_addr_flat = filter(lambda c: c.lower() in "0123456789abcdef", hw_addr)
+        exp_sh_val = int(hw_addr_flat[0:8], 16)
+        exp_sl_val = int(hw_addr_flat[8:], 16)
+
+        format_args = ((self.settings["idigi-device_id"],) + (hw_addr,)*3)
+        idigi_message = idigi_message % ((self.settings["idigi-device_id"],) + (hw_addr,)*3)
+        idigi_response = idigi.post_request("/ws/sci", idigi_message)
+        tree = ET.fromstring(idigi_response)
+        ni_node = tree.find('send_message/device/rci_reply/do_command/at_response[@command="NI"]')
+        self.assertEqual(ni_node.get("result"), "ok")
+        sh_node = tree.find('send_message/device/rci_reply/do_command/at_response[@command="SH"]')
+        self.assertEqual(sh_node.get("result"), "ok")
+        self.assertEqual(int(sh_node.get("value"), 16), exp_sh_val)
+        sl_node = tree.find('send_message/device/rci_reply/do_command/at_response[@command="SL"]')
+        self.assertEqual(sl_node.get("result"), "ok")
+        self.assertEqual(int(sl_node.get("value"), 16), exp_sl_val)
+
+
     def test_send_data(self):
         """
         Tests the <send_data> command, sending ASCII data to a remote node.
