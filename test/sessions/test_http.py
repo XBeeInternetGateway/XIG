@@ -27,7 +27,7 @@ class TestHTTP(TestCaseBase):
         test_xbee = self.test_xbee
         test_xbee.flushInput()
         test_xbee.write("http://faludi.com/test.html\r\n")
-        test_xbee.timeout = 5
+        test_xbee.timeout = 2
         buf = ""
         while buf.rfind("</html>") == -1:
             newbuf = test_xbee.read()
@@ -45,16 +45,16 @@ class TestHTTP(TestCaseBase):
         self.assertEqual(m.hexdigest(), EXPECTED_MD5)
 
 
-    def test_http_yahoo(self):
+    def test_http_request_long(self):
         """
-        Ensures that the entirety of yahoo.com may be retrieved.
+        Ensures that a large request can be transferred.
         """
-        EXPECTED_MIN_LENGTH = 200000
+        EXPECTED_MIN_LENGTH = 142410
 
         test_xbee = self.test_xbee
         test_xbee.flushInput()
-        test_xbee.write("http://yahoo.com/\r\n")
-        test_xbee.timeout = 8
+        test_xbee.write("http://www.gutenberg.org/files/5200/5200-h/5200-h.htm\r\n")
+        test_xbee.timeout = 2
         buf = ""
         while buf.rfind("</html>") == -1:
             newbuf = test_xbee.read()
@@ -77,8 +77,8 @@ class TestHTTP(TestCaseBase):
 
         test_xbee = self.test_xbee
         test_xbee.flushInput()
-        test_xbee.write("http://yahoo.com/\r\n")
-        test_xbee.timeout = 8
+        test_xbee.write("http://www.gutenberg.org/files/5200/5200-h/5200-h.htm\r\n")
+        test_xbee.timeout = 2
         buf = ""
         # accumulate some data:
         for i in xrange(64):

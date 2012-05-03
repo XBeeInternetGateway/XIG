@@ -155,7 +155,7 @@ class TestiDigiRCI(TestCaseBase):
         # check that message emerged from UART of test XBee
         buf = ""
         m = hashlib.md5()
-        self.test_xbee.timeout = 5
+        self.test_xbee.timeout = 2
         while buf.rfind("END_OF_MESSAGE") == -1:
             newbuf = self.test_xbee.read()
             try:
