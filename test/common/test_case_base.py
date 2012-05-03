@@ -60,7 +60,7 @@ class TestCaseBase(unittest.TestCase):
             self.test_xbee.close()
         finally:
             self.test_xbee = None
-            self.test_xbee_addr = None
+            #self.test_xbee_addr = None  # do not flush known address from cache to speed test execution
 
     def doTestXBeeCommand(self, command):
         self.test_xbee.write("\r")

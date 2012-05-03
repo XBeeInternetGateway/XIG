@@ -36,6 +36,7 @@ class TestHTTP(TestCaseBase):
             except:
                 pass
             if len(newbuf) == 0:
+                print buf
                 raise Exception, "serial read timeout"
             buf += newbuf
         buf = buf.strip()
@@ -56,12 +57,13 @@ class TestHTTP(TestCaseBase):
         test_xbee.timeout = 8
         buf = ""
         while buf.rfind("</html>") == -1:
-            newbuf = test_xbee.read(128)
+            newbuf = test_xbee.read()
             try:
                 self.xig.read_nonblocking(1024, timeout=0)
             except:
                 pass
             if len(newbuf) == 0:
+                print buf
                 raise Exception, "serial read timeout"
             buf += newbuf
         self.assertGreaterEqual(len(buf), EXPECTED_MIN_LENGTH)
@@ -97,6 +99,7 @@ class TestHTTP(TestCaseBase):
             except:
                 pass
             if len(newbuf) == 0:
+                print buf
                 raise Exception, "serial read timeout"
             buf += newbuf
             if buf.rfind("</html>") != -1:

@@ -26,3 +26,16 @@ class iDigiClient(object):
         return response_body
 
 
+    def get_request(self, path):
+        webservice = httplib.HTTP(self.server, 80)
+        webservice.putrequest("GET", path)
+        webservice.putheader("Authorization", "Basic %s" % self.__auth)
+        webservice.putheader("Content-type", "text/xml; charset=\"UTF-8\"")
+        webservice.endheaders()
+
+        # get the response
+        statuscode, statusmessage, header = webservice.getreply()
+        response_body = webservice.getfile().read()
+
+        return response_body
+
