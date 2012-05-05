@@ -1,6 +1,6 @@
 class Addr(str):
     """Generic Address class to store MAC and IP addresses"""
-    
+
     NUM_BYTES = None
     DELIMITER = ":"
     BASE = 16
@@ -47,7 +47,7 @@ class Addr(str):
             return 0x10000
         else:
             return 0x100 ** cls.BYTES_PER_SEGMENT
-    
+
     @classmethod
     def strip_str(cls, value):
         "Strip off extra characters from string"
@@ -60,7 +60,7 @@ class Addr(str):
             if ch in char_list:
                 stripped_value = stripped_value + ch
         return stripped_value
-    
+
     @classmethod
     def string_to_long(cls, value):
         "Convert from string to Integer"
@@ -83,7 +83,7 @@ class Addr(str):
         for i in xrange(0, cls.NUM_BYTES, cls.BYTES_PER_SEGMENT):
             output.insert(0, formatter % ((value >> (i*8*cls.BYTES_PER_SEGMENT)) & mask))
         return (cls.DELIMITER or '').join(output)
-    
+
     @classmethod
     def from_bin_string(cls, buf, big_endian = True): #default to network order
         "Convert from string to Integer"
@@ -93,9 +93,9 @@ class Addr(str):
                 value_num = value_num * 0x100 + ord(buf[i])
         else:
             for i in xrange(cls.NUM_BYTES-1, -1, -1):
-                value_num = value_num * 0x100 + ord(buf[i])            
+                value_num = value_num * 0x100 + ord(buf[i])
         return cls(value_num)
-    
+
 
 class XBee_Addr(Addr):
     """XBee extended 64-bit address that is wrapped in a []!"""
@@ -139,7 +139,7 @@ class IPv4_Addr(Addr):
 class IPv6_Addr(Addr):
     NUM_BYTES = 16
     BYTES_PER_SEGMENT = 2
-    
+
     @classmethod
     def string_to_long(cls, value):
         "Convert from string to Integer"
@@ -188,7 +188,7 @@ class IPv6_Addr(Addr):
                 start = ['']
             if not end:
                 end = ['']
-            output = start+['']+end                
+            output = start+['']+end
         return ':'.join(output)
 
 
@@ -203,10 +203,10 @@ class Addr_Tuple(tuple):
             if value is not None:
                 value_list[i] = value
         new_object = super(Addr_Tuple, cls).__new__(cls, value_list)   #magic sauce
-        return new_object        
+        return new_object
 
     def __getattr__(self, name):
-        return self[self.MAP.index(name)]
+        return self[list(self.MAP).index(name)]
 
 
 class XBee_Addr_Tuple(Addr_Tuple):
@@ -226,7 +226,7 @@ class XBee_Addr_Tuple(Addr_Tuple):
                     address = XBee_Short_Addr(address)
             kwargs['address'] = address
         return super(XBee_Addr_Tuple, cls).__new__(cls, iterative, **kwargs)
-            
+
 
 class IP_Addr_Tuple(Addr_Tuple):
     MAP = ("address", "port")
@@ -248,7 +248,7 @@ class IP_Addr_Tuple(Addr_Tuple):
             kwargs['address'] = address
         return super(IP_Addr_Tuple, cls).__new__(cls, iterative, **kwargs)
 
-#for addr in (IPv4_Addr('192.168.0.1'), 
+#for addr in (IPv4_Addr('192.168.0.1'),
 #             IPv6_Addr('fe80::1'),
 #             XBee_Addr('00:11:22:33:44:55:66:77')):
 #    print addr.__class__.__name__

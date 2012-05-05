@@ -31,7 +31,9 @@ class LoggerStub:
 
     def warn(self, msg, *args):
         self.log("WARN", msg, *args)
-    warning = warn
+
+    def warning(self, msg, *args):
+        self.log("WARN", msg, *args)
 
     def error(self, msg, *args):
         self.log("ERROR", msg, *args)
