@@ -1,9 +1,9 @@
-#Sun Oct 10 17:30:52 CDT 2010
-IP=192.168.42.162
+#Sat May 05 14:00:05 CDT 2012
+IP=192.168.0.10
 compile_sources=true
 device=ConnectPort X4
 eclipse.preferences.version=1
-entry_point=src\\xig.py
-remote_config_name=Rob's X4
+entry_point=src/xig.py
+remote_config_name=St Paul Cheese ConnectPort X2D
 remove_docstrings=true
 use_current_remote_config=true
