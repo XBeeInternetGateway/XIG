@@ -292,7 +292,7 @@ class XigIOKernel(object):
                 
                 try:
                     self.__xbee_xmit_stack.xmit()
-                except error, why:
+                except Exception, why:
                     # TODO: handle gracefully
                     if why[0] != errno.EWOULDBLOCK:
                         logger.error("IO: exception on XBee xmit (%s)" % repr(why)) 
