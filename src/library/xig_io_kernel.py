@@ -20,7 +20,7 @@ from xig_inactive_session_command_parser import XigInactiveSessionCommandParser
 from xbee_xmit_stack import XBeeXmitStack
 
 import logging
-logger = logging.getLogger("xig.io")
+logger = logging.getLogger("xig.io_kernel")
 
 import xbee
 
