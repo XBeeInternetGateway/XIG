@@ -58,7 +58,7 @@ class XbeeHandler:
             ai = ord(xbee.ddo_get_param(addr, 'ai'))
             return self.AI_STATUS.get(ai, '0x%02X - Unknown Status' % ai)
         except Exception, e:
-	    self.logger.debug("XBee Status: exception '%s'" % repr(e))
+            self.logger.debug("XBee Status: exception '%s'" % repr(e))
             return "XBee Not Connected."
 
     def poll(self, refresh=False):
