@@ -46,7 +46,7 @@ import xbee #@UnusedImport
 logger = logging.getLogger("xig")
 logger.setLevel(logging.INFO)
 logger.info("%s v%s starting." % (NAME, VERSION))
-logging.getLogger("xig.io").setLevel(logging.DEBUG)
+logging.getLogger("xig.io_kernel").setLevel(logging.DEBUG)
 logging.getLogger("cp4pc.xbee").setLevel(logging.WARNING)
 
 

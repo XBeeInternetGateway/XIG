@@ -118,12 +118,6 @@ class XBee_Short_Addr(XBee_Addr):
     DELIMITER = None
     BYTES_PER_SEGMENT = 2
 
-    @classmethod
-    def long_to_string(cls, value):
-        "Convert from Integer to string"
-        # add "[]!" wrapper to value
-        return "["+super(XBee_Short_Addr, cls).long_to_string(value)+"]!"
-
 
 class Eth_MAC(Addr):
     NUM_BYTES = 6
