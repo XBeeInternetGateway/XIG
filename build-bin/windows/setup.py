@@ -57,6 +57,11 @@ shutil.copy2(os.path.join(this_folder, 'xig.ico'), os.path.join(dist_folder, 'xi
 shutil.copy2(os.path.join('..', '..', 'src', 'library', 'ext', 'cp4pc', 'rci', 'idigi-ca-cert-public.crt'),
              os.path.join(dist_folder, 'idigi-ca-cert-public.crt'))
 
+print "Copying xig_config_default.py to directory to make it easier to modify"
+src_filename = os.path.join(this_folder, '..', '..', 'src', 'xig_config_default.py')
+dst_filename = os.path.join(dist_folder, 'xig_config_default.py')
+shutil.copyfile(src_filename, dst_filename)
+
 print "Copy dist folder and zip up"
 from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
