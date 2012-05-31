@@ -236,6 +236,7 @@ xig = {
         	var com_port_select = dojo.byId('xbee-com_port');
         	var select_index = 0;
         	var new_index = 0;
+        	new_list.unshift(''); // add an empty element to COM port list (for initial startup and to clear COM settings).
         	while (1) {
         		// merge the new items into the select options
         		// this relies on both lists being ordered
