@@ -150,9 +150,8 @@ class XigIOKernel(object):
             Else, returns False.
         """
         
-        # Matches Series 2 and Series 1 I/O packets, respectively:
-        if (addr[2:4] != (0xc105, 0x92) and
-            addr[2:4] != (0x0, 0x92)):
+        # Matches Series 2 and Series 1 I/O packets:
+        if (addr[2:4] not in ((0xc105, 0x92), (0x0, 0x92), (0x0, 0x93))):
             return False
         
         #Take care to strip off XBee option bits 
