@@ -46,7 +46,7 @@ class XigIOKernel(object):
 
         # set up XBee socket to receive commands on        
         self.__xbee_sd = socket.socket(socket.AF_XBEE, socket.SOCK_DGRAM, socket.XBS_PROT_TRANSPORT)
-        self.__xbee_version = self.__getXBeeVersion()
+        self.__xbee_version = self.__getXBeeVersion() #FIXME: this doesn't work in a lot of cases.
         xbee_series = self.__xbee_version[0]
         logger.info("XBee Version = %s, Series = %s" % (self.__xbee_version, xbee_series))
         bind_addr = ('', 0, 0, 0)
