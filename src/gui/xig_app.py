@@ -55,6 +55,7 @@ import rci
 
 # set the version from XIG
 settings['version'] = xig.VERSION
+settings['device_type'] = "XIG PC Gateway"
 
 
 class XigApp(threading.Thread):
