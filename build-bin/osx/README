@@ -1,0 +1,35 @@
+
+Build Instructions for Mac OSX
+==============================
+
+How to build the binary OSX version of the XIG in five easy steps!
+
+
+1. Install the *32-bit* version of Python from http://www.python.org
+   
+   The version of Python distributed with OSX apparantly does not
+   work well with XIG and py2app.  Similarly, the 64-bit version of
+   the official Python 2.7 also does not work well with XIG.
+
+2. Install ez_setup if not already installed:
+
+   $ curl -O http://peak.telecommunity.com/dist/ez_setup.py
+   $ sudo python ez_setup.py -U setuptools 
+
+3. Install py2app from easy_install:
+
+   $ sudo easy_install -U py2app
+
+4. Run the build script from this directory (build-bin/osx/build.sh):
+
+   $ ./build.sh
+
+5. Once the build is complete two directories will be created, "build"
+   and "dist".  "xig.app" will be found in the "dist" directory and
+   is ready to distribute!
+
+   N.B. if you create an official build, make certain to distribute a
+   fresh build of xig.app!  If you have run the xig.app on your local
+   machine its contents will have been modified as the configuration
+   and state information are saved within the xig.app bundle.
+
