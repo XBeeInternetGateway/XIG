@@ -120,6 +120,16 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
 
         if xig_tree.tag == "send_data":
             data = str(xig_tree.text) or ""
+            encoding = xig_tree.get("encoding")
+            if encoding is None:
+              encoding = "ascii"
+
+            if encoding == "ascii":
+              data = str(data.decode("ascii"))
+            elif encoding == "string_escape":
+              data = str(data.decode("string_escape"))
+            else:
+              return self.__xml_err_msg("unknown encoding %s" % encoding)
         elif xig_tree.tag == "send_hexdata":
             data = str(xig_tree.text) or ""
             data = filter(lambda c: c in "0123456789abcdef", data.lower())

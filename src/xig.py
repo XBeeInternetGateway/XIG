@@ -12,9 +12,9 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.0b12"
+VERSION = "1.5.0b14"
 
-import sys
+import sys, os
 
 sys.path.insert(0, "./library/ext")
 sys.path.insert(0, "./library/ext/cp4pc")
