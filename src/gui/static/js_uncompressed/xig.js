@@ -48,8 +48,6 @@ xig = {
 		"error": function(status) {
 			// report the errors
 			xig.logs.add({msg: "Poll error: "+status});
-			// set state to disconnected
-			xig.logs.connected = false;
 		},
 	},
 	"power": {
