@@ -1,7 +1,7 @@
 import sys
 sys.path.insert(0, "./library/ext")
 sys.path.insert(0, "./library/ext/cp4pc")
-sys.path.insert(0, ".")
+sys.path.insert(0, "./")
 
 if sys.version_info < (2, 7):
     # should be run with Python version 2.7 or greater

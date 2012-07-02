@@ -181,7 +181,7 @@
 			                        <div id="xbee-com_ports-param" class="parameter">
 			                            <span class="key">COM Port: </span>
 			                            <div class="value">
-			                                <select id="xbee-com_port" onChange="xig.settings.set({key:'com_port', value:this.value});">
+			                                <select id="xbee-com_port" onChange="xig.settings.set({key:'com_port', value:this.options[this.selectedIndex].value});">
 			                                    <option selected="true"></option>
 			                                </select>
 			                            </div>
@@ -189,7 +189,7 @@
 			                        <div id="xbee-baud-param" class="parameter">
 			                            <span class="key">Baud: </span>
 			                            <div class="value">
-				                            <select id="xbee-baud" onChange="xig.settings.set({key:'baud', value:this.value});">
+				                            <select id="xbee-baud" onChange="xig.settings.set({key:'baud', value:this.options[this.selectedIndex].value});">
 				                                <option>1200</option>
 				                                <option>2400</option>
 				                                <option>4800</option>
