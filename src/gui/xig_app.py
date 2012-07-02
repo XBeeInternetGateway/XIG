@@ -83,7 +83,7 @@ class XigApp(threading.Thread):
         settings.setdefault('local_port', DEFAULT_PORT)
 
         if sys.platform == 'darwin':
-	    # special settings handling for OSX
+        # special settings handling for OSX
             self.__osx_settings()
 
         # add callbacks to restart XIG if serial port changes
