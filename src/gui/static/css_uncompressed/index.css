@@ -249,4 +249,9 @@ body {
     height: 1.5em;
     text-align: center;
     color: #70899D;
+    padding: .5em;
+}
+
+#footer a, #footer a.visited {
+    color: #70899D;
 }
