@@ -38,10 +38,15 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
-2012/04/23 - XIG v1.5.0b1
+2012/07/13 - XIG v1.5.0
 
-Binary only release for Windows and Linux to test new XIG for PC
-builds.
+Added support using Digi's CP4PC Python module so XIG can be run
+on non-Digi ConnectPort hardware.  Refactored XIG abstractions to 
+work with CP4PC.
+
+Added XIG web GUI (run it from src as "gui/xig_app.py").
+
+Bug fixes to iDigi RCI session module.
 
 
 2012/03/06 - XIG v1.4.2
