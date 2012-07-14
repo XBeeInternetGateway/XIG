@@ -66,8 +66,8 @@ print "Copy dist folder and zip up"
 from contextlib import closing
 from zipfile import ZipFile, ZIP_DEFLATED
 import xig
-xig_version = xig.VERSION.replace('.', '_')
-filename = 'xig_'+xig_version
+xig_version = xig.VERSION
+filename = 'xig-windows-'+xig_version
 xig_folder = os.path.join(this_folder, filename)
 if os.path.exists(xig_folder):
     shutil.rmtree(xig_folder, True)
