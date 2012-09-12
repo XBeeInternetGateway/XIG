@@ -6,6 +6,25 @@ Created on Jan 19, 2012
 
 import time
 
+def _local_time_offset(t=None):
+    """Return offset of local zone from GMT, either at present or at time t."""
+    # python2.3 localtime() can't take None
+
+    # ConnectPort X4s don't have an RTC, so we need to check for that
+    # functionality first.
+    if 'timezone' in dir(time):
+        if t is None:
+            t = time.time()
+
+        if time.localtime(t).tm_isdst > 0 and time.daylight:
+            return -time.altzone
+        else:
+            return -time.timezone
+
+    else:
+        return None
+
+
 def iso_date(t=None, use_local_time_offset=False):
     """
     Return an ISO-formatted date string from a provided date/time object.

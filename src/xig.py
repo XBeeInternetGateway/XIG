@@ -12,9 +12,10 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.0"
+VERSION = "1.5.1b1"
 
 import sys
+import gc
 
 sys.path.insert(0, "./library/ext")
 sys.path.insert(0, "./library/ext/cp4pc")
@@ -98,6 +99,12 @@ class Xig(object):
 
         self.__quit_flag = False
         self.__io_kernel = XigIOKernel(xig_core=self)
+
+    def __gcTask(self):
+        """A periodic task which invokes the garbage collector"""
+        print "JRH JRH JRH GC GC GC JRH JRH JRH"
+        gc.collect()
+        self.scheduleAfter(self.__config.global_gc_interval, self.__gcTask)
 
     def quit(self):
         self.__quit_flag = True
@@ -200,6 +207,7 @@ class Xig(object):
         self.helpfile = self.helpfile.replace('\n', '\r\n')
         logger.info("Starting scheduler...")
         self.__sched.start()
+        self.__gcTask()
         logger.info("XIG startup complete, ready to serve requests.")
         while not self.__quit_flag:
             try:

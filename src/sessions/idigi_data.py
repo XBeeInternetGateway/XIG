@@ -173,7 +173,8 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
             if io_pin in ad_set:
                 unit = "int"
                 value = str(int(sample[io_pin]))
-            self._sample_add(addr2iDigiDataLabel(addr) + "." + io_pin, value, unit, iso_date())
+            self._sample_add(addr2iDigiDataLabel(addr) + "." + io_pin, value, unit,
+                             iso_date(None, True))
 
 
 class iDigiDataSession(AbstractSession):

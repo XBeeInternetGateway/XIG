@@ -92,6 +92,9 @@ class XigConfig(object):
     # session requests, such as the I/O service.
     global_max_dest_session_q_len = 8
     
+    # How often (in seconds) to call the garbage collector:
+    global_gc_interval = 60
+     
     # Controls which UDP port number to receive requests
     xbee_udp_port = 5649
-    
+   
