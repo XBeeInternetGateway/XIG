@@ -44,7 +44,8 @@ def iso_date(t=None, use_local_time_offset=False):
     if use_local_time_offset:
         lto = _local_time_offset()
 
-    time_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(t))
+    # For example: 2012-09-23T10:58:30-05:00
+    time_str = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(t))
     
     if lto is not None:
         time_str += "%+03d:%02d" % (lto//(60*60), lto%60)
