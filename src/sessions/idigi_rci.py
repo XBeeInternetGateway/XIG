@@ -77,11 +77,15 @@ Response:
 
 import exceptions
 import threading
+import sys
 
 import library.digi_ElementTree as ET
 from library.io_sample import parse_is
 
-import rci
+try:
+    import idigidata        # new style
+except:
+    import rci              # old style
 import xbee
 
 from abstract_autostart import AbstractAutostartSession
@@ -91,11 +95,16 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
 
-        rci_thread = threading.Thread(name="XIG RCI Handler",
-                         target=lambda: rci.add_rci_callback(
-                             "xig", self.__rci_callback))
-        rci_thread.setDaemon(True)
-        rci_thread.start()
+        if 'idigidata' in sys.modules:
+            # new style
+            idigidata.register_callback("xig", lambda target, data: self.__rci_callback(data))
+        else:
+            # old style
+            rci_thread = threading.Thread(name="XIG RCI Handler",
+                             target=lambda: rci.add_rci_callback(
+                                 "xig", self.__rci_callback))
+            rci_thread.setDaemon(True)
+            rci_thread.start()
 
     def helpText(self):
         return """\
@@ -280,6 +289,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __rci_callback(self, message):
         # sneakily re-root message string:
         message = "<root>" + message + "</root>"
+        print "message: %s" % repr(message)
         try:
             xig_tree = ET.fromstring(message)
         except Exception, e:

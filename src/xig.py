@@ -12,7 +12,7 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.1b2"
+VERSION = "1.5.1b3"
 
 import sys
 import gc
@@ -21,6 +21,8 @@ sys.path.insert(0, "./library/ext")
 sys.path.insert(0, "./library/ext/cp4pc")
 sys.path.insert(0, "./library/ext/serial")
 APP_ARCHIVE = "WEB/python/_xig.zip"
+if sys.platform.startswith("linux"):
+    APP_ARCHIVE = "/" + APP_ARCHIVE
 sys.path.insert(0, APP_ARCHIVE)
 
 # logging_stub will replace logging module on platforms that don't support logging.
@@ -102,7 +104,6 @@ class Xig(object):
 
     def __gcTask(self):
         """A periodic task which invokes the garbage collector"""
-        print "JRH JRH JRH GC GC GC JRH JRH JRH"
         gc.collect()
         self.scheduleAfter(self.__config.global_gc_interval, self.__gcTask)
 
@@ -116,10 +117,16 @@ class Xig(object):
         return True
 
     def getLocalIP(self):
-        query_string = """\
-        <rci_request version="1.1">
-            <query_state><boot_stats/></query_state>
-        </rci_request>"""
+        if sys.platform.startswith("linux"):
+            query_string = """\
+            <rci_request version="1.1">
+                <query_state/>
+            </rci_request>"""
+        else:
+            query_string = """\
+            <rci_request version="1.1">
+                <query_state><boot_stats/></query_state>
+            </rci_request>"""            
         response = rci.process_request(query_string)
         ip_beg, ip_end = (0, 0)
         if sys.platform == "digix3":

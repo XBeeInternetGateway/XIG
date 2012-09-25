@@ -43,7 +43,10 @@ import library.digi_ElementTree as ET
 from library.helpers import iso_date
 from library.io_sample import parse_is
 
-import library.idigi_data as idigi_data
+try:
+    import idigidata                               # new style
+except:
+    import library.idigi_data as idigidata_legacy  # old style
 
 MAX_SAMPLE_Q_LEN = 256
 
@@ -112,13 +115,21 @@ class iDigiDataUploader(object):
         try:
             self.__lock.acquire()
             try:
-                idigi_data.send_idigi_data(self.__format_doc(),
-                                         filename,
-                                         self.COLLECTION, self.SECURE)
+                if 'idigidata' in sys.modules:
+                    # new style
+                    idigidata.send_to_idigi(self.__format_doc(),
+                                             filename,
+                                             self.COLLECTION, "text/xml")
+                else:
+                    # old style
+                    idigidata_legacy.send_idigi_data(self.__format_doc(),
+                                             filename,
+                                             self.COLLECTION, self.SECURE)
+                    
                 logger.info('upload of %d samples successful' % len(self.__sample_q))
                 self.__sample_q = []
             except Exception, e:
-                idigi_data.warning('error during upload "%s"' % str(e))
+                logger.warning('error during upload "%s"' % str(e))
         finally:
             self.__lock.release()
 
