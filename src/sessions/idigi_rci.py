@@ -85,7 +85,13 @@ from library.io_sample import parse_is
 try:
     import idigidata        # new style
 except:
+    pass
+
+try:
     import rci              # old style
+except:
+    pass
+
 import xbee
 
 from abstract_autostart import AbstractAutostartSession
@@ -98,7 +104,8 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         if 'idigidata' in sys.modules:
             # new style
             idigidata.register_callback("xig", lambda target, data: self.__rci_callback(data))
-        else:
+            
+        if 'rci' in sys.modules and 'add_rci_callback' in dir(rci):
             # old style
             rci_thread = threading.Thread(name="XIG RCI Handler",
                              target=lambda: rci.add_rci_callback(
@@ -289,7 +296,6 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __rci_callback(self, message):
         # sneakily re-root message string:
         message = "<root>" + message + "</root>"
-        print "message: %s" % repr(message)
         try:
             xig_tree = ET.fromstring(message)
         except Exception, e:
