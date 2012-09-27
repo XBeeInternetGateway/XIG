@@ -1,5 +1,6 @@
-XBee Internet Gateway for Digi ConnectPort X2/3/4/8
----------------------------------------------------
+XBee Internet Gateway for Digi ConnectPort X2(de)/4/8,
+OSX, Windows and Linux
+-----------------------------------------------------
 by Rob Faludi (http://faludi.com),   
    Jordan Husney (http://jordan.husney.com),
    & Ted Hayes (http://log.liminastudio.com),
@@ -37,6 +38,22 @@ commercial and educational users.
 
 
 II. RELEASE HISTORY
+
+2012/09/26 - XIG v1.5.1
+
+Optimized garbage collection for ConnectPort X2.  Should resolve
+XIG crashing due to insufficient memory on this platform.
+
+Added timezone support so samples show up and graph properly when
+using iDigi's DataStreams.
+
+Added support for the ConnectPort X2e.
+
+Added some useful logging messages to the idigi_rci and idigi_data
+session types.
+
+Misc bugfixes.
+
 
 2012/07/13 - XIG v1.5.0
 
