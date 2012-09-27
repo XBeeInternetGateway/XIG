@@ -178,6 +178,7 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
         io_set = ad_set.union(dio_set)
         sample_set = set(sample.keys())
 
+        count = 0
         for io_pin in io_set.intersection(sample_set):
             unit = "bool"
             value = str(bool(int(sample[io_pin])))
@@ -186,6 +187,8 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
                 value = str(int(sample[io_pin]))
             self._sample_add(addr2iDigiDataLabel(addr) + "." + io_pin, value, unit,
                              iso_date(None, True))
+            count += 1
+        logger.info('queued %d I/O samples for upload to iDigi' % count)
 
 
 class iDigiDataSession(AbstractSession):
@@ -230,11 +233,12 @@ class iDigiDataSession(AbstractSession):
             return
 
         # prepare all timestamps for samples
-        param_lists.append( len(param_lists[0])*[iso_date()] )
+        param_lists.append( len(param_lists[0])*[iso_date(None, True)] )
 
         # submit samples:
         for sample_params in zip(*param_lists):
             self.__idigi_data_autostart._sample_add(*sample_params)
+        logger.info('queued %d samples for upload to iDigi' % len(names_list))
 
     @staticmethod
     def handleSessionCommand(xig_core, cmd_str, xbee_addr):

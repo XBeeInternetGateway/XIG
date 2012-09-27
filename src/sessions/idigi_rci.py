@@ -78,6 +78,7 @@ Response:
 import exceptions
 import threading
 import sys
+import logging
 
 import library.digi_ElementTree as ET
 from library.io_sample import parse_is
@@ -97,13 +98,19 @@ import xbee
 from abstract_autostart import AbstractAutostartSession
 from abstract import AbstractSession
 
+logger = logging.getLogger("xig.idigi_rci")
+logger.setLevel(logging.INFO)
+
+
 class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
+        self.__targets_desc = ""
 
         if 'idigidata' in sys.modules:
             # new style
             idigidata.register_callback("xig", lambda target, data: self.__rci_callback(data))
+            self.__targets_desc = '"data_service"'
             
         if 'rci' in sys.modules and 'add_rci_callback' in dir(rci):
             # old style
@@ -112,11 +119,12 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
                                  "xig", self.__rci_callback))
             rci_thread.setDaemon(True)
             rci_thread.start()
+            self.__targets_desc = ' '.join((self.__target_desc,'"do_command"'))
 
     def helpText(self):
         return """\
- idigi_rci is running, accepting commands on do_command target "xig"
-"""
+ idigi_rci is running, accepting commands on "xig" target for %s services
+""" % (self.__targets_desc)
 
     def __xml_err_msg(self, error_msg):
         error_tree = ET.Element("error")
@@ -131,6 +139,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         Node tag may be of type "send_data" or "send_hexdata". Returns a
         string response.
         """
+
         destination = str(xig_tree.get("hw_address"))
         data = ""
 
@@ -158,7 +167,6 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
         else:
             return self.__xml_err_msg(
                     "unknown command: %s" % str(xig_tree.tag))
-
         if destination is None:
             return self.__xml_err_msg("hw_address parameter missing")
 
@@ -166,13 +174,13 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             destination = self.__core.xbeeAddrTupleFromHwAddr(destination)
         except:
             return self.__xml_err_msg('invalid hw_address "%s"' % str(destination))
-
         new_session = iDigiRCISession(xig_core=self.__core,
                                       url="",
                                       xbee_addr=destination)
         new_session.appendSessionToXBeeBuffer(data)
         try:
             self.__core.enqueueSession(new_session)
+            logger.info("%s %d bytes to %s" % (xig_tree.tag, len(data), repr(destination)))
         except exceptions.OverflowError:
             return self.__xml_err_msg("queue full for destination")
 
@@ -251,10 +259,12 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             result = ""
             operation = "set"
             if value is not None:
+                logger.info("AT set param to %s %s=%s" % (repr(destination), command, repr(value)))
                 value = xbee.ddo_set_param(destination, command, value, apply=apply)
                 result = "ok"
             else:
                 operation = "get"
+                logger.info("AT get param %s from %s" % (command, repr(destination)))
                 value = xbee.ddo_get_param(destination, command)
                 result = "ok"
         except Exception, e:

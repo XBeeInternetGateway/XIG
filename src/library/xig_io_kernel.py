@@ -28,8 +28,8 @@ class XigIOKernel(object):
     XBEE_S1_MAX_TX = 100
     XBEE_S1_MAX_RX = 100
     
-    XBEE_S23_MAX_TX = 72
-    XBEE_S23_MAX_RX = 84
+    XBEE_S234_MAX_TX = 72
+    XBEE_S234_MAX_RX = 84
     
     XBEE_MIN_TX = 48
     XBEE_MIN_RX = 100
@@ -53,13 +53,13 @@ class XigIOKernel(object):
         if xbee_series == '1':
             bind_addr = ('', 0, 0, 0)
             self.__xig_sd_max_tx_sz = self.XBEE_S1_MAX_TX
-        elif xbee_series == '2' or xbee_series == '3':
+        elif xbee_series == '2' or xbee_series == '3' or xbee_series == '4':
             bind_addr = ('', 0xe8, 0, 0)
             try:
                 self.__xig_sd_max_tx_sz = struct.unpack(
                     "B", xbee.ddo_get_param(None, 'NP'))[0]
             except:
-                self.__xig_sd_max_tx_sz = self.XBEE_S23_MAX_TX
+                self.__xig_sd_max_tx_sz = self.XBEE_S234_MAX_TX
             source_routing_enabled = struct.unpack("B",
                 xbee.ddo_get_param(None, 'AR'))[0] != 0xff
             if source_routing_enabled:
