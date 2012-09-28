@@ -31,6 +31,7 @@ to prevent the gateway from uploading too often and not having the time
 to processing incoming data from the XBee network.
 """
 
+import sys
 import logging
 import time
 import threading
@@ -46,6 +47,9 @@ from library.io_sample import parse_is
 try:
     import idigidata                               # new style
 except:
+    pass
+
+if (not 'idigidata' in sys.modules) or ('idigidata' in sys.modules and not hasattr(idigidata, 'send_to_idigi')):
     import library.idigi_data as idigidata_legacy  # old style
 
 MAX_SAMPLE_Q_LEN = 256
@@ -115,7 +119,7 @@ class iDigiDataUploader(object):
         try:
             self.__lock.acquire()
             try:
-                if 'idigidata' in sys.modules:
+                if 'idigidata' in sys.modules and hasattr(idigidata, 'send_to_idigi'):
                     # new style
                     idigidata.send_to_idigi(self.__format_doc(),
                                              filename,

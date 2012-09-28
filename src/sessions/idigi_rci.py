@@ -106,13 +106,15 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
         self.__targets_desc = ""
+        self.__started = False
 
-        if 'idigidata' in sys.modules:
+        if 'idigidata' in sys.modules and hasattr(idigidata, 'register_callback'):
             # new style
             idigidata.register_callback("xig", lambda target, data: self.__rci_callback(data))
             self.__targets_desc = '"data_service"'
+            self.__started = True
             
-        if 'rci' in sys.modules and 'add_rci_callback' in dir(rci):
+        if 'rci' in sys.modules and hasattr(rci, 'add_rci_callback'):
             # old style
             rci_thread = threading.Thread(name="XIG RCI Handler",
                              target=lambda: rci.add_rci_callback(
@@ -120,6 +122,10 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
             rci_thread.setDaemon(True)
             rci_thread.start()
             self.__targets_desc = ' '.join((self.__target_desc,'"do_command"'))
+            self.__started = True
+            
+        if not self.__started:
+            raise Exception, "unable to start: no RCI callback registration methods"
 
     def helpText(self):
         return """\
