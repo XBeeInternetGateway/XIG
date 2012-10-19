@@ -121,7 +121,7 @@ class iDigiRCIAutostartSession(AbstractAutostartSession):
                                  "xig", self.__rci_callback))
             rci_thread.setDaemon(True)
             rci_thread.start()
-            self.__targets_desc = ' '.join((self.__target_desc,'"do_command"'))
+            self.__targets_desc = ' '.join((self.__targets_desc,'"do_command"'))
             self.__started = True
             
         if not self.__started:
