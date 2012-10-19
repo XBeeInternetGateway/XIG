@@ -3,7 +3,7 @@ XigSession implementation.  Handles all xig:// control commands.
 """
 
 from abstract import AbstractSession
-from library import time_helpers
+from library import helpers
 
 class XigSession(AbstractSession):
     """\
@@ -75,5 +75,5 @@ class XigSession(AbstractSession):
 
     def handleCommandTime(self):
         # Get the current time, add time zone adjustment, if any:
-        time_str = time_helpers.iso_date(t=None, use_local_time_offset=True)          
+        time_str = helpers.iso_date(t=None, use_local_time_offset=True)          
         self.appendSessionToXBeeBuffer("Xig: " + time_str + "\r\n")
