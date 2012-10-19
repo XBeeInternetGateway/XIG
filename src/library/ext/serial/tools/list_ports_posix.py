@@ -5,11 +5,11 @@ import re
 
 # JRH: prefer popen4 to avoid subprocess _DummyThread exception on Raspberry Pi:
 def popen(argv):
-try:
-    si, so =  os.popen4(' '.join(argv))
-    return so.read().strip()
-except:
-    raise IOError('lsusb failed')
+    try:
+        si, so =  os.popen4(' '.join(argv))
+        return so.read().strip()
+    except:
+        raise IOError('lsusb failed')
 
 
 # The comports function is expected to return an iterable that yields tuples of
