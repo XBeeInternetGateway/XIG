@@ -52,7 +52,8 @@ except:
 if (not 'idigidata' in sys.modules) or ('idigidata' in sys.modules and not hasattr(idigidata, 'send_to_idigi')):
     import library.idigi_data as idigidata_legacy  # old style
 
-MAX_SAMPLE_Q_LEN = 256
+MAX_UPLOAD_RATE_SEC_DEFAULT = 60
+MAX_SAMPLE_Q_LEN_DEFAULT = 256
 
 logger = logging.getLogger("xig.idigi_data")
 logger.setLevel(logging.INFO)
@@ -97,11 +98,15 @@ class iDigiDataUploader(object):
     def sample_add(self, name, value, unit, timestamp):
         sample = { "name": name, "value": value,
                    "unit": unit, "timestamp": timestamp }
-
-        if len(self.__sample_q) > self.__max_sample_q_len:
-            self.__sample_q.pop(0)
-
-        self.__sample_q.append(sample)
+        try:
+            self.__lock.acquire()
+            if len(self.__sample_q) >= self.__max_sample_q_len:
+                logger.warning('sample queue full (len=%d), dropping oldest sample' % (len(self.__sample_q)))
+                self.__sample_q.pop(0)
+    
+            self.__sample_q.append(sample)
+        finally:
+            self.__lock.release()
 
     def __format_doc(self):
         doc = ET.Element("idigi_data")
@@ -154,9 +159,11 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
         max_rate_sec = getattr(self.__core.getConfig(),
-                               "idigi_data_max_rate_sec", 60)
+                               "idigi_data_max_rate_sec", MAX_UPLOAD_RATE_SEC_DEFAULT)
+        max_sample_q_len = getattr(self.__core.getConfig(),
+                                   "idigi_data_max_q_len", MAX_SAMPLE_Q_LEN_DEFAULT)
         self.__uploader = iDigiDataUploader(xig_core,
-                                            max_rate_sec, MAX_SAMPLE_Q_LEN)
+                                            max_rate_sec, max_sample_q_len)
         # kick off initial uploader scheduling task:
         self.__uploader.reschedule()
         self.__core.ioSampleSubcriberAdd(self.__ioSampleCallback)
