@@ -116,17 +116,24 @@ class Xig(object):
 
         return True
 
+    def __getLocalIPLinux(self):
+        import socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("50.56.41.152", 3197))    # No connect is actually made,
+                                                 # address is my.idigi.com, EDP port
+            return s.getsockname()[0]
+        except:
+            return "127.0.0.1"
+        
     def getLocalIP(self):
         if sys.platform.startswith("linux"):
-            query_string = """\
-            <rci_request version="1.1">
-                <query_state/>
-            </rci_request>"""
-        else:
-            query_string = """\
-            <rci_request version="1.1">
-                <query_state><boot_stats/></query_state>
-            </rci_request>"""            
+            return self.__getLocalIPLinux()
+        
+        query_string = """\
+        <rci_request version="1.1">
+            <query_state><boot_stats/></query_state>
+        </rci_request>"""            
         response = rci.process_request(query_string)
         ip_beg, ip_end = (0, 0)
         if sys.platform == "digix3":
