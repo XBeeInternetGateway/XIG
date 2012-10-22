@@ -110,7 +110,8 @@ if   plat[:5] == 'linux':    # Linux (confirmed)
         return 'n/a'    # XXX directly remove these from the list?
 
     def comports():
-        devices = glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*')
+        devices = (glob.glob('/dev/ttyS*') + glob.glob('/dev/ttyUSB*') + glob.glob('/dev/ttyACM*') +
+                   glob.glob('/dev/ttyAM*'))
         return [(d, describe(d), hwinfo(d)) for d in devices]
 
 elif plat == 'cygwin':       # cygwin/win32
