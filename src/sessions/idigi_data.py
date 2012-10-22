@@ -109,38 +109,68 @@ class iDigiDataUploader(object):
             self.__lock.release()
 
     def __format_doc(self):
-        doc = ET.Element("idigi_data")
-        doc.set("compact", "True")
-
-        for sample in self.__sample_q:
-            elem = ET.Element("sample")
-            map(lambda k: elem.set(k, sample[k]), sample.keys())
-            doc.append(elem)
+        """\
+        Format the sample queue as an XML document string.
+        """
+        try:
+            self.__lock.acquire()
+            doc = ET.Element("idigi_data")
+            doc.set("compact", "True")
+    
+            for sample in self.__sample_q:
+                elem = ET.Element("sample")
+                map(lambda k: elem.set(k, sample[k]), sample.keys())
+                doc.append(elem)
+        finally:
+            self.__lock.release()
 
         return ET.ElementTree(doc).writestring()
+
+    def __upload_err_recovery(self, prev_sample_q):
+        """\
+        Transfers the previous sample queue to the active sample queue,
+        potentially dropping samples according to the queue length
+        configuration.
+        """
+        try:
+            self.__lock.acquire()
+            new_sample_q = self.__sample_q
+            self.__sample_q = prev_sample_q
+            for sample in new_sample_q:
+                self.sample_add(**sample)
+        finally:
+            self.__lock.release()
 
     def upload(self):
         filename=(self.FILENAME_PREFIX + str(int(time.time())) + ".xml")
         try:
             self.__lock.acquire()
-            try:
-                if 'idigidata' in sys.modules and hasattr(idigidata, 'send_to_idigi'):
-                    # new style
-                    idigidata.send_to_idigi(self.__format_doc(),
-                                             filename,
-                                             self.COLLECTION, "text/xml")
-                else:
-                    # old style
-                    idigidata_legacy.send_idigi_data(self.__format_doc(),
-                                             filename,
-                                             self.COLLECTION, self.SECURE)
-                    
-                logger.info('upload of %d samples successful' % len(self.__sample_q))
-                self.__sample_q = []
-            except Exception, e:
-                logger.warning('error during upload "%s"' % str(e))
+            prev_sample_q = self.__sample_q
+            document=self.__format_doc()
+            self.__sample_q = []
         finally:
             self.__lock.release()
+            
+        try:
+            # NOTE: the _sample_q lock is not being held here, so new samples
+            #       can be flowing in from the main I/O thread
+            if 'idigidata' in sys.modules and hasattr(idigidata, 'send_to_idigi'):
+                # new style
+                idigidata.send_to_idigi(document,
+                                         filename,
+                                         self.COLLECTION, "text/xml")
+            else:
+                # old style
+                idigidata_legacy.send_idigi_data(document,
+                                         filename,
+                                         self.COLLECTION, self.SECURE)
+                
+            logger.info('upload of %d samples successful' % len(prev_sample_q))
+            del(prev_sample_q)
+        except Exception, e:
+            self.__upload_err_recovery(prev_sample_q)
+            logger.warning('error during upload "%s"' % str(e))
+
 
 
     def reschedule(self):
