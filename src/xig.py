@@ -37,6 +37,11 @@ if __name__ == "__main__":
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logging.getLogger().setLevel(logging.INFO)
+    
+#    hdlr = logging.FileHandler('/WEB/python/xig.log')
+#    formatter = logging.Formatter('%(asctime)s: %(name)s - %(message)s')
+#    hdlr.setFormatter(formatter)
+#    logger.addHandler(hdlr)
 
 import traceback
 import time
@@ -98,9 +103,31 @@ class Xig(object):
         self.__sched = SchedAsync("xig_sched", self)
 
         self.helpfile = ""
+        self.setLogLevels()
 
         self.__quit_flag = False
         self.__io_kernel = XigIOKernel(xig_core=self)
+
+    def setLogLevels(self):
+        
+        log_level_map = {
+            "debug": logging.DEBUG,
+            "info":  logging.INFO,
+            "warning": logging.WARNING,
+            "error": logging.ERROR,
+            "critical": logging.CRITICAL,
+        }
+        
+        log_level_global = getattr(self.__config,
+                               "log_level_global", "info").lower()
+        log_level_io_kernel = getattr(self.__config,
+                               "log_level_io_kernel", "debug").lower()
+        
+        if log_level_global in log_level_map:
+            logger.setLevel(log_level_map[log_level_global])
+        if log_level_io_kernel in log_level_map:
+            logging.getLogger("xig.io_kernel").setLevel(log_level_map[log_level_io_kernel])
+        
 
     def __gcTask(self):
         """A periodic task which invokes the garbage collector"""

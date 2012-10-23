@@ -18,6 +18,7 @@ class XigSession(AbstractSession):
         self.__write_buf = ""
         self.__read_buf = ""
          
+        self.__always_send_help = getattr(self.__core.getConfig(), "global_always_send_help", True)
 
         if url in ('help', 'xig://help'):
             self.appendSessionToXBeeBuffer(xig_core.helpfile)
@@ -29,8 +30,9 @@ class XigSession(AbstractSession):
             self.appendSessionToXBeeBuffer("Xig: Quitting...\r\n")
             self.__core.quit()
         else:
-            self.appendSessionToXBeeBuffer(
-              xig_core.helpfile + "\r\n\r\nUnknown command: %s\r\n" % url) 
+            if self.__always_send_help:
+                self.appendSessionToXBeeBuffer(
+                  xig_core.helpfile + "\r\n\r\nUnknown command: %s\r\n" % url) 
     
                            
     @staticmethod

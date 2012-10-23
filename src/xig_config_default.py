@@ -26,7 +26,6 @@ class XigConfig(object):
         #"osc",               # Send data to Open Sound Control server
     ]
     
-    
     ## HTTP
     
     # No configuration options at this time.
@@ -35,6 +34,7 @@ class XigConfig(object):
     ## iDigi Data
     idigi_data_max_rate_sec = 30    # maximum upload rate to iDigi in seconds
     idigi_data_max_q_len = 256      # maximum number of samples to save before uploading
+    idigi_data_no_errors = False    # maximum number of samples to save before uploading
     
     ## iDigi RCI
     
@@ -81,7 +81,11 @@ class XigConfig(object):
     # You shouldn't need to change anything in this section unless
     # you know what you've been doing or you've been instructed to
     # do so.
-    
+ 
+    # Should we send the helpfile for all unknown commands or
+    # simply ignore them?
+    global_always_send_help = True
+
     # Controls how long must buffers in the system may reach before
     # they are trimmed.  This setting also happens to control the
     # maximum length of a URL or XIG command.
@@ -95,6 +99,10 @@ class XigConfig(object):
     
     # How often (in seconds) to call the garbage collector:
     global_gc_interval = 60
+
+    # Log-levels for various sub systems:
+    log_level_global = "info"
+    log_level_io_kernel = "debug"
      
     # Controls which UDP port number to receive requests
     xbee_udp_port = 5649
