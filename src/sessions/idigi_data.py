@@ -54,6 +54,7 @@ if (not 'idigidata' in sys.modules) or ('idigidata' in sys.modules and not hasat
 
 MAX_UPLOAD_RATE_SEC_DEFAULT = 60
 MAX_SAMPLE_Q_LEN_DEFAULT = 256
+SAMPLE_PAGE_SIZE = 2048
 
 logger = logging.getLogger("xig.idigi_data")
 logger.setLevel(logging.INFO)
@@ -108,21 +109,19 @@ class iDigiDataUploader(object):
         finally:
             self.__lock.release()
 
-    def __format_doc(self):
+    def __format_doc(self, sample_q):
         """\
-        Format the sample queue as an XML document string.
+        Format the given sample queue as an XML document string.
         """
-        try:
-            self.__lock.acquire()
-            doc = ET.Element("idigi_data")
-            doc.set("compact", "True")
-    
-            for sample in self.__sample_q:
-                elem = ET.Element("sample")
-                map(lambda k: elem.set(k, sample[k]), sample.keys())
-                doc.append(elem)
-        finally:
-            self.__lock.release()
+        doc = ET.Element("idigi_data")
+        doc.set("compact", "True")
+
+        for sample in sample_q:
+            elem = ET.Element("sample")
+            map(lambda k: elem.set(k, sample[k]), sample.keys())
+            doc.append(elem)
+
+
 
         return ET.ElementTree(doc).writestring()
 
@@ -141,57 +140,76 @@ class iDigiDataUploader(object):
         finally:
             self.__lock.release()
 
+    def __do_upload(self, document):
+        filename=(self.FILENAME_PREFIX + str(int(time.time() * 1000)) + ".xml")
+        if 'idigidata' in sys.modules and hasattr(idigidata, 'send_to_idigi'):
+            # new style
+            result = idigidata.send_to_idigi(document,
+                                     filename,
+                                     self.COLLECTION, "text/plain", timeout=120)
+            success, error, errmsg = result
+            if not success:
+                raise Exception, "idigidata error: %s" % repr(result)
+        else:
+            # old style
+            idigidata_legacy.send_idigi_data(document,
+                                     filename,
+                                     self.COLLECTION, self.SECURE)
+
     def upload(self):
-        filename=(self.FILENAME_PREFIX + str(int(time.time())) + ".xml")
         try:
             self.__lock.acquire()
             prev_sample_q = self.__sample_q
-            document=self.__format_doc()
             self.__sample_q = []
         finally:
             self.__lock.release()
-            
-        try:
-            # NOTE: the _sample_q lock is not being held here, so new samples
-            #       can be flowing in from the main I/O thread
-            if 'idigidata' in sys.modules and hasattr(idigidata, 'send_to_idigi'):
-                # new style
-                idigidata.send_to_idigi(document,
-                                         filename,
-                                         self.COLLECTION, "text/xml")
-            else:
-                # old style
-                idigidata_legacy.send_idigi_data(document,
-                                         filename,
-                                         self.COLLECTION, self.SECURE)
-                
-            logger.info('upload of %d samples successful' % len(prev_sample_q))
-            del(prev_sample_q)
-        except Exception, e:
-            self.__upload_err_recovery(prev_sample_q)
-            logger.warning('error during upload "%s"' % str(e))
 
+        # We page the data upload here as to not overwhelm the iDigi Dia
+        # ingest process.
+        #
+        # TODO: when iDigi creates a new DataPoint interface, change this to use
+        #       the new, speedier interface.
+        logger.info('total of %d samples to upload' % len(prev_sample_q))
+        while len(prev_sample_q) > 0:
+            logger.info('%s samples remain in queue' % len(prev_sample_q))
+            document = self.__format_doc(prev_sample_q[:SAMPLE_PAGE_SIZE])
+            try:
+                self.__do_upload(document)
+                logger.info('uploaded %d samples to iDigi' % len(prev_sample_q[:SAMPLE_PAGE_SIZE]))
+                prev_sample_q = prev_sample_q[SAMPLE_PAGE_SIZE:]
+            except Exception, e:
+                logger.warning('error during upload "%s"' % str(e))
+                self.__upload_err_recovery(prev_sample_q)
+                break
 
-
-    def reschedule(self):
-        self.__core.scheduleAfter(self.__max_rate_sec, self._sched_callback)
+    def reschedule(self, after_sec=0):
+        self.__core.scheduleAfter(after_sec, self._sched_callback)
 
     def _sched_callback(self):
+        sched_at = self.__max_rate_sec
         try:
+            upload_time = time.time()
             if len(self.__sample_q) > 0:
                 self.upload()
+            upload_time = time.time() - upload_time
+            sched_at = max(self.__max_rate_sec - upload_time, 0)
         finally:
-            self.reschedule()
+            logger.warning('will upload again in %d seconds' % (sched_at))
+            self.reschedule(sched_at)
 
 
 
 class iDigiDataAutostartSession(AbstractAutostartSession):
     def __init__(self, xig_core):
         self.__core = xig_core
+        
+        # Parse configuration parameters:
         max_rate_sec = getattr(self.__core.getConfig(),
                                "idigi_data_max_rate_sec", MAX_UPLOAD_RATE_SEC_DEFAULT)
         max_sample_q_len = getattr(self.__core.getConfig(),
                                    "idigi_data_max_q_len", MAX_SAMPLE_Q_LEN_DEFAULT)
+
+        
         self.__uploader = iDigiDataUploader(xig_core,
                                             max_rate_sec, max_sample_q_len)
         # kick off initial uploader scheduling task:
@@ -229,7 +247,7 @@ class iDigiDataAutostartSession(AbstractAutostartSession):
             self._sample_add(addr2iDigiDataLabel(addr) + "." + io_pin, value, unit,
                              iso_date(None, True))
             count += 1
-        logger.info('queued %d I/O samples for upload to iDigi' % count)
+        logger.debug('queued %d I/O samples for upload to iDigi' % count)
 
 
 class iDigiDataSession(AbstractSession):
@@ -237,12 +255,18 @@ class iDigiDataSession(AbstractSession):
         self.__core = xig_core
         self.__idigi_data_autostart = xig_core.getAutostartSessions(
                                             obj_type=iDigiDataAutostartSession)
+        self.__no_errors = getattr(self.__core.getConfig(), "idigi_data_no_errors", False)
+            
         self.__xbee_addr = xbee_addr
         self.__write_buf = ""
 
         if not url.startswith("idigi_data:"):
-            self.do_error('url does not start with "idigi_data:"')
+            self._do_error('url does not start with "idigi_data:"')
             return
+        
+        if url.count("idigi_data:") > 1:
+            # special case, malformed command buffer
+            self._do_error("too many idigi_data: in command string")
 
         qs = url.split(":")[1]
         try:
@@ -279,7 +303,7 @@ class iDigiDataSession(AbstractSession):
         # submit samples:
         for sample_params in zip(*param_lists):
             self.__idigi_data_autostart._sample_add(*sample_params)
-        logger.info('queued %d samples for upload to iDigi' % len(names_list))
+        logger.debug('queued %d samples for upload to iDigi' % len(names_list))
 
     @staticmethod
     def handleSessionCommand(xig_core, cmd_str, xbee_addr):
@@ -304,6 +328,9 @@ class iDigiDataSession(AbstractSession):
 """
 
     def _do_error(self, err_str):
+        if self.__no_errors:
+            return
+        
         self.__write_buf = "Xig-Error: idigi_data " + err_str + "\r\n"
 
     def close(self):

@@ -46,7 +46,12 @@ class XigInactiveSessionCommandParser(object):
         # return all complete commands:
         cmds = [ ]
         try:
-            for cmd_str in cmd_buf.split("\n"):
+            split_cmd_buf = cmd_buf.split("\n")
+            terminus = len(split_cmd_buf)
+            if not cmd_buf.endswith("\n"):
+                # the last command is not complete, do not process:
+                terminus -= 1
+            for cmd_str in split_cmd_buf[:terminus]:
                 if not len(cmd_str):
                     continue
                 cmds.append(self.XigInactiveSessionCommand(cmd_str, addr))

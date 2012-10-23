@@ -25,12 +25,19 @@ logger = logging.getLogger("xig.io_kernel")
 import xbee
 
 class XigIOKernel(object):
+    # 802.15.4
     XBEE_S1_MAX_TX = 100
     XBEE_S1_MAX_RX = 100
     
+    # ZigBee
     XBEE_S234_MAX_TX = 72
     XBEE_S234_MAX_RX = 84
     
+    # DigiMesh
+    XBEE_S8_MAX_TX = 256
+    XBEE_S8_MAX_RX = 256
+    
+    # Unknown
     XBEE_MIN_TX = 48
     XBEE_MIN_RX = 100
     
@@ -64,6 +71,9 @@ class XigIOKernel(object):
                 xbee.ddo_get_param(None, 'AR'))[0] != 0xff
             if source_routing_enabled:
                 self.__xig_sd_max_tx_sz -= 20
+        elif xbee_series == '8':
+            bind_addr = ('', 0, 0, 0)
+            self.__xig_sd_max_tx_sz = self.XBEE_S8_MAX_TX
         else:
             bind_addr = ('', 0xe8, 0, 0)
             self.__xig_sd_max_tx_sz = self.XBEE_MIN_TX
@@ -107,7 +117,9 @@ class XigIOKernel(object):
 
 
     def __getXBeeVersion(self):
-        return "%04X" % struct.unpack(">H", xbee.ddo_get_param(None, 'VR'))[0]
+        # Some DigiMesh radios return 4 bytes--with only the last two being significant.
+        # Here we slice the VR parameter to only read the last two bytes.
+        return "%04X" % struct.unpack(">H", xbee.ddo_get_param(None, 'VR')[-2:])[0]
     
     def __homogenizeXBeeSocketAddr(self, xbee_socket_addr):
         return XBee_Addr_Tuple(xbee_socket_addr, options=0, transmission_id=0)
