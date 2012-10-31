@@ -37,6 +37,11 @@ if __name__ == "__main__":
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logging.getLogger().setLevel(logging.INFO)
+    
+#    hdlr = logging.FileHandler('/WEB/python/xig.log')
+#    formatter = logging.Formatter('%(asctime)s: %(name)s - %(message)s')
+#    hdlr.setFormatter(formatter)
+#    logger.addHandler(hdlr)
 
 #    Uncomment to enable file based logging:    
 #    hdlr = logging.FileHandler('/WEB/python/xig.log')
