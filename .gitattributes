@@ -2,4 +2,5 @@ build/*		export-ignore
 build-bin/*	export-ignore
 releases/*	export-ignore
 test/*		export-ignore
+settings.json	export-ignore
 
