@@ -72,7 +72,7 @@ class XigIOKernel(object):
             if source_routing_enabled:
                 self.__xig_sd_max_tx_sz -= 20
         elif xbee_series == '8':
-            bind_addr = ('', 0, 0, 0)
+            bind_addr = ('', 0xe8, 0, 0)
             self.__xig_sd_max_tx_sz = self.XBEE_S8_MAX_TX
         else:
             bind_addr = ('', 0xe8, 0, 0)
