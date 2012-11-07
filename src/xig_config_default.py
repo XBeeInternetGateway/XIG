@@ -33,7 +33,7 @@ class XigConfig(object):
 
     ## iDigi Data
     idigi_data_max_rate_sec = 30    # maximum upload rate to iDigi in seconds
-    idigi_data_max_q_len = 256      # maximum number of samples to save before uploading
+    idigi_data_max_q_len = 512      # maximum number of samples to save before uploading
     idigi_data_no_errors = False    # maximum number of samples to save before uploading
     
     ## iDigi RCI

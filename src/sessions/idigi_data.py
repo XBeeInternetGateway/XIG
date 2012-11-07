@@ -53,7 +53,7 @@ if (not 'idigidata' in sys.modules) or ('idigidata' in sys.modules and not hasat
     import library.idigi_data as idigidata_legacy  # old style
 
 MAX_UPLOAD_RATE_SEC_DEFAULT = 60
-MAX_SAMPLE_Q_LEN_DEFAULT = 256
+MAX_SAMPLE_Q_LEN_DEFAULT = 512
 SAMPLE_PAGE_SIZE = 2048
 
 logger = logging.getLogger("xig.idigi_data")
@@ -194,7 +194,8 @@ class iDigiDataUploader(object):
             upload_time = time.time() - upload_time
             sched_at = max(self.__max_rate_sec - upload_time, 0)
         finally:
-            logger.warning('will upload again in %d seconds' % (sched_at))
+            if (len(self.__sample_q)) > 0:
+                logger.warning('will upload again in %d seconds' % (sched_at))
             self.reschedule(sched_at)
 
 
