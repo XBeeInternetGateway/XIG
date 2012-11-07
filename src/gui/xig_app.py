@@ -59,6 +59,9 @@ import rci
 settings['version'] = xig.VERSION
 settings['device_type'] = "XIG PC Gateway"
 
+# global state
+quit_flag = False
+
 
 class XigApp(threading.Thread):
 
@@ -112,26 +115,33 @@ class XigApp(threading.Thread):
 	    self.xig.quit()
 
     def run(self):
-	while 1:
-	    # make sure rci and xbee are connected
-	    try:
-		if self.enable_xig and rci.connected() and xbee.ddo_get_param(None, "VR"):
-		    try:
-			self.xig = xig.Xig()
-			try:
-			    # set port for xig_console_handler
-			    self.xig_console_handler.port = self.xig.getConfig().xbee_udp_port
-			except:
-			    pass
-			# start XIG running forever
-			self.xig.go()
-		    except Exception, e:
-			logger.error("Exception when running XIG: %s" % e)
-	    except:
-		pass # expected exception when ddo_get_param fails
-	    self.xig_console_handler.port = None
-	    self.xig = None
-	    time.sleep(1)
+        global quit_flag
+        
+    	while not quit_flag:
+    	    # make sure rci and xbee are connected
+    	    try:
+                if self.enable_xig and rci.connected() and xbee.ddo_get_param(None, "VR"):
+                    try:
+                        self.xig = xig.Xig()
+                        try:
+                            # set port for xig_console_handler
+                            self.xig_console_handler.port = self.xig.getConfig().xbee_udp_port
+                        except:
+                            pass
+                        # start XIG running forever unless a user quit was issued (status == 0)
+                        status = self.xig.go()
+                        if status == 0:
+                            logger.info("Shutting down XIG GUI...")
+                            self.enable_xig = False
+                            time.sleep(5)
+                            quit_flag = True
+                    except Exception, e:
+                        logger.error("Exception when running XIG: %s" % e)
+            except:
+                pass # expected exception when ddo_get_param fails
+            self.xig_console_handler.port = None
+            self.xig = None
+            time.sleep(1)
 
     def get_power(self):
 	if self.xig and self.enable_xig:
@@ -219,50 +229,53 @@ if __name__ == "__main__":
 
     # Start the app:
     app = XigApp()
+    app.setDaemon(True)
     app.start()
 
     url = "http://localhost:%d" % settings['local_port']
 
     # Make sure the app is serving
     while 1:
-	try:
-	    import urllib2
-	    page = urllib2.urlopen(url, timeout=5.0)
-	except urllib2.URLError, e:
-	    if e.reason.errno == 61:
-		# Port not bound yet? Try again after a delay.
-		time.sleep(1)
-		continue
-	except Exception, e:
-	    pass # try to open the webpage from a standard browser anyway
-	break
+        try:
+            import urllib2
+            page = urllib2.urlopen(url, timeout=5.0)
+        except urllib2.URLError, e:
+            if e.reason.errno == 61:
+                # Port not bound yet? Try again after a delay.
+                time.sleep(1)
+                continue
+        except Exception, e:
+            pass # try to open the webpage from a standard browser anyway
+        break
 
     if not args.no_browser:
-	# launch the web browser:
-	import webbrowser
-	webbrowser.open(url)
+        # launch the web browser:
+        import webbrowser
+        webbrowser.open(url)
 
     # Important! This little bit of hidden window trickery will allow
     # the GUI to respond to O/S GUI events, e.g. allowing the OSX
-    # icon to no state "Application Not Responding"
+    # icon to not state "Application Not Responding"
     sleepyTime = False
     try:
-	import Tkinter as tk
-	root = tk.Tk()
-	root.withdraw()
-	def idle_loop():
-	    root.after(100, idle_loop)
-	root.after(100, idle_loop)
-	root.mainloop()
+        import Tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+        def idle_loop():
+            if quit_flag:
+                root.quit()
+            root.after(250, idle_loop)
+        root.after(250, idle_loop)
+        root.mainloop()
     except ImportError:
-	logger.warning("Tkinter not available, running as command-line only.")
-	sleepyTime = True
+        logger.warning("Tkinter not available, running as command-line only.")
+        sleepyTime = True
     except tk._tkinter.TclError:
-	logger.info("No window manager available, will run as command-line only.")
-	sleepyTime = True
+        logger.info("No window manager available, will run as command-line only.")
+        sleepyTime = True
 
     # Prevent daemon threads from exiting
-    if sleepyTime:
-	while 1:
-	    time.sleep(10)
+    if sleepyTime and not quit_flag:
+        while 1:
+            time.sleep(1)
 

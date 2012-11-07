@@ -12,7 +12,7 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.1b17"
+VERSION = "1.5.1b18"
 
 import sys
 import gc
@@ -225,6 +225,8 @@ class Xig(object):
 
 
     def go(self):
+        status = 255
+        
         logger.info("Loading and initializing configured session types...")
         for session_type in self.__config.session_types:
             if session_type not in sessions.SESSION_MODEL_CLASS_MAP:
@@ -263,6 +265,8 @@ class Xig(object):
                 logger.error("Exception during I/O loop: %s"%e)
                 traceback.print_exc(file=sys.stdout)
         logger.info("Shutting down.")
+        if self.__quit_flag:
+            status = 0
         # run one last time, with feeling:
         self.__io_kernel.ioLoop(timeout=5.0)
         self.__io_kernel.shutdown()
@@ -281,7 +285,7 @@ class Xig(object):
         zipimport._zip_directory_cache.clear()
         sys.path = syspath_backup
 
-        return 0
+        return status
 
 
     def enqueueSession(self, session):
