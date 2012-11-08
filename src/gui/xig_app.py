@@ -275,7 +275,7 @@ if __name__ == "__main__":
         sleepyTime = True
 
     # Prevent daemon threads from exiting
-    if sleepyTime and not quit_flag:
-        while 1:
+    if sleepyTime:
+        while not quit_flag:
             time.sleep(1)
 
