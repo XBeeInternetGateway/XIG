@@ -1,15 +1,8 @@
 import glob
 import sys
 import os
+import tempfile
 import re
-
-# JRH: prefer popen4 to avoid subprocess _DummyThread exception on Raspberry Pi:
-def popen(argv):
-    try:
-        si, so =  os.popen4(' '.join(argv))
-        return so.read().strip()
-    except:
-        raise IOError('lsusb failed')
 
 
 # The comports function is expected to return an iterable that yields tuples of
@@ -58,18 +51,32 @@ if   plat[:5] == 'linux':    # Linux (confirmed)
     def usb_lsusb_string(sysfs_path):
         bus, dev = os.path.basename(os.path.realpath(sysfs_path)).split('-')
         try:
-            desc = popen(['lsusb', '-v', '-s', '%s:%s' % (bus, dev)])
-            # descriptions from device
-            iManufacturer = re_group('iManufacturer\s+\w+ (.+)', desc)
-            iProduct = re_group('iProduct\s+\w+ (.+)', desc)
-            iSerial = re_group('iSerial\s+\w+ (.+)', desc) or ''
-            # descriptions from kernel
-            idVendor = re_group('idVendor\s+0x\w+ (.+)', desc)
-            idProduct = re_group('idProduct\s+0x\w+ (.+)', desc)
-            # create descriptions. prefer text from device, fall back to the others
-            return '%s %s %s' % (iManufacturer or idVendor, iProduct or idProduct, iSerial)
-        except IOError:
-            return base
+            # JRH: why this cruel and unusual punishment to run lsusb?
+            #      It turns out that the Raspberry Pi's Python 2.7 library is
+            #      old (2.7.1) and has a problem when calling os.fork() and using
+            #      _DummyThread.  It tosses an exception, which is caught but
+            #      annoyingly printed. This method of collecting results from
+            #      lsusb avoids calling os.fork() and the annoying exception.
+            (fd, filename) = tempfile.mkstemp()
+            os.spawnlp(os.P_WAIT, 'sh', 'sh', '-c', "/usr/bin/lsusb -v -s %s:%s > %s" % (bus, dev, filename))
+            f = os.fdopen(fd, "r")
+            desc = f.read()
+            f.close()
+        finally:
+            #os.remove(filename)
+        # descriptions from device
+        print desc
+        iManufacturer = re_group('iManufacturer\s+\w+ (.+)', desc)
+        iProduct = re_group('iProduct\s+\w+ (.+)', desc)
+        iSerial = re_group('iSerial\s+\w+ (.+)', desc) or ''
+        # descriptions from kernel
+        idVendor = re_group('idVendor\s+0x\w+ (.+)', desc)
+        idProduct = re_group('idProduct\s+0x\w+ (.+)', desc)
+        # create descriptions. prefer text from device, fall back to the others
+        print "MAN: %s" % iManufacturer
+        print "PRO: %s" % iProduct
+        print "SER: %s" % iSerial
+        return '%s %s %s' % (iManufacturer or idVendor, iProduct or idProduct, iSerial)
 
     def describe(device):
         """\
