@@ -39,7 +39,7 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
-2012/09/26 - XIG v1.5.1
+2012/11/11 - XIG v1.5.1b19
 
 Optimized garbage collection for ConnectPort X2.  Should resolve
 XIG crashing due to insufficient memory on this platform.
@@ -51,6 +51,15 @@ Added support for the ConnectPort X2e.
 
 Added some useful logging messages to the idigi_rci and idigi_data
 session types.
+
+Log levels now configurable in configuration file.
+
+Improved upload algorithm for idigi_data session.
+
+Work around for exceptions during execution on Raspberry Pi Raspbian
+platform when using Raspian's stock Python v2.7.1 interpreter.
+
+Fixes for DigiMesh.
 
 Misc bugfixes.
 
