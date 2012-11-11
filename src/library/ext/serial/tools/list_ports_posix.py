@@ -63,9 +63,8 @@ if   plat[:5] == 'linux':    # Linux (confirmed)
             desc = f.read()
             f.close()
         finally:
-            #os.remove(filename)
+            os.remove(filename)
         # descriptions from device
-        print desc
         iManufacturer = re_group('iManufacturer\s+\w+ (.+)', desc)
         iProduct = re_group('iProduct\s+\w+ (.+)', desc)
         iSerial = re_group('iSerial\s+\w+ (.+)', desc) or ''
@@ -73,9 +72,6 @@ if   plat[:5] == 'linux':    # Linux (confirmed)
         idVendor = re_group('idVendor\s+0x\w+ (.+)', desc)
         idProduct = re_group('idProduct\s+0x\w+ (.+)', desc)
         # create descriptions. prefer text from device, fall back to the others
-        print "MAN: %s" % iManufacturer
-        print "PRO: %s" % iProduct
-        print "SER: %s" % iSerial
         return '%s %s %s' % (iManufacturer or idVendor, iProduct or idProduct, iSerial)
 
     def describe(device):
