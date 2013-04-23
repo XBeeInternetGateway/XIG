@@ -44,7 +44,7 @@ II. RELEASE HISTORY
 Optimized garbage collection for ConnectPort X2.  Should resolve
 XIG crashing due to insufficient memory on this platform.
 
-Added timezone support so samples show up and graph properly when
+Added time zone support so samples show up and graph properly when
 using iDigi's DataStreams.
 
 Added support for the ConnectPort X2e.
