@@ -28,7 +28,7 @@ h1, h2, h3 {
     background-color: #EEE;
 }
 .header_coloring {
-	background-color: #222;
+	background-color: #2b2b2b;
 }
 
 .tundra .dijitTabPaneWrapper {
@@ -65,7 +65,7 @@ body {
 
 /** Header **/
 #header {
-    background-color: #222;
+    background-color: #1b75bb;
     background-repeat: no-repeat;
 }
 
@@ -131,13 +131,13 @@ body {
 }
 
 .header {
-	background-color: #d5d5d5;
+	background-color: #1b75bb;
 	border: 1px solid #E4E4E4;
 	padding: 0.2em 0.8em;
     -webkit-border-radius: 8px;
 	-moz-border-radius: 8px;
 	border-radius: 8px;
-	color: black;
+	color: white;
 	font-size: large;
 	text-align:center;
     margin-left: auto;

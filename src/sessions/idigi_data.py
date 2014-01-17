@@ -175,7 +175,7 @@ class iDigiDataUploader(object):
             document = self.__format_doc(prev_sample_q[:SAMPLE_PAGE_SIZE])
             try:
                 self.__do_upload(document)
-                logger.info('uploaded %d samples to iDigi' % len(prev_sample_q[:SAMPLE_PAGE_SIZE]))
+                logger.info('uploaded %d samples to Device Cloud' % len(prev_sample_q[:SAMPLE_PAGE_SIZE]))
                 prev_sample_q = prev_sample_q[SAMPLE_PAGE_SIZE:]
             except Exception, e:
                 logger.warning('error during upload "%s"' % str(e))
@@ -261,11 +261,11 @@ class iDigiDataSession(AbstractSession):
         self.__xbee_addr = xbee_addr
         self.__write_buf = ""
 
-        if not url.startswith("idigi_data:"):
-            self._do_error('url does not start with "idigi_data:"')
+        if not url.startswith("dc_data:") and not url.startswith("idigi_data:"):
+            self._do_error('url does not start with "idigi_data:" or "dc_data"')
             return
         
-        if url.count("idigi_data:") > 1:
+        if (url.count("dc_data:") > 1) or (url.count("idigi_data:") > 1):
             # special case, malformed command buffer
             self._do_error("too many idigi_data: in command string")
 
@@ -316,7 +316,7 @@ class iDigiDataSession(AbstractSession):
         (or incomplete), return False.
         """
 
-        if cmd_str.startswith("idigi_data:"):
+        if cmd_str.startswith("dc_data:") or cmd_str.startswith("idigi_data:"):
             return iDigiDataSession(xig_core, cmd_str, xbee_addr)
 
         return None
