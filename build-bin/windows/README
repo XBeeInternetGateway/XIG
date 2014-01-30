@@ -1,0 +1,24 @@
+
+Build Instructions for Windows
+==============================
+
+How to build the binary windows version of the XIG:
+
+
+1. Install the *32-bit* version of Python from http://www.python.org
+  
+   Any v2.7 series, 32-bit version of Python will do.
+ 
+2. Install the python v2.7 version of py2exe:
+
+   Visit http://py2exe.org/index.cgi/FrontPage, navigate to the
+   downloads page, and download the v2.7 series installer.
+
+3. Run the build script from this directory (build-bin/osx/build.sh):
+
+   X:\xig\build-bin\windows> C:\python27\python.exe setup.py py2exe
+
+4. Once the build is complete, a distribution zip archive will be
+   created. That's it!
+
+
