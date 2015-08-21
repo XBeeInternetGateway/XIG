@@ -39,6 +39,12 @@ commercial and educational users.
 
 II. RELEASE HISTORY
 
+2015/08/21 - XIG v1.5.2
+
+Change the look and feel of the tool.
+
+Removed all the references to Device Cloud.
+
 2012/11/11 - XIG v1.5.1b19
 
 Optimized garbage collection for ConnectPort X2.  Should resolve
