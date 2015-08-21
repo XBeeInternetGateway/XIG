@@ -12,7 +12,7 @@ See http://code.google.com/p/xig/ or README.txt for more information.
 ## Global String Constants
 NAME = "XBee Internet Gateway (XIG)"
 SHORTNAME = "xig"
-VERSION = "1.5.1b19"
+VERSION = "1.5.2"
 
 import sys
 import gc
@@ -323,8 +323,8 @@ def main():
         traceback.print_exc(file=sys.stdout)
         time.sleep(10)
         # TODO: until shutdown may be propagated cleanly, allow XIG to squirt
-        #	out the exception before exiting (and ultimately causing a
-        #	reboot on the ConnectPort)
+        #﻿  out the exception before exiting (and ultimately causing a
+        #﻿  reboot on the ConnectPort)
     sys.exit(ret)
 
 

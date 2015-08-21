@@ -45,7 +45,7 @@ html, body {
 
 body {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
-    color: #393939;
+    color: #4f5454;
     min-width: 600px;
 }
 
@@ -65,7 +65,7 @@ body {
 
 /** Header **/
 #header {
-    background-color: #1b75bb;
+    background-color: #00a05b;
     background-repeat: no-repeat;
 }
 
@@ -77,7 +77,7 @@ body {
     padding-left: 20px;
     font-size: x-large;
     font-weight:bold;
-    color: #CCC;
+    color: #FFFFFF ;
 }
 
 #power_div {
@@ -131,7 +131,7 @@ body {
 }
 
 .header {
-	background-color: #1b75bb;
+	background-color: #00a05b;
 	border: 1px solid #E4E4E4;
 	padding: 0.2em 0.8em;
     -webkit-border-radius: 8px;
@@ -203,7 +203,7 @@ body {
     padding-left: 5px;
     padding-bottom: 5px;
     width: 50px;
-    background-color: #EEE;
+    background-color: #00a05b;
 }
 
 #console-input-wrapper{
@@ -245,13 +245,13 @@ body {
 
 /** Footer **/
 #footer {
-    background-color: #222;
+    background-color: #00a05b;
     height: 1.5em;
     text-align: center;
-    color: #70899D;
+    color: #FFFFFF;
     padding: .5em;
 }
 
 #footer a, #footer a.visited {
-    color: #70899D;
+    color: #FFFFFF;
 }
