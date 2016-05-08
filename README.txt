@@ -5,6 +5,8 @@ by Rob Faludi (http://faludi.com),
    Jordan Husney (http://jordan.husney.com),
    & Ted Hayes (http://log.liminastudio.com),
 
+Download current releases here: https://github.com/XBeeInternetGateway/XIG/releases 
+Explore the help wiki documentation here: https://github.com/XBeeInternetGateway/XIG/wiki
 
 I. INTRODUCTION
 
